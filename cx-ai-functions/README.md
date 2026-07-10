@@ -22,12 +22,13 @@ product teams evaluating customer-experience analytics.
 - Natural-language filtering for at-risk conversations (`AI_FILTER`)
 - Voice via `AI_TRANSCRIBE`
 - Optimizing a custom function with AI Function Studio
+- Cost management, best practices, per-user quotas, and killing runaway queries
 
 ## Contents
 
 | File | Description |
 |------|-------------|
-| `presentations/cx-ai-functions.html` | Slide deck (12 slides) |
+| `presentations/cx-ai-functions.html` | Slide deck (14 slides) |
 | `presentations/cx-ai-functions-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
 | `lab/setup.sql` | SQL setup (database, schema, warehouse, structured `CUSTOMERS`) |
 | `lab/data_gen.py` | Snowpark loader for the unstructured text tables |
@@ -80,7 +81,23 @@ and use a warehouse.
 5. Theme discovery with `AI_AGG` / `AI_SUMMARIZE_AGG`
 6. At-risk detection with `AI_FILTER`
 7. Assemble the `CX_TELEMETRY` table
-8. Optimize a custom function with AI Function Studio
+8. AI Function Studio — create → evaluate → optimize a custom escalation router (`ROUTE_ESCALATION`)
+9. Cost, usage & guardrails — monitor spend, set per-user quotas, kill runaway queries
+
+### Demoing AI Function Studio (Section 8)
+
+Section 8 builds a custom **escalation router** that labels each conversation `LOW` / `MEDIUM` /
+`HIGH`, then runs the three stored procedures behind Cortex AI Function Studio:
+`CREATE_AI_FUNCTION` → `EVALUATE_AI_FUNCTION` → `OPTIMIZE_AI_FUNCTION`. You can demo it two ways:
+
+- **SQL / notebook:** run the Section 8 cells top to bottom (create the function, build the
+  `ESCALATION_EVAL` labeled set, evaluate with `exact_match`, then optimize across models).
+- **Snowsight UI:** Snowsight → **AI & ML → Cortex AI Function Studio** → open `ROUTE_ESCALATION`
+  (created by the notebook) and run **Evaluate** / **Optimize** from the visual workflow — the
+  Optimize step plots an accuracy-vs-cost Pareto chart across models.
+
+> `OPTIMIZE_AI_FUNCTION` runs ~10+ minutes; run it live only if you can narrate the Pareto concept,
+> or run it ahead of time and read results back with `SHOW RUN METRICS`.
 
 ## Key Concepts
 
@@ -90,6 +107,9 @@ and use a warehouse.
   larger than the model context window and support `GROUP BY`.
 - **Governed, in-place:** text never leaves Snowflake; results land next to billing and
   engagement data for the Conversational BI module to analyze.
+- **Cost is token-based, not warehouse-based:** a row-wise function over 1M+ rows is ~1M model
+  calls, so prototype on a subset, pre-filter rows, right-size the model, and don't oversize the
+  warehouse. Monitor via `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` and cap with per-user quotas.
 
 ## References
 
@@ -100,3 +120,6 @@ and use a warehouse.
 - [AI_AGG](https://docs.snowflake.com/en/sql-reference/functions/ai_agg) · [AI_SUMMARIZE_AGG](https://docs.snowflake.com/en/sql-reference/functions/ai_summarize_agg)
 - [AI_FILTER](https://docs.snowflake.com/en/sql-reference/functions/ai_filter)
 - [Cortex AI Function Studio](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-function-studio)
+- [Managing Cortex AI Function costs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management)
+- [Per-user quotas](https://docs.snowflake.com/en/user-guide/budgets/per-user-quotas)
+- [CORTEX_AI_FUNCTIONS_USAGE_HISTORY view](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_ai_functions_usage_history)

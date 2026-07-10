@@ -173,10 +173,18 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 **Talking Points:**
 - Built-ins cover most CX telemetry. When the customer needs a domain-specific label or scoring rubric, build a custom function on `AI_COMPLETE` and tune it in AI Function Studio.
 - Studio lets you compare prompts and models on a labeled sample and review accuracy vs cost before productionizing.
+- The lab builds a concrete example: `ROUTE_ESCALATION`, a custom function that labels each conversation LOW / MEDIUM / HIGH escalation priority.
+
+**How to demo it (two ways):**
+- **Snowsight UI (best for a room):** Snowsight → **AI & ML → Cortex AI Function Studio**. (1) **Create** — pick model `llama3.1-8b`, paste the escalation rubric as the system prompt, `{TRANSCRIPT}` as the input; (2) **Evaluate** — select the `ESCALATION_EVAL` labeled table, metric `exact_match`, show the baseline score and the per-row failure list; (3) **Optimize** — add `mistral-large2` and `claude-sonnet-4-6`, run, and land on the **accuracy-vs-cost Pareto chart** — "same task, cheaper model, equal accuracy."
+- **SQL / notebook (repeatable):** Section 8 of the lab runs the exact same three stored procedures (`CREATE_AI_FUNCTION` → `EVALUATE_AI_FUNCTION` → `OPTIMIZE_AI_FUNCTION`). The function created in SQL also shows up in the Studio UI, so you can start in the notebook and finish in the UI.
+- Pre-built for you in this account: `FIELD_CX_DEMO.AI_FUNCTIONS.ROUTE_ESCALATION` + `ESCALATION_EVAL` (24 labeled rows). Baseline `exact_match` = **0.96** (23/24) on `llama3.1-8b`.
 
 **Internal Context:**
 - Position Studio as the "optimization" chapter, not the starting point — don't lead with custom functions when a built-in exists.
 - Great trust-builder: showing measured accuracy/cost trade-offs turns a hand-wave into evidence.
+- Optimize runs 10+ minutes — run it live only if you can talk through the Pareto concept while it works, otherwise run it beforehand and show the stored results (`SHOW RUN METRICS`).
+- The baseline is already high (0.96) because the sample transcripts are clear-cut — pivot the story to **cost**: can a cheaper model match it? That's the Pareto payoff.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-function-studio
@@ -197,13 +205,56 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 13: Next Steps
+## Slide 13: Cost & Usage
+
+**Talking Points:**
+- Set the mental model: AI Functions bill by **tokens processed** (input + output), or pages for document functions — not by warehouse size. A row-wise function over 1M rows is ~1M model calls.
+- Name the runaway causes directly: running a row-wise function over a full 1M+ row table with no `WHERE`/`LIMIT`, verbose prompts, and oversized models.
+- Walk the monitoring query: `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY` is the single source of truth for credits by function, model, user, and query (2-5 min latency).
+- Land the best-practices box: prototype on a sampled/`LIMIT` subset, pre-filter rows, pick the smallest model that passes eval, keep prompts tight, prefer aggregates at scale, and don't oversize the warehouse.
+
+**Internal Context:**
+- This is the slide that answers the #1 field objection: "customers burn money running functions on 1M+ rows without knowing." Say that out loud — it builds trust.
+- The warehouse point is counter-intuitive and worth repeating: a bigger warehouse does NOT speed AI functions up; it only adds compute cost on top of token cost. MEDIUM is plenty.
+- `QUERY_TAG` is the cheap win for chargeback — encourage teams to tag AI workloads by project.
+- `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` requires access to the SNOWFLAKE database (IMPORTED PRIVILEGES / ACCOUNTADMIN). Flag that so the query doesn't stall in the demo.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management
+- https://docs.snowflake.com/en/sql-reference/account-usage/cortex_ai_functions_usage_history
+
+---
+
+## Slide 14: Guardrails & Quotas
+
+**Talking Points:**
+- Lead with **per-user quotas**: a first-class `SNOWFLAKE.CORE.QUOTA` object that enforces monthly/daily per-user credit limits and **auto-blocks** AI requests at the limit — no custom tasks, no scheduling.
+- Emphasize the block behavior: enforcement evaluates within minutes, denies new AI requests with a clear "quota exhausted" error, and even terminates in-progress AI function calls; blocks clear automatically at the cycle reset.
+- Show the two backup layers: an hourly `ALERT` on the usage view that emails admins on threshold breach, and a task that detects + cancels runaway queries.
+- Show the manual escape hatch: `SELECT SYSTEM$CANCEL_QUERY('<query_id>')` kills a specific long-running query immediately.
+- Note access control: revoke `SNOWFLAKE.CORTEX_USER` from `PUBLIC` and grant it via a dedicated role so limits can't be bypassed.
+
+**Internal Context:**
+- Quotas are the headline — they're the newest, cleanest answer and they auto-block. The alert + cancel-task pattern from the cost-management doc is the belt-and-suspenders story for accounts that want custom logic.
+- Quota block enforcement covers AI domains only (AI functions, Cortex Agents, Snowflake CoWork, CoCo), not warehouse spend. Track warehouse spend in a separate quota.
+- Cancelling a query stops further cost but does NOT refund credits already consumed — say this so nobody thinks cancel = free.
+- Killing/cancelling and quotas require elevated privileges (OPERATE on the warehouse for cancel; ACCOUNTADMIN or a `QUOTA_CREATOR` custom role for quotas). Frame these as admin/governance setup, not analyst steps.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/budgets/per-user-quotas
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management
+- https://docs.snowflake.com/en/sql-reference/functions/system_cancel_query
+
+---
+
+## Slide 15: Next Steps
 
 **Talking Points:**
 - Four concrete actions: run the lab, point the same SQL at real chat/call data, trend the telemetry in BI, and feed at-risk signals to churn.
 - Close on the one-liner: CX telemetry is now a SQL query, not an ML project.
 
 **Internal Context:**
+- Before you leave, remind the room of the guardrails: quotas + alerts + cancel mean they can turn analysts loose without budget fear.
 - Natural bridge to the Conversational BI module — that demo consumes this telemetry inside a semantic view + agent.
 - Leave-behind: this repo's deck + lab so champions can re-run it internally.
 

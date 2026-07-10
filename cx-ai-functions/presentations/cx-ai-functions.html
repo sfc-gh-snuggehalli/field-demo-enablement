@@ -466,6 +466,8 @@
     <a href="#voice">Voice &amp; Calls</a>
     <a href="#studio">AI Function Studio</a>
     <a href="#comparison">Built-in vs Custom</a>
+    <a href="#cost">Cost &amp; Usage</a>
+    <a href="#guardrails">Guardrails &amp; Quotas</a>
     <a href="#closing">Next Steps</a>
     <!-- NAV_LINKS_END -->
   </nav>
@@ -661,7 +663,47 @@
       </table>
     </section>
 
-    <!-- Slide 12: Next Steps -->
+    <!-- Slide 12: Cost & Usage -->
+    <section class="slide" id="cost">
+      <h2>What AI Functions actually cost</h2>
+      <h3>Token-based billing, and how it runs away on large tables</h3>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>How you're billed</h4><p>AI Functions consume credits by <strong>tokens processed</strong> (input + output), or by pages for document functions — <em>not</em> by warehouse size. A row-wise function over 1M rows makes ~1M model calls.</p></div>
+        <div class="card"><h4>Where it runs away</h4><p>Running a row-wise function across a full 1M+ row table without a <code>LIMIT</code> or <code>WHERE</code>, verbose prompts, and oversized models are the usual causes of surprise bills.</p></div>
+      </div>
+      <pre><span class="comment">-- Track daily credits by function and model (2-5 min latency)</span>
+<span class="keyword">SELECT</span> <span class="function">DATE_TRUNC</span>(<span class="string">'day'</span>, start_time) <span class="keyword">AS</span> usage_date,
+       function_name, model_name,
+       <span class="function">SUM</span>(credits) <span class="keyword">AS</span> total_credits,
+       <span class="function">COUNT</span>(<span class="keyword">DISTINCT</span> query_id) <span class="keyword">AS</span> query_count
+<span class="keyword">FROM</span> SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY
+<span class="keyword">WHERE</span> start_time >= <span class="function">DATEADD</span>(<span class="string">'day'</span>, -30, <span class="function">CURRENT_TIMESTAMP</span>())
+<span class="keyword">GROUP BY</span> <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span> <span class="keyword">ORDER BY</span> usage_date <span class="keyword">DESC</span>, total_credits <span class="keyword">DESC</span>;</pre>
+      <div class="highlight-box anim-fade"><strong>Best practices:</strong> prototype on a <code>LIMIT</code>/sampled subset first &bull; pre-filter rows with <code>WHERE</code> before the AI call &bull; pick the smallest model that passes AI Function Studio eval &bull; keep prompts tight &bull; use aggregates (<code>AI_AGG</code>) instead of row-wise <code>AI_COMPLETE</code> at scale &bull; a warehouse larger than <strong>MEDIUM</strong> does not speed AI functions up — it just costs more &bull; tag queries with <code>QUERY_TAG</code> for chargeback.</div>
+    </section>
+
+    <!-- Slide 13: Guardrails & Quotas -->
+    <section class="slide" id="guardrails">
+      <h2>Guardrails: quotas &amp; killing runaway queries</h2>
+      <h3>Stop a 1M-row mistake before it drains the budget</h3>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Per-user quotas</h4><p>A first-class quota object enforces monthly/daily per-user credit limits and <strong>auto-blocks</strong> AI requests at the limit — no custom tasks required.</p></div>
+        <div class="card"><h4>Spend alerts</h4><p>An hourly <code>ALERT</code> on <code>CORTEX_AI_FUNCTIONS_USAGE_HISTORY</code> emails admins when account or monthly spend crosses a threshold.</p></div>
+        <div class="card"><h4>Kill runaway queries</h4><p>Cancel a specific long-running query on the spot, or automate detection + cancellation with a scheduled task.</p></div>
+        <div class="card"><h4>Access control</h4><p>Gate AI Functions behind a dedicated role by revoking <code>CORTEX_USER</code> from <code>PUBLIC</code>, so limits can't be bypassed.</p></div>
+      </div>
+      <pre><span class="comment">-- Per-user quota that auto-blocks AI spend past the limit</span>
+<span class="keyword">CREATE</span> SNOWFLAKE.CORE.QUOTA my_quota();
+<span class="keyword">CALL</span> my_quota!ADD_SHARED_RESOURCE(<span class="string">'AI FUNCTION'</span>);
+<span class="keyword">CALL</span> my_quota!SET_PER_USER_LIMIT(<span class="number">120</span>);          <span class="comment">-- 120 credits / user / month</span>
+<span class="keyword">CALL</span> my_quota!SET_BLOCK_ENFORCEMENT_ENABLED(<span class="keyword">TRUE</span>);
+
+<span class="comment">-- Kill a runaway query right now</span>
+<span class="keyword">SELECT</span> <span class="function">SYSTEM$CANCEL_QUERY</span>(<span class="string">'&lt;query_id&gt;'</span>);</pre>
+      <div class="context-box anim-fade"><strong>SE framing:</strong> lead the cost conversation with quotas — they auto-block at the limit and even terminate in-progress AI calls, so a customer can't burn the budget on one bad query. Alerts and the cancel task are the belt-and-suspenders layer.</div>
+    </section>
+
+    <!-- Slide 14: Next Steps -->
     <section class="slide" id="closing">
       <h2>Next Steps</h2>
       <div class="card-grid anim-fade">
