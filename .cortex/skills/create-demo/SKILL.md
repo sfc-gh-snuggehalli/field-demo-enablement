@@ -34,10 +34,13 @@ Ask the user (question tool) for anything not already clear from their request:
 - **Audience** — who it's for (SEs, data engineers, etc.).
 - **Include lab?** — default YES (deck + notes + setup.sql + notebook). If NO, skip the
   `lab/` artifacts and their README rows.
+- **Generate data?** — default YES when the lab needs unstructured free text (chats,
+  transcripts, tickets, reviews). Adds `lab/data_gen.py`. Skip for structured-only labs.
 - **Slide count** — default 8-12.
 
 Derive: `DB_NAME = <SLUG_UPPER>_DEMO`, `SCHEMA_NAME` (a sensible schema like `DEMO` or
-feature-appropriate), `WH_NAME = <SLUG_UPPER>_WH`, `WH_SIZE = default_warehouse_size`.
+feature-appropriate), `WH_NAME = <SLUG_UPPER>_WH`, `WH_SIZE = default_warehouse_size`,
+`CONNECTION_NAME` (the user's default local connection; ask if unknown, else use `default`).
 
 **STOP**: Confirm slug, title, DB/WH names, audience, and include-lab before generating.
 
@@ -72,9 +75,15 @@ limits, common objections. The final block covers the Next Steps slide.
 
 **setup.sql** — Copy `templates/setup.sql` to `<slug>/lab/setup.sql`. Substitute
 `{{DB_NAME}}`, `{{SCHEMA_NAME}}`, `{{WH_NAME}}`, `{{WH_SIZE}}`, `{{SLUG}}`,
-`{{DECK_TITLE}}`, and the prerequisites comments. Replace the `{{SAMPLE_DATA_STUB}}` and
-`{{FEATURE_OBJECTS_STUB}}` lines with real DDL + small synthetic INSERTs sized to run
-interactively. Validate the DDL compiles with `snowflake_sql_execute` (`only_compile: true`).
+`{{DECK_TITLE}}`, and the prerequisites comments. Fill the stubs:
+- `{{STRUCTURED_DATA_STUB}}` — structured tables via `TABLE(GENERATOR(...))` + `UNIFORM`/
+  `RANDOM`/`SEQ`/`DATEADD`/array indexing, sized to run interactively.
+- `{{UNSTRUCTURED_DATA_STUB}}` — a short comment listing the free-text tables that
+  `data_gen.py` will create (no DDL; `write_pandas` creates them).
+- `{{FEATURE_OBJECTS_STUB}}` — the objects the lab demonstrates (AI-function views,
+  semantic views, Cortex Search services, agents). Objects that read the unstructured
+  tables must be created AFTER `data_gen.py` runs; note this in the lab ordering.
+Validate the DDL compiles with `snowflake_sql_execute` (`only_compile: true`).
 
 **notebook** — Create the notebook by copying the template, then filling it:
 ```bash
@@ -85,6 +94,21 @@ Then use the notebook tools (`notebook_edit_cell`, `notebook_add_cell`) to subst
 `get_active_session()` and `USE DATABASE/SCHEMA/WAREHOUSE` (already in the connect cell).
 Do NOT run cells — the lab runs in the user's Snowflake account. Confirm the file is valid
 JSON afterward (e.g. `python3 -c "import json,sys; json.load(open(sys.argv[1]))" <path>`).
+
+### Step 5b: Generate the data loader (skip if generate-data = NO)
+
+**data_gen.py** — Copy `templates/data_gen.py` to `<slug>/lab/data_gen.py`. Substitute
+`{{DECK_TITLE}}`, `{{DB_NAME}}`, `{{SCHEMA_NAME}}`, `{{WH_NAME}}`, `{{CONNECTION_NAME}}`, and
+replace `{{DATA_GEN_STUB}}` inside `build_frames()` with code that builds one pandas
+DataFrame per free-text table and returns them keyed by table name. Author the text with
+real variety (positive/negative/mixed sentiment, a realistic topic taxonomy) so AI Functions
+return interesting results. Reading/writing to Snowflake:
+- The template's `get_session()` uses `get_active_session()` in a notebook/worksheet and
+  falls back to `Session.builder.config("connection_name", ...)` when run locally via CLI.
+- Write with `session.write_pandas(df, TABLE, auto_create_table=True, overwrite=True)` —
+  this creates/replaces and bulk-loads. Do NOT hand-write per-row INSERTs for text tables.
+Validate it parses (`python3 -m py_compile <slug>/lab/data_gen.py`). Do NOT execute it here —
+it loads into the user's account. Keep row counts modest (hundreds–low thousands).
 
 ### Step 6: Generate the module README
 
@@ -109,8 +133,21 @@ Preserve all marker comments so future runs can append again.
 ### Step 8: Report
 
 List every file created, the local path to open the deck, and the published Pages URL.
-Remind the user to run `setup.sql` before the notebook, and to `git add`/commit/push to
-publish via GitHub Pages.
+Remind the user of the run order (`setup.sql` → `python lab/data_gen.py` if present →
+notebook), and to `git add`/commit/push to publish via GitHub Pages.
+
+**Best demo path (recommend this to the user):** run the lab inside Snowsight via
+**Projects → Workspaces → Create Workspace from Git repository**. There `get_active_session()`
+works with no local auth, and `data_gen.py` runs as a notebook cell (no `--connection`). The
+module README already includes a "Run in Snowflake (Workspaces / Git)" section. For agent/Analyst
+demos, finish in **AI & ML → Agents** (or Snowflake Intelligence) as the closing moment.
+
+**Running locally / validating:** the Python connector can't drive `oauth_authorization_code`
+(needs a client_id), so prefer the notebook path for `data_gen.py`. `snow sql -f setup.sql` works
+with a connection whose **role can CREATE** the objects and use a warehouse. Gotcha: if a warehouse
+named in setup.sql already exists under a different owner, `CREATE WAREHOUSE IF NOT EXISTS` won't
+re-own it and Cortex Search reports the warehouse as "missing" — grant your role `USAGE, OPERATE`
+on that warehouse first.
 
 ## Output
 
@@ -122,6 +159,7 @@ publish via GitHub Pages.
 │   └── <slug>-speaker-notes.md
 └── lab/                      (omitted if include-lab = NO)
     ├── setup.sql
+    ├── data_gen.py           (omitted if generate-data = NO)
     └── <slug>-lab.ipynb
 ```
 Plus updated root `README.md` (table row + section + tree node).
@@ -136,4 +174,8 @@ Plus updated root `README.md` (table row + section + tree node).
 - Real function names/signatures only — verify via docs (Step 2). No fabricated SQL.
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - setup.sql DDL compiles; notebook is valid JSON and is NOT executed here.
+- data_gen.py compiles (`py_compile`) and uses `write_pandas`; NOT executed here.
+- Structured data via SQL GENERATOR; unstructured text via data_gen.py write_pandas.
+- Objects depending on unstructured tables are created after data_gen.py in the run order.
+- Module README includes a "Run in Snowflake (Workspaces / Git)" section (Workspaces + `get_active_session()` is the recommended demo path).
 - Root README markers preserved; new module appears in table, sections, and tree.

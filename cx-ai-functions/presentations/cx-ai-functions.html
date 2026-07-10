@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Functions: Customer Experience Telemetry</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0F1B2D;
+      --sidebar-bg: #1B2A4A;
+      --primary: #29B5E8;
+      --accent: #7C3AED;
+      --text: #E2E8F0;
+      --text-muted: #94A3B8;
+      --card-bg: #162236;
+      --border: #2D4A6F;
+      --green: #10B981;
+      --orange: #F59E0B;
+      --red: #EF4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      z-index: 1000;
+      transition: width 0.1s;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      padding: 2rem 1.5rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar a {
+      display: block;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      color: var(--text);
+      background: rgba(41, 181, 232, 0.1);
+    }
+
+    .sidebar a.active {
+      border-left: 3px solid var(--primary);
+      padding-left: calc(0.75rem - 3px);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 0;
+    }
+
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .slide h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slide h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    .slide h3 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .slide p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      text-align: center;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--card-bg);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:hover td {
+      background: rgba(41, 181, 232, 0.05);
+    }
+
+    .highlight-box {
+      background: rgba(41, 181, 232, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .context-box {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--orange);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-orange { background: rgba(245, 158, 11, 0.15); color: var(--orange); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-blue { background: rgba(41, 181, 232, 0.15); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-purple { background: rgba(124, 58, 237, 0.15); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+
+    .slide ul {
+      list-style: none;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .slide ul li {
+      padding: 0.75rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .slide ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    code {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--primary);
+    }
+
+    pre {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      width: 100%;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text);
+    }
+
+    pre .keyword { color: var(--accent); font-weight: 500; }
+    pre .string { color: var(--green); }
+    pre .comment { color: var(--text-muted); font-style: italic; }
+    pre .function { color: var(--primary); }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .flow-step {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .flow-step.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(41, 181, 232, 0.2);
+    }
+
+    .flow-step .step-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .flow-step .step-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+
+    .flow-arrow {
+      color: var(--primary);
+      font-size: 1.5rem;
+      font-weight: 300;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .anim-fade {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .anim-fade.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .slide { padding: 2rem 1.5rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .github-link {
+      position: fixed;
+      top: 1rem;
+      right: 1.5rem;
+      z-index: 1000;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      transition: all 0.2s;
+    }
+    .github-link:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+    .github-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <a href="https://github.com/sfc-gh-snuggehalli/field-demo-enablement/tree/main/cx-ai-functions" class="github-link" target="_blank">
+    <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+  <div class="progress-bar"></div>
+
+  <nav class="sidebar">
+    <h2>CX Telemetry</h2>
+    <!-- NAV_LINKS_START -->
+    <a href="#hero">Overview</a>
+    <a href="#problem">The Problem</a>
+    <a href="#pipeline">The Pipeline</a>
+    <a href="#sentiment">Sentiment</a>
+    <a href="#topics">Topic Modeling</a>
+    <a href="#extract">Extraction</a>
+    <a href="#aggregate">Theme Discovery</a>
+    <a href="#filter">At-Risk Detection</a>
+    <a href="#voice">Voice &amp; Calls</a>
+    <a href="#studio">AI Function Studio</a>
+    <a href="#comparison">Built-in vs Custom</a>
+    <a href="#closing">Next Steps</a>
+    <!-- NAV_LINKS_END -->
+  </nav>
+
+  <main class="main">
+
+    <!-- SLIDES_START -->
+
+    <!-- Slide 1: Hero -->
+    <section class="slide" id="hero">
+      <h1>AI Functions: Customer Experience Telemetry</h1>
+      <p>Turn raw chat threads and call transcripts into structured sentiment and topic telemetry — entirely in SQL, no ML infrastructure.</p>
+      <div class="stat-grid anim-fade" style="margin-top: 2rem;">
+        <div class="stat-card"><div class="value">1 SQL call</div><div class="label">From raw text to sentiment</div></div>
+        <div class="stat-card"><div class="value">0</div><div class="label">Models to host or deploy</div></div>
+        <div class="stat-card"><div class="value">Chat + Voice</div><div class="label">One pipeline for both</div></div>
+        <div class="stat-card"><div class="value">Governed</div><div class="label">Runs next to your data</div></div>
+      </div>
+    </section>
+
+    <!-- Slide 2: The Problem -->
+    <section class="slide" id="problem">
+      <h2>The customer-experience blind spot</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Conversations pile up</h4><p>A customer-facing GPT assistant and a support line generate thousands of chats and calls a day. Nobody can read them all.</p></div>
+        <div class="card"><h4>No structured read</h4><p>Product and CX teams can't answer "what are customers asking about?" or "how do they feel?" without manual sampling.</p></div>
+        <div class="card"><h4>Churn signals are buried</h4><p>Frustration and cancellation intent live in free text that never reaches the warehouse or the churn model.</p></div>
+        <div class="card"><h4>ML is too heavy</h4><p>Standing up sentiment/topic models, endpoints, and pipelines is weeks of work for a small data team.</p></div>
+      </div>
+      <div class="warning-box anim-fade"><strong>The gap:</strong> the richest signal about customer experience is unstructured and effectively invisible to analytics.</div>
+    </section>
+
+    <!-- Slide 3: The Pipeline -->
+    <section class="slide" id="pipeline">
+      <h2>One SQL pipeline, raw text to telemetry</h2>
+      <h3>Each step is a single AI Function over your conversation tables</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step"><div class="step-label">Ingest</div><div class="step-title">Chats &amp; calls</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">AI_SENTIMENT</div><div class="step-title">Score</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">AI_CLASSIFY</div><div class="step-title">Topics</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">AI_EXTRACT</div><div class="step-title">Fields</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">AI_AGG</div><div class="step-title">Themes</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">AI_FILTER</div><div class="step-title">At-risk</div></div>
+      </div>
+      <div class="highlight-box anim-fade">The output is a governed telemetry table you can trend, join to billing, and feed a churn model — built with SQL your team already writes.</div>
+    </section>
+
+    <!-- Slide 4: Sentiment -->
+    <section class="slide" id="sentiment">
+      <h2>Sentiment with <code>AI_SENTIMENT</code></h2>
+      <h3>Overall and per-aspect sentiment in one call</h3>
+      <pre><span class="comment">-- Overall + category sentiment for each chat thread</span>
+<span class="keyword">SELECT</span> thread_id, customer_id,
+  <span class="function">AI_SENTIMENT</span>(
+    transcript,
+    [<span class="string">'valuation_accuracy'</span>, <span class="string">'pricing_billing'</span>, <span class="string">'onboarding'</span>]
+  ) <span class="keyword">AS</span> sentiment
+<span class="keyword">FROM</span> chat_threads;</pre>
+      <div class="context-box anim-fade"><strong>Returns</strong> an OBJECT with an <code>overall</code> record plus one per category, each scored <code>positive</code> / <code>negative</code> / <code>neutral</code> / <code>mixed</code> / <code>unknown</code>. Extract with <code>sentiment:categories</code>.</div>
+    </section>
+
+    <!-- Slide 5: Topic Modeling -->
+    <section class="slide" id="topics">
+      <h2>Topic modeling with <code>AI_CLASSIFY</code></h2>
+      <h3>Map every conversation to a CX taxonomy — single or multi-label</h3>
+      <pre><span class="comment">-- Classify each thread into your support topic taxonomy</span>
+<span class="keyword">SELECT</span> thread_id,
+  <span class="function">AI_CLASSIFY</span>(
+    transcript,
+    [<span class="string">'valuation_accuracy'</span>, <span class="string">'pricing_billing'</span>, <span class="string">'onboarding'</span>,
+     <span class="string">'bug_report'</span>, <span class="string">'cancellation'</span>, <span class="string">'feature_request'</span>],
+    {<span class="string">'task_description'</span>: <span class="string">'Support topics for a home-valuation product'</span>}
+  ):labels[0]::string <span class="keyword">AS</span> topic
+<span class="keyword">FROM</span> chat_threads;</pre>
+      <div class="highlight-box anim-fade">Set <code>{'output_mode': 'multi'}</code> when a conversation spans several topics. Add label descriptions and few-shot <code>examples</code> to lift accuracy.</div>
+    </section>
+
+    <!-- Slide 6: Extraction -->
+    <section class="slide" id="extract">
+      <h2>Structured fields with <code>AI_EXTRACT</code></h2>
+      <h3>Pull intent, product area, and requested action out of free text</h3>
+      <pre><span class="comment">-- Extract structured fields from each ticket body</span>
+<span class="keyword">SELECT</span> ticket_id,
+  <span class="function">AI_EXTRACT</span>(
+    text => body,
+    responseFormat => {
+      <span class="string">'intent'</span>: <span class="string">'What does the customer want to do?'</span>,
+      <span class="string">'product_area'</span>: <span class="string">'Which product area is mentioned?'</span>,
+      <span class="string">'urgency'</span>: <span class="string">'Is this urgent? yes or no'</span>
+    }
+  ):response <span class="keyword">AS</span> fields
+<span class="keyword">FROM</span> support_tickets;</pre>
+      <div class="context-box anim-fade">Ask for a single value per question, in plain English. The same function reads documents on a stage via <code>file =&gt; TO_FILE(...)</code>.</div>
+    </section>
+
+    <!-- Slide 7: Theme Discovery -->
+    <section class="slide" id="aggregate">
+      <h2>Theme discovery with <code>AI_AGG</code> &amp; <code>AI_SUMMARIZE_AGG</code></h2>
+      <h3>The "unsupervised" view: surface dominant themes across thousands of rows</h3>
+      <pre><span class="comment">-- Top complaints per topic, across the whole corpus</span>
+<span class="keyword">SELECT</span> topic,
+  <span class="function">AI_AGG</span>(transcript,
+    <span class="string">'Identify the most common customer complaints in these conversations'</span>) <span class="keyword">AS</span> complaints
+<span class="keyword">FROM</span> classified_threads
+<span class="keyword">GROUP BY</span> topic;</pre>
+      <div class="highlight-box anim-fade">These aggregate functions process datasets larger than the model context window and support <code>GROUP BY</code> — ideal for topic discovery, executive summaries, and per-segment rollups.</div>
+    </section>
+
+    <!-- Slide 8: At-Risk Detection -->
+    <section class="slide" id="filter">
+      <h2>At-risk detection with <code>AI_FILTER</code></h2>
+      <h3>Keep only the conversations that matter</h3>
+      <pre><span class="comment">-- Surface churn-risk / escalation threads in natural language</span>
+<span class="keyword">SELECT</span> thread_id, customer_id, transcript
+<span class="keyword">FROM</span> chat_threads
+<span class="keyword">WHERE</span> <span class="function">AI_FILTER</span>(
+  <span class="string">'This customer is frustrated and at risk of cancelling: '</span> || transcript
+);</pre>
+      <div class="context-box anim-fade"><code>AI_FILTER</code> returns a BOOLEAN, so it drops straight into a <code>WHERE</code> or <code>CASE</code>. Join the survivors to billing to prioritize saves by revenue.</div>
+    </section>
+
+    <!-- Slide 9: Voice & Calls -->
+    <section class="slide" id="voice">
+      <h2>Same pipeline for voice</h2>
+      <h3>Transcribe recordings, then reuse every function above</h3>
+      <pre><span class="comment">-- Turn call recordings into text, then score them like chats</span>
+<span class="keyword">SELECT</span> call_id,
+  <span class="function">AI_TRANSCRIBE</span>(<span class="function">TO_FILE</span>(<span class="string">'@call_recordings'</span>, file_name)):text <span class="keyword">AS</span> transcript
+<span class="keyword">FROM</span> <span class="function">DIRECTORY</span>(@call_recordings);
+
+<span class="comment">-- ...then AI_SENTIMENT / AI_CLASSIFY / AI_FILTER on transcript</span></pre>
+      <div class="highlight-box anim-fade">Chat, in-app, and phone all converge into one CX telemetry table. In this lab, <code>CALL_TRANSCRIPTS</code> ships as text so the pipeline runs without audio files.</div>
+    </section>
+
+    <!-- Slide 10: AI Function Studio -->
+    <section class="slide" id="studio">
+      <h2>Optimize with AI Function Studio</h2>
+      <h3>When a built-in isn't enough, build and tune a custom function</h3>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>Build</h4><p>Define a custom classification or scoring function on top of <code>AI_COMPLETE</code> for logic the built-ins don't cover (e.g. a custom escalation score).</p></div>
+        <div class="card"><h4>Evaluate &amp; tune</h4><p>Compare prompts and models side by side on a labeled sample, review accuracy and cost, and iterate before you productionize.</p></div>
+      </div>
+      <div class="context-box anim-fade"><strong>SE framing:</strong> built-in functions cover most CX telemetry out of the box. Reach for Studio when the customer needs a domain-specific label, a custom rubric, or an accuracy/cost trade-off they want to see measured.</div>
+    </section>
+
+    <!-- Slide 11: Built-in vs Custom -->
+    <section class="slide" id="comparison">
+      <h2>Choosing the right tool</h2>
+      <table class="anim-fade">
+        <thead><tr><th>Need</th><th>Use</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Sentiment (overall / aspect)</td><td><span class="badge-blue">AI_SENTIMENT</span></td><td>Purpose-built, no prompt needed</td></tr>
+          <tr><td>Assign to known topics</td><td><span class="badge-blue">AI_CLASSIFY</span></td><td>Single or multi-label with descriptions</td></tr>
+          <tr><td>Pull structured fields</td><td><span class="badge-blue">AI_EXTRACT</span></td><td>Text or documents, JSON schema</td></tr>
+          <tr><td>Themes across many rows</td><td><span class="badge-purple">AI_AGG / AI_SUMMARIZE_AGG</span></td><td>Beats context-window limits, GROUP BY</td></tr>
+          <tr><td>Filter by fuzzy condition</td><td><span class="badge-blue">AI_FILTER</span></td><td>BOOLEAN, drops into WHERE</td></tr>
+          <tr><td>Custom label / scoring rubric</td><td><span class="badge-orange">AI Function Studio</span></td><td>Tune prompt + model, measure accuracy/cost</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Slide 12: Next Steps -->
+    <section class="slide" id="closing">
+      <h2>Next Steps</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>1. Run the lab</h4><p>Execute <code>setup.sql</code>, load text with <code>data_gen.py</code>, then work the notebook end to end.</p></div>
+        <div class="card"><h4>2. Point at real data</h4><p>Swap the synthetic tables for your chat logs and call transcripts — the SQL is unchanged.</p></div>
+        <div class="card"><h4>3. Trend the telemetry</h4><p>Materialize sentiment + topic per day and chart it in your BI layer.</p></div>
+        <div class="card"><h4>4. Feed churn</h4><p>Join at-risk signals to billing and hand them to the churn model and CX team.</p></div>
+      </div>
+      <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">
+        <strong>The takeaway: customer-experience telemetry is now a SQL query, not an ML project.</strong>
+      </div>
+    </section>
+
+    <!-- SLIDES_END -->
+
+  </main>
+
+  <script>
+    // Progress bar
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      document.querySelector('.progress-bar').style.width = progress + '%';
+    });
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.anim-fade').forEach(el => observer.observe(el));
+
+    // Active nav tracking
+    const sections = document.querySelectorAll('.slide');
+    const navLinks = document.querySelectorAll('.sidebar a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 200;
+        if (window.scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -39,6 +39,22 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 
 {{LAB_SECTIONS_LIST}}
 
+### Run in Snowflake (Workspaces / Git) — recommended for demos
+
+Run everything inside Snowsight so `get_active_session()` handles auth (no local OAuth / connection
+setup needed):
+
+1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
+   `https://github.com/{{GITHUB_USER}}/{{REPO_NAME}}`.
+2. Open `{{SLUG}}/lab/setup.sql` and run it.
+3. If present, run `lab/data_gen.py` as a notebook cell (uses `get_active_session()` — no
+   `--connection` needed in-notebook).
+4. Open `lab/{{SLUG}}-lab.ipynb` and walk the sections.
+
+Running locally instead? Use `snow sql -f lab/setup.sql` and `python lab/data_gen.py --connection
+<name>` with a connection whose **role can create the objects** and use a warehouse. If a referenced
+warehouse already exists under a different owner, grant your role `USAGE, OPERATE` on it.
+
 ## Key Concepts
 
 {{KEY_CONCEPTS_LIST}}
