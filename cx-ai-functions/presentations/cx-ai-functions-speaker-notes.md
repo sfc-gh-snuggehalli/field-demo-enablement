@@ -44,7 +44,24 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 3: The Pipeline
+## Slide 3: Architecture
+
+**Talking Points:**
+- Orient the room before the function-by-function detail: three text sources (CHAT_THREADS, CALL_TRANSCRIPTS, SUPPORT_TICKETS) flow through one AI Functions layer and land back as enriched CX telemetry columns in the warehouse.
+- The built-in functions handle the common cases; AI Function Studio covers custom AI_COMPLETE functions in the same layer.
+- Call out the downstream arrow: that enriched telemetry is exactly what the Conversational BI module's semantic view and agent consume.
+
+**Internal Context:**
+- This is the "text in, governed telemetry out, no models to deploy" mental model — every later slide fills in one function in this diagram.
+- The last box (Conversational BI) is the cross-module bridge; use it to set up the paired demo without diving in yet.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-function-studio
+
+---
+
+## Slide 4: The Pipeline
 
 **Talking Points:**
 - Show the shape before the detail: ingest → sentiment → topics → extract → themes → at-risk.
@@ -59,7 +76,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 4: Sentiment
+## Slide 5: Sentiment
 
 **Talking Points:**
 - `AI_SENTIMENT(text[, categories])` returns overall sentiment plus per-category (aspect) sentiment in one call.
@@ -74,7 +91,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 5: Topic Modeling
+## Slide 6: Topic Modeling
 
 **Talking Points:**
 - `AI_CLASSIFY(input, categories[, config])` maps each conversation to your support taxonomy; `:labels` holds the result.
@@ -89,7 +106,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 6: Extraction
+## Slide 7: Extraction
 
 **Talking Points:**
 - `AI_EXTRACT(text => ..., responseFormat => {...})` pulls named fields from free text; result is under `:response`.
@@ -104,7 +121,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 7: Theme Discovery
+## Slide 8: Theme Discovery
 
 **Talking Points:**
 - `AI_AGG(expr, instruction)` reduces a whole column of text with a natural-language instruction; `AI_SUMMARIZE_AGG(expr)` gives a general summary.
@@ -121,7 +138,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 8: At-Risk Detection
+## Slide 9: At-Risk Detection
 
 **Talking Points:**
 - `AI_FILTER` evaluates a natural-language predicate and returns BOOLEAN, so it drops straight into `WHERE`.
@@ -136,7 +153,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 9: Voice & Calls
+## Slide 10: Voice & Calls
 
 **Talking Points:**
 - `AI_TRANSCRIBE(TO_FILE(...))` turns call recordings into text; from there it's the exact same sentiment/topic/filter pipeline.
@@ -151,7 +168,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 10: AI Function Studio
+## Slide 11: AI Function Studio
 
 **Talking Points:**
 - Built-ins cover most CX telemetry. When the customer needs a domain-specific label or scoring rubric, build a custom function on `AI_COMPLETE` and tune it in AI Function Studio.
@@ -167,7 +184,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 11: Built-in vs Custom
+## Slide 12: Built-in vs Custom
 
 **Talking Points:**
 - Use the table as a cheat sheet: match each CX need to the right function, and reserve Studio for custom labels/rubrics.
@@ -180,7 +197,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 12: Next Steps
+## Slide 13: Next Steps
 
 **Talking Points:**
 - Four concrete actions: run the lab, point the same SQL at real chat/call data, trend the telemetry in BI, and feed at-risk signals to churn.

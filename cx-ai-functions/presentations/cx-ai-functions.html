@@ -346,6 +346,48 @@
       font-weight: 300;
     }
 
+    /* Layered architecture diagram: vertical levels of nodes joined by arrows. */
+    .arch-diagram {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arch-diagram .level {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-diagram .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .arch-diagram .node-primary {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(41, 181, 232, 0.2);
+    }
+
+    .arch-diagram .node-accent {
+      border-color: var(--accent);
+    }
+
+    .arch-diagram .arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -414,6 +456,7 @@
     <!-- NAV_LINKS_START -->
     <a href="#hero">Overview</a>
     <a href="#problem">The Problem</a>
+    <a href="#architecture">Architecture</a>
     <a href="#pipeline">The Pipeline</a>
     <a href="#sentiment">Sentiment</a>
     <a href="#topics">Topic Modeling</a>
@@ -455,7 +498,36 @@
       <div class="warning-box anim-fade"><strong>The gap:</strong> the richest signal about customer experience is unstructured and effectively invisible to analytics.</div>
     </section>
 
-    <!-- Slide 3: The Pipeline -->
+    <!-- Slide 3: Architecture -->
+    <section class="slide" id="architecture">
+      <h2>Architecture</h2>
+      <h3>Text in, governed telemetry out &mdash; no models to deploy</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">CHAT_THREADS</div>
+          <div class="node">CALL_TRANSCRIPTS</div>
+          <div class="node">SUPPORT_TICKETS</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">Built-in AI Functions<br><span style="color: var(--text-muted); font-size: 0.8rem;">SENTIMENT / CLASSIFY / EXTRACT / AGG / SUMMARIZE_AGG / FILTER</span></div>
+          <div class="node node-accent">AI Function Studio<br><span style="color: var(--text-muted); font-size: 0.8rem;">custom AI_COMPLETE functions</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-primary"><strong>Enriched CX telemetry</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">sentiment, topics, entities, risk flags</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">Conversational BI module<br><span style="color: var(--text-muted); font-size: 0.8rem;">semantic view + agent</span></div>
+        </div>
+      </div>
+      <div class="context-box anim-fade">
+        <strong>Pattern:</strong> every step is a single SQL call over your conversation tables &mdash; no endpoints, no orchestration. The AI Functions layer turns free text into structured columns that land back in the warehouse and feed the Conversational BI agent downstream.
+      </div>
+    </section>
+
+    <!-- Slide 4: The Pipeline -->
     <section class="slide" id="pipeline">
       <h2>One SQL pipeline, raw text to telemetry</h2>
       <h3>Each step is a single AI Function over your conversation tables</h3>

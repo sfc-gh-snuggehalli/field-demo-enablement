@@ -49,4 +49,17 @@
 
 ---
 
+## Slide 3: Architecture
+
+**Talking Points:**
+- {{SLIDE3_TALKING_POINTS}}
+
+**Internal Context:**
+- {{SLIDE3_INTERNAL_CONTEXT}}
+
+**References:**
+- {{SLIDE3_REFERENCES}}
+
+---
+
 <!-- Continue one block per remaining slide, ending with the Next Steps slide. -->

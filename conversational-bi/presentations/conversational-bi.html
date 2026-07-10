@@ -346,6 +346,48 @@
       font-weight: 300;
     }
 
+    /* Layered architecture diagram: vertical levels of nodes joined by arrows. */
+    .arch-diagram {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arch-diagram .level {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-diagram .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .arch-diagram .node-primary {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(41, 181, 232, 0.2);
+    }
+
+    .arch-diagram .node-accent {
+      border-color: var(--accent);
+    }
+
+    .arch-diagram .arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -414,6 +456,7 @@
     <!-- NAV_LINKS_START -->
     <a href="#hero">Overview</a>
     <a href="#problem">The Problem</a>
+    <a href="#architecture">Architecture</a>
     <a href="#why-semantic">Why Semantic Views</a>
     <a href="#build">Build the View</a>
     <a href="#query">Query the View</a>
@@ -454,7 +497,36 @@
       <div class="warning-box anim-fade"><strong>The cost:</strong> inconsistent metrics erode trust in every dashboard built on top of them.</div>
     </section>
 
-    <!-- Slide 3: Why Semantic Views -->
+    <!-- Slide 3: Architecture -->
+    <section class="slide" id="architecture">
+      <h2>Architecture</h2>
+      <h3>One semantic layer, two retrieval paths, one agent</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">Structured tables<br><span style="color: var(--text-muted); font-size: 0.8rem;">ANALYTICS (customers, usage, churn)</span></div>
+          <div class="node">Unstructured chat<br><span style="color: var(--text-muted); font-size: 0.8rem;">AI_FUNCTIONS.CHAT_THREADS</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">CX_ANALYTICS_SV<br><span style="color: var(--text-muted); font-size: 0.8rem;">semantic view</span></div>
+          <div class="node node-accent">CHAT_SEARCH<br><span style="color: var(--text-muted); font-size: 0.8rem;">Cortex Search service</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">Cortex Analyst<br><span style="color: var(--text-muted); font-size: 0.8rem;">text-to-SQL tool</span></div>
+          <div class="node">Cortex Search<br><span style="color: var(--text-muted); font-size: 0.8rem;">retrieval tool</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-primary"><strong>CX_INTELLIGENCE_AGENT</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">Snowflake Intelligence</span></div>
+        </div>
+      </div>
+      <div class="context-box anim-fade">
+        <strong>Pattern:</strong> the semantic view governs the numbers (structured), Cortex Search grounds the "why" (unstructured), and the agent orchestrates both tools — so one natural-language question can join a churn metric to the support chats that explain it.
+      </div>
+    </section>
+
+    <!-- Slide 4: Why Semantic Views -->
     <section class="slide" id="why-semantic">
       <h2>Why a semantic view</h2>
       <h3>Define the business once; every tool inherits it</h3>

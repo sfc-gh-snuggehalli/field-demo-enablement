@@ -41,7 +41,24 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 3: Why Semantic Views
+## Slide 3: Architecture
+
+**Talking Points:**
+- Orient the room before the deep-dive: two inputs (structured tables in ANALYTICS, unstructured chat in AI_FUNCTIONS.CHAT_THREADS) feed two governed objects — the CX_ANALYTICS_SV semantic view and the CHAT_SEARCH Cortex Search service.
+- Those become two agent tools (Cortex Analyst for text-to-SQL, Cortex Search for retrieval), and CX_INTELLIGENCE_AGENT orchestrates both behind Snowflake Intelligence.
+- The payoff: one natural-language question can join a churn metric to the support chats that explain it.
+
+**Internal Context:**
+- This is the "one semantic layer, two retrieval paths, one agent" pattern — reuse it as the mental model for the rest of the deck; every later slide fills in one box of this diagram.
+- CHAT_SEARCH reads Module A's CHAT_THREADS, so note the cross-module dependency here rather than surprising them on the Cortex Search slide.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents
+- https://docs.snowflake.com/en/user-guide/views-semantic/overview
+
+---
+
+## Slide 4: Why Semantic Views
 
 **Talking Points:**
 - Define the business once; every tool inherits it. Governed definitions (RBAC, sharing) in one schema object, and it's tool-agnostic — Analyst, agents, and Sigma all read the same view.
@@ -57,7 +74,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 4: Build the View
+## Slide 5: Build the View
 
 **Talking Points:**
 - Walk the clauses: TABLES (with PRIMARY KEY), RELATIONSHIPS, FACTS, METRICS. Relationship types are inferred — no join_type needed.
@@ -73,7 +90,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 5: Query the View
+## Slide 6: Query the View
 
 **Talking Points:**
 - `SELECT ... FROM SEMANTIC_VIEW(view METRICS ... DIMENSIONS ...)` — pick metrics and dimensions; joins and metric logic are already defined.
@@ -87,7 +104,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 6: Cortex Analyst
+## Slide 7: Cortex Analyst
 
 **Talking Points:**
 - Point Cortex Analyst at the semantic view; business users ask in natural language and get governed SQL.
@@ -102,7 +119,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 7: Cortex Search
+## Slide 8: Cortex Search
 
 **Talking Points:**
 - Create a Cortex Search service over the chat threads from the AI Functions module — this indexes the unstructured side.
@@ -118,7 +135,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 8: The Agent
+## Slide 9: The Agent
 
 **Talking Points:**
 - The agent has two tools: Cortex Analyst over the semantic view (structured) and Cortex Search over chat telemetry (unstructured).
@@ -134,7 +151,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 9: Extensions & MCP
+## Slide 10: Extensions & MCP
 
 **Talking Points:**
 - Extend with custom tools (stored procs/UDFs, type `generic`) for actions like opening a save-motion task; the built-in `data_to_chart` tool visualizes results; MCP connectors reach external systems like Jira/Salesforce.
@@ -149,7 +166,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 10: When to Use What
+## Slide 11: When to Use What
 
 **Talking Points:**
 - Use the table to route: metric questions → Analyst; conversation questions → Search; combined → the agent; actions → custom tool / MCP.
@@ -163,7 +180,7 @@ BI layer and they use desktop assistants + MCP, so the extensibility story matte
 
 ---
 
-## Slide 11: Next Steps
+## Slide 12: Next Steps
 
 **Talking Points:**
 - Four actions: run the lab, model real metrics into one semantic view, wire up Analyst for self-serve, and ship the agent into Snowsight/Sigma/MCP.

@@ -346,6 +346,49 @@
       font-weight: 300;
     }
 
+    /* Layered architecture diagram: vertical levels of nodes joined by arrows.
+       Use for system architecture (who talks to whom); use .flow-diagram for linear pipelines. */
+    .arch-diagram {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arch-diagram .level {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-diagram .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .arch-diagram .node-primary {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(41, 181, 232, 0.2);
+    }
+
+    .arch-diagram .node-accent {
+      border-color: var(--accent);
+    }
+
+    .arch-diagram .arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -419,6 +462,7 @@
     <!-- NAV_LINKS_START -->
     <a href="#hero">Overview</a>
     <a href="#problem">The Problem</a>
+    <a href="#architecture">Architecture</a>
     <a href="#closing">Next Steps</a>
     <!-- NAV_LINKS_END -->
   </nav>
@@ -455,6 +499,30 @@
         <div class="card"><h4>{{PROBLEM_2_TITLE}}</h4><p>{{PROBLEM_2_BODY}}</p></div>
         <div class="card"><h4>{{PROBLEM_3_TITLE}}</h4><p>{{PROBLEM_3_BODY}}</p></div>
         <div class="card"><h4>{{PROBLEM_4_TITLE}}</h4><p>{{PROBLEM_4_BODY}}</p></div>
+      </div>
+    </section>
+
+    <!-- Slide 3: Architecture (layered .arch-diagram of the objects + how they connect) -->
+    <section class="slide" id="architecture">
+      <h2>{{ARCH_HEADING}}</h2>
+      <h3>{{ARCH_SUBTITLE}}</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">{{ARCH_SOURCE_1}}</div>
+          <div class="node">{{ARCH_SOURCE_2}}</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">{{ARCH_LAYER_1}}</div>
+          <div class="node node-accent">{{ARCH_LAYER_2}}</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-primary"><strong>{{ARCH_TOP}}</strong></div>
+        </div>
+      </div>
+      <div class="context-box anim-fade">
+        <strong>Pattern:</strong> {{ARCH_PATTERN}}
       </div>
     </section>
 

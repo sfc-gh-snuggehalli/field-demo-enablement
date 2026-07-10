@@ -59,7 +59,9 @@ Before writing SQL or slides, ground the content in real Snowflake behavior:
    `{{STAT*}}` / `{{PROBLEM_*}}` / `{{NEXT_*}}` / `{{CLOSING_CALLOUT}}` placeholders.
 3. Build the real slide arc per `reference/design-system.md`: keep hero + problem + closing,
    and insert feature/concept/comparison/decision slides between the `<!-- ADD FEATURE ... -->`
-   marker and the closing slide. Each slide needs a unique `id`.
+   marker and the closing slide. Every deck MUST keep an Architecture slide (`id="architecture"`,
+   layered `.arch-diagram`) right after The Problem — fill its `{{ARCH_*}}` placeholders with the
+   real objects and how they connect. Each slide needs a unique `id`.
 4. Rebuild the sidebar nav between `<!-- NAV_LINKS_START -->` and `<!-- NAV_LINKS_END -->`:
    one `<a href="#id">Label</a>` per slide, in order. Every href must match a slide `id`.
 5. Remove the template's instructional HTML comments once content is in.
@@ -173,6 +175,7 @@ Plus updated root `README.md` (table row + section + tree node).
 
 - Real function names/signatures only — verify via docs (Step 2). No fabricated SQL.
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
+- Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
 - setup.sql DDL compiles; notebook is valid JSON and is NOT executed here.
 - data_gen.py compiles (`py_compile`) and uses `write_pandas`; NOT executed here.
 - Structured data via SQL GENERATOR; unstructured text via data_gen.py write_pandas.

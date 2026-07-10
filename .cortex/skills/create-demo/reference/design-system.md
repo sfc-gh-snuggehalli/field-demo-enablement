@@ -39,6 +39,7 @@ sidebar `<nav>`. The active-nav script keys off these ids. Wrap content blocks i
 | Feature/pain cards | `.card-grid` > `.card` (`h4` + `p`) | 2-6 parallel points; auto-wraps |
 | Side-by-side | `.two-col` > 2x `.card` | Compare exactly two things |
 | Process flow | `.flow-diagram` > `.flow-step` (`.step-label` + `.step-title`) separated by `<div class="flow-arrow">&rarr;</div>` | Sequential pipeline; add `.active` to highlight steps |
+| Architecture diagram | `.arch-diagram` > stacked `.level` (each holding one or more `.node`), separated by `<div class="arrow">&darr;</div>` | Layered system architecture (which objects talk to which). Accent the entry point with `.node node-primary` and mid-tier objects with `.node node-accent`. Use this for the Architecture slide; use `.flow-diagram` for linear pipelines |
 | Comparison table | `<table>` with `<thead>`/`<tbody>` | Multi-dimension comparisons |
 | Status pill | `<span class="badge-green\|orange\|red\|blue\|purple">` | Inline ratings inside tables/cards |
 | Emphasis callouts | `.highlight-box` (blue), `.context-box` (purple), `.warning-box` (orange) | Key insight / internal framing / caveat |
@@ -64,7 +65,11 @@ Wrap tokens by hand:
 
 1. **Hero** (`id="hero"`) — title + 4 stat cards.
 2. **The Problem** (`id="problem"`) — card-grid of pain points, optional warning-box.
-3-N. **Feature/concept slides** — one per capability. Mix code blocks, flow diagrams,
+3. **Architecture** (`id="architecture"`) — layered `.arch-diagram` showing the objects
+   involved and how they connect (sources &rarr; processing layer &rarr; entry point),
+   plus a `.context-box` summarizing the pattern. Every deck should have this slide right
+   after The Problem — it orients the audience before the feature deep-dives.
+4-N. **Feature/concept slides** — one per capability. Mix code blocks, flow diagrams,
    two-col, and callout boxes. This is where the tool/feature is demonstrated.
 - **Comparison** (`id="comparison"`) — table with badges when contrasting approaches.
 - **Decision framework** (`id="decision"`) — card-grid with colored borders
