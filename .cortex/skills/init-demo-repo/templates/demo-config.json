@@ -1,0 +1,15 @@
+{
+  "github_user": "{{GITHUB_USER}}",
+  "repo_name": "{{REPO_NAME}}",
+  "repo_title": "{{REPO_TITLE}}",
+  "default_warehouse_size": "MEDIUM",
+  "palette": {
+    "bg": "#0F1B2D",
+    "sidebar_bg": "#1B2A4A",
+    "primary": "#29B5E8",
+    "accent": "#7C3AED",
+    "green": "#10B981",
+    "orange": "#F59E0B",
+    "red": "#EF4444"
+  }
+}

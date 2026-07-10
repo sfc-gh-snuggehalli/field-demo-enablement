@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Snowflake CLI local state
+.snowflake/
+
+# Cortex Code runtime state — but keep the in-repo skills committed
+.cortex/*
+!.cortex/skills/
