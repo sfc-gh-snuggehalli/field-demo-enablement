@@ -8,7 +8,8 @@ fast-growing data team wants to understand which conversations are meaningful, w
 ask about, and how they feel — without standing up ML infrastructure. This module shows how
 Snowflake AI Functions convert raw chat threads and call transcripts into structured
 customer-experience telemetry in SQL, and how AI Function Studio optimizes a custom function.
-Pairs with the "Conversational BI" module, which analyzes this telemetry alongside churn/revenue.
+Governed metrics (semantic view + Cortex Agent) and app UX telemetry ingestion are part of this
+same module — the second notebook and the Governed Metrics / CX Agent slides.
 
 ---
 
@@ -49,11 +50,11 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 **Talking Points:**
 - Orient the room before the function-by-function detail: three text sources (CHAT_THREADS, CALL_TRANSCRIPTS, SUPPORT_TICKETS) flow through one AI Functions layer and land back as enriched CX telemetry columns in the warehouse.
 - The built-in functions handle the common cases; AI Function Studio covers custom AI_COMPLETE functions in the same layer.
-- Call out the downstream arrow: that enriched telemetry is exactly what the Conversational BI module's semantic view and agent consume.
+- Call out both ends: app UX telemetry (chat + thumbs up/down) feeds in at the top via a stage, and the enriched telemetry at the bottom is exactly what the semantic view and agent (later in this deck) consume.
 
 **Internal Context:**
 - This is the "text in, governed telemetry out, no models to deploy" mental model — every later slide fills in one function in this diagram.
-- The last box (Conversational BI) is the cross-module bridge; use it to set up the paired demo without diving in yet.
+- The semantic view + Analyst + agent are now part of this same module (the old Conversational-BI module folded in); use the last box to tee up the Governed Metrics and CX Agent slides later.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql
@@ -76,7 +77,24 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 5: Sentiment
+## Slide 5: App UX Telemetry
+
+**Talking Points:**
+- This answers the #1 field question: "how does my app's data actually get into Snowflake?" Chat threads and thumbs up/down land as JSON in a stage, then flow to curated tables.
+- Two patterns, both shown live: raw `VARIANT` landing (`COPY INTO`, schema-on-read) and curated typed tables (`LATERAL FLATTEN`). Raw is the durable landing zone; curated is what you serve.
+- In production the manual `COPY` becomes Snowpipe or Snowpipe Streaming; the FLATTEN can be a Dynamic Table or Task.
+
+**Internal Context:**
+- The customer points their own app at the stage with this JSON shape and nothing downstream changes — that's the reusable-template message.
+- Thumbs up/down rolls up to `ANALYTICS.CUSTOMER_FEEDBACK`, which the semantic view exposes as `thumbs_down_rate` — connecting app UX to a governed metric the agent can answer.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/data-load-overview
+- https://docs.snowflake.com/en/user-guide/data-load-snowpipe-streaming-overview
+
+---
+
+## Slide 6: Sentiment
 
 **Talking Points:**
 - `AI_SENTIMENT(text[, categories])` returns overall sentiment plus per-category (aspect) sentiment in one call.
@@ -91,7 +109,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 6: Topic Modeling
+## Slide 7: Topic Modeling
 
 **Talking Points:**
 - `AI_CLASSIFY(input, categories[, config])` maps each conversation to your support taxonomy; `:labels` holds the result.
@@ -106,7 +124,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 7: Extraction
+## Slide 8: Extraction
 
 **Talking Points:**
 - `AI_EXTRACT(text => ..., responseFormat => {...})` pulls named fields from free text; result is under `:response`.
@@ -121,7 +139,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 8: Theme Discovery
+## Slide 9: Theme Discovery
 
 **Talking Points:**
 - `AI_AGG(expr, instruction)` reduces a whole column of text with a natural-language instruction; `AI_SUMMARIZE_AGG(expr)` gives a general summary.
@@ -138,7 +156,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 9: At-Risk Detection
+## Slide 10: At-Risk Detection
 
 **Talking Points:**
 - `AI_FILTER` evaluates a natural-language predicate and returns BOOLEAN, so it drops straight into `WHERE`.
@@ -153,7 +171,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 10: Voice & Calls
+## Slide 11: Voice & Calls
 
 **Talking Points:**
 - `AI_TRANSCRIBE(TO_FILE(...))` turns call recordings into text; from there it's the exact same sentiment/topic/filter pipeline.
@@ -168,7 +186,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 11: AI Function Studio
+## Slide 12: AI Function Studio
 
 **Talking Points:**
 - Built-ins cover most CX telemetry. When the customer needs a domain-specific label or scoring rubric, build a custom function on `AI_COMPLETE` and tune it in AI Function Studio.
@@ -192,7 +210,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 12: Built-in vs Custom
+## Slide 13: Built-in vs Custom
 
 **Talking Points:**
 - Use the table as a cheat sheet: match each CX need to the right function, and reserve Studio for custom labels/rubrics.
@@ -205,7 +223,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 13: Where AI functions plug in
+## Slide 14: Where AI functions plug in
 
 **Talking Points:**
 - Reframe AI functions as reusable building blocks, not a dead-end SQL feature: build a label once as a UDF, reuse it three ways.
@@ -225,7 +243,38 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 14: Cost & Usage
+## Slide 15: Governed metrics
+
+**Talking Points:**
+- One semantic view (`ANALYTICS.CX_ANALYTICS_SV`) defines churn, MRR, engagement, and the app-fed `thumbs_down_rate` once; `SEMANTIC_VIEW()` queries it with no JOINs.
+- The same definition powers Cortex Analyst NL→SQL, the agent, and BI tools like Sigma — change it once, it changes everywhere.
+
+**Internal Context:**
+- `churn_rate` and `thumbs_down_rate` are derived metrics (scalar expressions of other metrics) — defined once, reused everywhere.
+- This is the old Conversational-BI module folded in; the objects are created by setup.sql and queried live in the extensions notebook.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/views-semantic/overview
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst
+
+---
+
+## Slide 16: The CX Intelligence agent
+
+**Talking Points:**
+- One agent (`CX_INTELLIGENCE_AGENT`) combines Cortex Analyst (semantic view), Cortex Search (chat telemetry), and the escalation UDF tool.
+- Ask "which churn-risk customers had negative support chats?" or "what's our thumbs-down rate by plan?" — the agent routes to the right tool automatically.
+
+**Internal Context:**
+- Analyst answers metric questions from the governed view; Search answers "what did customers say"; the UDF returns escalation urgency. Extend with more custom tools or MCP.
+- Chat with it in Snowsight (AI & ML → Agents → "CX Intelligence"); the extensions notebook confirms it with SHOW AGENTS.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents
+
+---
+
+## Slide 17: Cost & Usage
 
 **Talking Points:**
 - Set the mental model: AI Functions bill by **tokens processed** (input + output), or pages for document functions — not by warehouse size. A row-wise function over 1M rows is ~1M model calls.
@@ -245,7 +294,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 15: Estimate cost before you run
+## Slide 18: Estimate cost before you run
 
 **Talking Points:**
 - The headline: you can price a full-table run *before* launching it — no need to run it and find out.
@@ -266,7 +315,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 16: Guardrails & Quotas
+## Slide 19: Guardrails & Quotas
 
 **Talking Points:**
 - Lead with **per-user quotas**: a first-class `SNOWFLAKE.CORE.QUOTA` object that enforces monthly/daily per-user credit limits and **auto-blocks** AI requests at the limit — no custom tasks, no scheduling.
@@ -288,7 +337,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 17: Next Steps
+## Slide 20: Next Steps
 
 **Talking Points:**
 - Four concrete actions: run the lab, point the same SQL at real chat/call data, trend the telemetry in BI, and feed at-risk signals to churn.
@@ -296,7 +345,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 **Internal Context:**
 - Before you leave, remind the room of the guardrails: quotas + alerts + cancel mean they can turn analysts loose without budget fear.
-- Natural bridge to the Conversational BI module — that demo consumes this telemetry inside a semantic view + agent.
+- Natural bridge to the second notebook (extensions), where the semantic view + agent analyze this telemetry alongside churn/revenue — same module, runs live.
 - Leave-behind: this repo's deck + lab so champions can re-run it internally.
 
 **References:**

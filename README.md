@@ -24,7 +24,6 @@ hands-on lab with SQL setup and a notebook.
 | Module | Audience | Format | Presentation |
 |--------|----------|--------|--------------|
 | AI Functions: Customer Experience Telemetry | Sales Engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
-| Conversational BI: Semantic Views + Cortex Analyst + Agent | Sales Engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/conversational-bi/presentations/conversational-bi.html) |
 | Donor Lapse/Churn Intelligence: Snowflake ML → Agent | SEs + Customer ML Teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 <!-- MODULE_TABLE_END -->
 
@@ -38,31 +37,18 @@ hands-on lab with SQL setup and a notebook.
 **Location:** `cx-ai-functions/`
 
 Turn raw chat threads, call transcripts, and support tickets into structured sentiment and
-topic telemetry — entirely in SQL with Snowflake AI Functions — then optimize a custom
-function with AI Function Studio.
+topic telemetry — entirely in SQL with Snowflake AI Functions — optimize a custom function with
+AI Function Studio, and govern it with a semantic view and a Cortex Agent. Also shows how an app's
+own UX data (chat threads + thumbs up/down) flows in via a stage → raw `VARIANT` → curated tables.
 
 | File | Description |
 |------|-------------|
-| `presentations/cx-ai-functions.html` | Slide deck (12 slides) |
+| `presentations/cx-ai-functions.html` | Slide deck (20 slides) |
 | `presentations/cx-ai-functions-speaker-notes.md` | Speaker notes |
-| `lab/setup.sql` | Database, schema, warehouse, structured `CUSTOMERS` |
+| `lab/setup.sql` | Schemas, warehouse, structured `CUSTOMERS`, app-telemetry objects, semantic view, Cortex Search, agent |
 | `lab/data_gen.py` | Snowpark loader for the unstructured text tables |
-| `lab/cx-ai-functions-lab.ipynb` | Hands-on lab notebook |
-
-### Conversational BI: Semantic Views + Cortex Analyst + Agent
-
-**Location:** `conversational-bi/`
-
-Centralize churn, revenue, and engagement in one governed semantic view, query it in natural
-language with Cortex Analyst, and wrap it in a Cortex Agent that also searches the CX chat
-telemetry from the AI Functions module.
-
-| File | Description |
-|------|-------------|
-| `presentations/conversational-bi.html` | Slide deck (11 slides) |
-| `presentations/conversational-bi-speaker-notes.md` | Speaker notes |
-| `lab/setup.sql` | Structured tables, semantic view, Cortex Search service, agent |
-| `lab/conversational-bi-lab.ipynb` | Hands-on lab notebook |
+| `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — AI-function pipeline + app UX telemetry ingestion + AI Function Studio |
+| `lab/cx-ai-functions-extensions.ipynb` | Notebook 2 — semantic view / Analyst / Search / Agent (runs live) + cost & guardrails |
 
 ### Donor Lapse/Churn Intelligence: Snowflake ML → Agent
 
@@ -96,7 +82,7 @@ field-demo-enablement/
 │   └── workflows/
 │       └── static.yml          # GitHub Pages deploy
 <!-- REPO_TREE_START -->
-├── cx-ai-functions/            # AI Functions: Customer Experience Telemetry
+├── cx-ai-functions/            # AI Functions + Conversational BI: CX Intelligence
 │   ├── README.md
 │   ├── presentations/
 │   │   ├── cx-ai-functions.html
@@ -104,15 +90,8 @@ field-demo-enablement/
 │   └── lab/
 │       ├── setup.sql
 │       ├── data_gen.py
-│       └── cx-ai-functions-lab.ipynb
-├── conversational-bi/          # Conversational BI: Semantic Views + Analyst + Agent
-│   ├── README.md
-│   ├── presentations/
-│   │   ├── conversational-bi.html
-│   │   └── conversational-bi-speaker-notes.md
-│   └── lab/
-│       ├── setup.sql
-│       └── conversational-bi-lab.ipynb
+│       ├── cx-ai-functions-lab.ipynb
+│       └── cx-ai-functions-extensions.ipynb
 ├── donor-churn-ml/             # Donor Lapse/Churn Intelligence: Snowflake ML → Agent
 │   ├── README.md
 │   ├── presentations/

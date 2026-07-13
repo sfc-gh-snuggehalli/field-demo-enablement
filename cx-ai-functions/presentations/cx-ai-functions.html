@@ -458,6 +458,7 @@
     <a href="#problem">The Problem</a>
     <a href="#architecture">Architecture</a>
     <a href="#pipeline">The Pipeline</a>
+    <a href="#ingest">App Telemetry</a>
     <a href="#sentiment">Sentiment</a>
     <a href="#topics">Topic Modeling</a>
     <a href="#extract">Extraction</a>
@@ -467,6 +468,8 @@
     <a href="#studio">AI Function Studio</a>
     <a href="#comparison">Built-in vs Custom</a>
     <a href="#extend">Where It Plugs In</a>
+    <a href="#semantic">Governed Metrics</a>
+    <a href="#agent">CX Agent</a>
     <a href="#cost">Cost &amp; Usage</a>
     <a href="#estimate">Estimate Before You Run</a>
     <a href="#guardrails">Guardrails &amp; Quotas</a>
@@ -508,6 +511,7 @@
       <h3>Text in, governed telemetry out &mdash; no models to deploy</h3>
       <div class="arch-diagram anim-fade">
         <div class="level">
+          <div class="node">App UX telemetry<br><span style="color: var(--text-muted); font-size: 0.8rem;">stage &rarr; VARIANT &rarr; APP_MESSAGES / APP_FEEDBACK</span></div>
           <div class="node">CHAT_THREADS</div>
           <div class="node">CALL_TRANSCRIPTS</div>
           <div class="node">SUPPORT_TICKETS</div>
@@ -519,15 +523,15 @@
         </div>
         <div class="arrow">&darr;</div>
         <div class="level">
-          <div class="node node-primary"><strong>Enriched CX telemetry</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">sentiment, topics, entities, risk flags</span></div>
+          <div class="node node-primary"><strong>Enriched CX telemetry</strong><br><span style="color: var(--text-muted); font-size: 0.8rem;">sentiment, topics, entities, risk flags, thumbs up/down</span></div>
         </div>
         <div class="arrow">&darr;</div>
         <div class="level">
-          <div class="node">Conversational BI module<br><span style="color: var(--text-muted); font-size: 0.8rem;">semantic view + agent</span></div>
+          <div class="node node-primary">Semantic view + Cortex Analyst + Agent<br><span style="color: var(--text-muted); font-size: 0.8rem;">governed metrics &bull; NL &rarr; SQL &bull; CX Intelligence agent</span></div>
         </div>
       </div>
       <div class="context-box anim-fade">
-        <strong>Pattern:</strong> every step is a single SQL call over your conversation tables &mdash; no endpoints, no orchestration. The AI Functions layer turns free text into structured columns that land back in the warehouse and feed the Conversational BI agent downstream.
+        <strong>Pattern:</strong> every step is a single SQL call over your conversation tables &mdash; no endpoints, no orchestration. App events land via a stage, AI Functions turn free text into structured columns, and a governed semantic view + agent sit on top &mdash; all in one module.
       </div>
     </section>
 
@@ -549,6 +553,34 @@
         <div class="flow-step active"><div class="step-label">AI_FILTER</div><div class="step-title">At-risk</div></div>
       </div>
       <div class="highlight-box anim-fade">The output is a governed telemetry table you can trend, join to billing, and feed a churn model — built with SQL your team already writes.</div>
+    </section>
+
+    <!-- Slide 5: App UX Telemetry -->
+    <section class="slide" id="ingest">
+      <h2>How your app's data flows in</h2>
+      <h3>Chat threads and thumbs up/down &mdash; from the app to governed tables</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">Your app<br><span style="color: var(--text-muted); font-size: 0.8rem;">messages + thumbs up/down, emitted as JSON</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">Stage (JSON files)<br><span style="color: var(--text-muted); font-size: 0.8rem;">COPY INTO &bull; Snowpipe &bull; Snowpipe Streaming</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">RAW_APP_EVENTS<br><span style="color: var(--text-muted); font-size: 0.8rem;">VARIANT landing zone (schema-on-read)</span></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-primary">APP_THREADS / APP_MESSAGES / APP_FEEDBACK<br><span style="color: var(--text-muted); font-size: 0.8rem;">curated, typed, joinable to CUSTOMERS</span></div>
+        </div>
+      </div>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>Raw landing</h4><p><code>COPY INTO</code> a <code>VARIANT</code> column keeps the full app payload verbatim &mdash; capture everything the app sends and evolve the schema without breaking ingestion.</p></div>
+        <div class="card"><h4>Curated tables</h4><p><code>LATERAL FLATTEN</code> unpacks the <code>messages</code> and <code>feedback</code> arrays into typed tables that feed the AI functions and the semantic view's <code>thumbs_down_rate</code>.</p></div>
+      </div>
+      <div class="context-box anim-fade"><strong>SE framing:</strong> the customer points their own app at a stage (or a streaming channel) with this JSON shape &mdash; the rest of the pipeline is unchanged. Raw is the immutable landing zone; curated is what you serve.</div>
     </section>
 
     <!-- Slide 4: Sentiment -->
@@ -676,6 +708,47 @@
         <div class="card"><h4>One answer, three tools</h4><p>An agent can combine Analyst (metrics), Search (relevant tickets), and your custom UDF (urgency) in a single response — all built on AI functions.</p></div>
       </div>
       <div class="context-box anim-fade"><strong>SE framing:</strong> AI functions aren't a dead-end SQL feature — they are reusable building blocks. Build the label once as a UDF, then reuse it as an agent tool, an Analyst dimension, and a Search enrichment step. Materialize the column for interactive use so inference runs once per row, not once per question.</div>
+    </section>
+
+    <!-- Slide 14: Governed metrics -->
+    <section class="slide" id="semantic">
+      <h2>Governed metrics with a semantic view</h2>
+      <h3>Define churn, revenue, and thumbs-down once; every tool inherits it</h3>
+      <pre><span class="comment">-- Churn and app-feedback thumbs-down rate by plan — no JOINs, no re-written logic</span>
+<span class="keyword">SELECT</span> * <span class="keyword">FROM</span> <span class="function">SEMANTIC_VIEW</span>(
+  FIELD_CX_DEMO.ANALYTICS.CX_ANALYTICS_SV
+  <span class="keyword">METRICS</span> churn_rate, thumbs_down_rate, customer_count
+  <span class="keyword">DIMENSIONS</span> customers.plan
+);</pre>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>One definition</h4><p>Tables, joins, facts, and metrics live in <code>ANALYTICS.CX_ANALYTICS_SV</code> — including <code>thumbs_down_rate</code> fed by the app telemetry. Change it once, it changes everywhere.</p></div>
+        <div class="card"><h4>Tool-agnostic</h4><p>The same view powers <code>SEMANTIC_VIEW()</code> SQL, Cortex Analyst NL&rarr;SQL, the agent, and BI tools like Sigma.</p></div>
+      </div>
+      <div class="highlight-box anim-fade">A semantic view is the contract between your data and every consumer — human, BI tool, or agent — so "churn rate" and "thumbs-down rate" each mean exactly one thing.</div>
+    </section>
+
+    <!-- Slide 15: CX Intelligence agent -->
+    <section class="slide" id="agent">
+      <h2>The CX Intelligence agent</h2>
+      <h3>One assistant over structured metrics + unstructured chat</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step active"><div class="step-label">Analyst</div><div class="step-title">Semantic view</div></div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step active"><div class="step-label">Search</div><div class="step-title">Chat telemetry</div></div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-step active"><div class="step-label">UDF tool</div><div class="step-title">Escalation</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Agent</div><div class="step-title">One answer</div></div>
+      </div>
+      <pre><span class="keyword">CREATE OR REPLACE AGENT</span> <span class="function">CX_INTELLIGENCE_AGENT</span> <span class="keyword">FROM SPECIFICATION</span> $$
+  tools:
+    - tool_spec: { type: <span class="string">"cortex_analyst_text_to_sql"</span>, name: <span class="string">"CX_Metrics"</span> }
+    - tool_spec: { type: <span class="string">"cortex_search"</span>, name: <span class="string">"Chat_Telemetry"</span> }
+  tool_resources:
+    CX_Metrics:     { semantic_view: <span class="string">"FIELD_CX_DEMO.ANALYTICS.CX_ANALYTICS_SV"</span> }
+    Chat_Telemetry: { name: <span class="string">"FIELD_CX_DEMO.ANALYTICS.CHAT_SEARCH"</span> }
+$$;</pre>
+      <div class="context-box anim-fade">Ask <em>"Which churn-risk customers had negative support chats?"</em> or <em>"What's our thumbs-down rate by plan?"</em> — the agent picks Analyst, Search, or your UDF automatically, in one answer.</div>
     </section>
 
     <!-- Slide 13: Cost & Usage -->
