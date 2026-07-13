@@ -466,7 +466,9 @@
     <a href="#voice">Voice &amp; Calls</a>
     <a href="#studio">AI Function Studio</a>
     <a href="#comparison">Built-in vs Custom</a>
+    <a href="#extend">Where It Plugs In</a>
     <a href="#cost">Cost &amp; Usage</a>
+    <a href="#estimate">Estimate Before You Run</a>
     <a href="#guardrails">Guardrails &amp; Quotas</a>
     <a href="#closing">Next Steps</a>
     <!-- NAV_LINKS_END -->
@@ -663,7 +665,20 @@
       </table>
     </section>
 
-    <!-- Slide 12: Cost & Usage -->
+    <!-- Slide 12: Where AI functions plug in -->
+    <section class="slide" id="extend">
+      <h2>Where AI functions plug in</h2>
+      <h3>The same UDFs power the rest of the Cortex stack</h3>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Agent custom tool</h4><p>Register an AI-function UDF as a <strong>generic tool</strong> in a Cortex Agent spec. The agent's LLM calls it via tool-use when the question needs it (e.g. "how urgent is this message?").</p></div>
+        <div class="card"><h4>Inside Cortex Analyst</h4><p>Expose the UDF as a <strong>computed column</strong> in a semantic view. Analyst's generated SQL invokes the model, so a business user's NL question returns AI-derived labels.</p></div>
+        <div class="card"><h4>Cortex Search enrichment</h4><p><code>AI_EXTRACT</code> and <code>AI_EMBED</code> pre-process documents — structured fields + embeddings — before indexing into a Cortex Search service.</p></div>
+        <div class="card"><h4>One answer, three tools</h4><p>An agent can combine Analyst (metrics), Search (relevant tickets), and your custom UDF (urgency) in a single response — all built on AI functions.</p></div>
+      </div>
+      <div class="context-box anim-fade"><strong>SE framing:</strong> AI functions aren't a dead-end SQL feature — they are reusable building blocks. Build the label once as a UDF, then reuse it as an agent tool, an Analyst dimension, and a Search enrichment step. Materialize the column for interactive use so inference runs once per row, not once per question.</div>
+    </section>
+
+    <!-- Slide 13: Cost & Usage -->
     <section class="slide" id="cost">
       <h2>What AI Functions actually cost</h2>
       <h3>Token-based billing, and how it runs away on large tables</h3>
@@ -682,7 +697,23 @@
       <div class="highlight-box anim-fade"><strong>Best practices:</strong> prototype on a <code>LIMIT</code>/sampled subset first &bull; pre-filter rows with <code>WHERE</code> before the AI call &bull; pick the smallest model that passes AI Function Studio eval &bull; keep prompts tight &bull; use aggregates (<code>AI_AGG</code>) instead of row-wise <code>AI_COMPLETE</code> at scale &bull; a warehouse larger than <strong>MEDIUM</strong> does not speed AI functions up — it just costs more &bull; tag queries with <code>QUERY_TAG</code> for chargeback.</div>
     </section>
 
-    <!-- Slide 13: Guardrails & Quotas -->
+    <!-- Slide 14: Estimate before you run -->
+    <section class="slide" id="estimate">
+      <h2>Estimate cost <em>before</em> you run</h2>
+      <h3>Price a full-table run without running it</h3>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>Count the tokens</h4><p><code>AI_COUNT_TOKENS('&lt;function&gt;', input)</code> returns the tokens a function will process per row — free to call, never invokes the model. <code>SNOWFLAKE.CORTEX.COUNT_TOKENS('&lt;model&gt;', text)</code> does the same per model.</p></div>
+        <div class="card"><h4>Tokens → credits → $</h4><p>Multiply projected tokens by the model's credits-per-million rate (Service Consumption Table), then by your $/credit. Or back out the real rate from <code>CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY</code> and reconcile.</p></div>
+      </div>
+      <pre><span class="comment">-- Project the cost of AI_SENTIMENT over the whole table, before launching it</span>
+<span class="keyword">SELECT</span> <span class="function">SUM</span>(<span class="function">AI_COUNT_TOKENS</span>(<span class="string">'ai_sentiment'</span>, transcript)) <span class="keyword">AS</span> tokens,
+       tokens / <span class="number">1e6</span> * <span class="number">0.19</span>  <span class="keyword">AS</span> est_credits,   <span class="comment">-- llama3.1-8b rate</span>
+       est_credits * <span class="number">3.00</span>       <span class="keyword">AS</span> est_usd       <span class="comment">-- your $/credit</span>
+<span class="keyword">FROM</span> CHAT_THREADS;</pre>
+      <div class="highlight-box anim-fade"><strong>Why it matters:</strong> the same data shows a ~13x cost swing between the smallest and a frontier model — model selection is the biggest lever. Estimate first, pick the smallest model that passes an eval, then scale the run with confidence.</div>
+    </section>
+
+    <!-- Slide 15: Guardrails & Quotas -->
     <section class="slide" id="guardrails">
       <h2>Guardrails: quotas &amp; killing runaway queries</h2>
       <h3>Stop a 1M-row mistake before it drains the budget</h3>
@@ -703,7 +734,7 @@
       <div class="context-box anim-fade"><strong>SE framing:</strong> lead the cost conversation with quotas — they auto-block at the limit and even terminate in-progress AI calls, so a customer can't burn the budget on one bad query. Alerts and the cancel task are the belt-and-suspenders layer.</div>
     </section>
 
-    <!-- Slide 14: Next Steps -->
+    <!-- Slide 16: Next Steps -->
     <section class="slide" id="closing">
       <h2>Next Steps</h2>
       <div class="card-grid anim-fade">

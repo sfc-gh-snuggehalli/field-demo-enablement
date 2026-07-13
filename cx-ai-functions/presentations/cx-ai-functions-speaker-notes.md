@@ -205,7 +205,27 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 13: Cost & Usage
+## Slide 13: Where AI functions plug in
+
+**Talking Points:**
+- Reframe AI functions as reusable building blocks, not a dead-end SQL feature: build a label once as a UDF, reuse it three ways.
+- **Agent custom tool** — an AI-function UDF (e.g. `CLASSIFY_ESCALATION`) is registered as a *generic tool* in a Cortex Agent spec; the agent's LLM calls it via tool-use when the question needs it.
+- **Inside Cortex Analyst** — the UDF becomes a computed column in a semantic view, so a business user's natural-language question returns AI-derived labels transparently.
+- **Cortex Search enrichment** — `AI_EXTRACT` / `AI_EMBED` pre-process documents (structured fields + embeddings) before indexing, and expose filterable attributes.
+
+**Internal Context:**
+- This slide bridges the CX telemetry story to the broader Cortex stack; it sets up the extensions notebook (`cx-ai-functions-extensions.ipynb`).
+- The cost caveat matters: a view re-runs inference on every query — recommend materializing the column (task or Dynamic Table) for interactive Analyst/agent use so inference runs once per row.
+- Tool-use bills twice — the agent's orchestration tokens plus the UDF's inference tokens; tie this back to the estimator slide.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview
+
+---
+
+## Slide 14: Cost & Usage
 
 **Talking Points:**
 - Set the mental model: AI Functions bill by **tokens processed** (input + output), or pages for document functions — not by warehouse size. A row-wise function over 1M rows is ~1M model calls.
@@ -225,7 +245,28 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 14: Guardrails & Quotas
+## Slide 15: Estimate cost before you run
+
+**Talking Points:**
+- The headline: you can price a full-table run *before* launching it — no need to run it and find out.
+- `AI_COUNT_TOKENS('<function>', input)` returns the tokens a specific function will process (including its prompt template); `SNOWFLAKE.CORTEX.COUNT_TOKENS('<model>', text)` counts raw input-text tokens per model. Both are free and never invoke the model.
+- Chain it: tokens → credits (× model's credits-per-million rate from the Service Consumption Table) → dollars (× your $/credit).
+- Then reconcile against reality: back out the true credits-per-token from `CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY` (it records TOKENS and TOKEN_CREDITS per query) and apply it to the full-table estimate.
+- The lab's Section 9 has a reusable `estimate_cost()` helper — plug in any table/column/model.
+
+**Internal Context:**
+- This is the proactive companion to the cost slide: instead of monitoring spend after the fact, you forecast it. Lands well with FinOps-minded buyers.
+- Emphasize the ~13x model cost swing on the same data — model selection is the biggest lever, and the estimator quantifies it before you commit.
+- `CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY` lags (a few hours) and is empty on a fresh account — the notebook's estimator degrades gracefully and falls back to the rate table. Say this so a live run in a clean demo account doesn't look broken.
+
+**References:**
+- https://docs.snowflake.com/en/sql-reference/functions/ai_count_tokens
+- https://docs.snowflake.com/en/sql-reference/account-usage/cortex_functions_query_usage_history
+- https://www.snowflake.com/legal-files/CreditConsumptionTable.pdf
+
+---
+
+## Slide 16: Guardrails & Quotas
 
 **Talking Points:**
 - Lead with **per-user quotas**: a first-class `SNOWFLAKE.CORE.QUOTA` object that enforces monthly/daily per-user credit limits and **auto-blocks** AI requests at the limit — no custom tasks, no scheduling.
@@ -247,7 +288,7 @@ Pairs with the "Conversational BI" module, which analyzes this telemetry alongsi
 
 ---
 
-## Slide 15: Next Steps
+## Slide 17: Next Steps
 
 **Talking Points:**
 - Four concrete actions: run the lab, point the same SQL at real chat/call data, trend the telemetry in BI, and feed at-risk signals to churn.

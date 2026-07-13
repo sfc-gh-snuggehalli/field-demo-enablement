@@ -22,17 +22,20 @@ product teams evaluating customer-experience analytics.
 - Natural-language filtering for at-risk conversations (`AI_FILTER`)
 - Voice via `AI_TRANSCRIBE`
 - Optimizing a custom function with AI Function Studio
+- Estimating token cost before a bulk run (`AI_COUNT_TOKENS`) and tying it to real credits/$
+- Extending AI functions: custom Agent tool, Cortex Analyst computed columns, Cortex Search enrichment
 - Cost management, best practices, per-user quotas, and killing runaway queries
 
 ## Contents
 
 | File | Description |
 |------|-------------|
-| `presentations/cx-ai-functions.html` | Slide deck (14 slides) |
+| `presentations/cx-ai-functions.html` | Slide deck (16 slides) |
 | `presentations/cx-ai-functions-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
 | `lab/setup.sql` | SQL setup (database, schema, warehouse, structured `CUSTOMERS`) |
 | `lab/data_gen.py` | Snowpark loader for the unstructured text tables |
 | `lab/cx-ai-functions-lab.ipynb` | Hands-on lab notebook (~30 min) |
+| `lab/cx-ai-functions-extensions.ipynb` | Extensions + cost control (Agent tool, Cortex Analyst, Cortex Search enrichment, spike prevention) |
 
 ## Hands-On Lab
 
@@ -82,7 +85,12 @@ and use a warehouse.
 6. At-risk detection with `AI_FILTER`
 7. Assemble the `CX_TELEMETRY` table
 8. AI Function Studio — create → evaluate → optimize a custom escalation router (`ROUTE_ESCALATION`)
-9. Cost, usage & guardrails — monitor spend, set per-user quotas, kill runaway queries
+9. Cost, usage & guardrails — estimate token cost before a run (`AI_COUNT_TOKENS`), monitor spend, set per-user quotas, kill runaway queries
+
+After the core lab, `lab/cx-ai-functions-extensions.ipynb` shows how the same AI-function UDFs plug into the
+broader Cortex stack — as a **custom Agent tool**, a **computed column inside Cortex Analyst**, and an
+**`AI_EXTRACT` / `AI_EMBED` enrichment pipeline for Cortex Search** — plus cost/spike prevention (spend alerts,
+per-user budget enforcement, runaway-query cancellation, query tagging, and role-gated access).
 
 ### Demoing AI Function Studio (Section 8)
 
@@ -123,3 +131,5 @@ Section 8 builds a custom **escalation router** that labels each conversation `L
 - [Managing Cortex AI Function costs](https://docs.snowflake.com/en/user-guide/snowflake-cortex/ai-func-cost-management)
 - [Per-user quotas](https://docs.snowflake.com/en/user-guide/budgets/per-user-quotas)
 - [CORTEX_AI_FUNCTIONS_USAGE_HISTORY view](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_ai_functions_usage_history)
+- [AI_COUNT_TOKENS](https://docs.snowflake.com/en/sql-reference/functions/ai_count_tokens) · [CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY view](https://docs.snowflake.com/en/sql-reference/account-usage/cortex_functions_query_usage_history)
+- [Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents) · [Cortex Analyst](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst) · [Cortex Search](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-search/cortex-search-overview)
