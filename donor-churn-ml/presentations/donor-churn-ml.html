@@ -466,6 +466,7 @@
     <a href="#explainability">7. Explainability</a>
     <a href="#serving">8. Model Serving</a>
     <a href="#observability">9. ML Observability</a>
+    <a href="#orchestration">Optional: Orchestration (DAG)</a>
     <a href="#agent">10. Model-as-a-Tool Agent</a>
     <a href="#wow">The "Wow" Moment</a>
     <a href="#mapping">Mapping to Live Use Cases</a>
@@ -679,6 +680,31 @@ mv.<span class="function">run_batch</span>(X=session.<span class="function">tabl
       <div class="context-box anim-fade"><strong>Governance goal met:</strong> track prediction drift, data drift, and accuracy over time &mdash; segmented by region &mdash; and fire an alert when performance degrades. Query metrics with <code>MODEL_MONITOR_DRIFT_METRIC</code> / <code>_PERFORMANCE_METRIC</code>.</div>
     </section>
 
+    <!-- Slide 12.5 (optional): Orchestration as a Task Graph -->
+    <section class="slide" id="orchestration">
+      <h2>Optional: Orchestrate the Pipeline as a Task Graph</h2>
+      <h3>Productionize retraining as a scheduled DAG &mdash; ML Job training, dependencies, retries, run history</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step"><div class="step-label">Stage 1</div><div class="step-title">Prep training data</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">Stage 2 &middot; ML Job</div><div class="step-title">Train + register version</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Stage 3</div><div class="step-title">Batch score donors</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Stage 4</div><div class="step-title">Refresh monitor</div></div>
+      </div>
+      <pre><span class="keyword">from</span> snowflake.core.task.dagv1 <span class="keyword">import</span> DAG, DAGTask, DAGOperation
+
+<span class="keyword">with</span> <span class="function">DAG</span>(<span class="string">"DONOR_LAPSE_TRAINING_DAG"</span>, schedule=<span class="function">timedelta</span>(days=<span class="string">7</span>)) <span class="keyword">as</span> dag:
+    prep    = <span class="function">DAGTask</span>(<span class="string">"PREP_TRAINING_DATA"</span>, definition=<span class="function">StoredProcedureCall</span>(prep_fn, ...))
+    train   = <span class="function">DAGTask</span>(<span class="string">"TRAIN_AND_REGISTER"</span>, definition=train_and_register)  <span class="comment"># @remote ML Job</span>
+    score   = <span class="function">DAGTask</span>(<span class="string">"BATCH_SCORE"</span>, definition=<span class="function">StoredProcedureCall</span>(score_fn, ...))
+    monitor = <span class="function">DAGTask</span>(<span class="string">"REFRESH_MONITOR"</span>, definition=<span class="function">StoredProcedureCall</span>(monitor_fn, ...))
+    prep &gt;&gt; train &gt;&gt; score &gt;&gt; monitor            <span class="comment"># dependency chain</span>
+DAGOperation(schema).<span class="function">deploy</span>(dag)             <span class="comment"># then EXECUTE / schedule / trigger</span></pre>
+      <div class="context-box anim-fade"><strong>Why orchestrate:</strong> the training stage runs as a Snowflake <strong>ML Job on the compute pool</strong> &mdash; native to the task, not wrapped in a stored procedure. You get scheduled/triggered retraining, dependency-aware execution (score never runs before training succeeds), automatic retries, and full run history &mdash; watch it as a graph in <strong>Snowsight &rarr; Monitoring &rarr; Task History</strong>. Each run publishes a new Registry version. <em>(Optional Section 14 of the lab.)</em></div>
+    </section>
+
     <!-- Slide 13: Model-as-a-Tool Agent -->
     <section class="slide" id="agent">
       <h2>10. Cortex Agent &mdash; Model as a Tool</h2>
@@ -720,7 +746,7 @@ mv.<span class="function">run_batch</span>(X=session.<span class="function">tabl
       <table class="anim-fade">
         <thead><tr><th>Initiative</th><th>What they build</th><th>Demo coverage</th></tr></thead>
         <tbody>
-          <tr><td>ML Ops &amp; Platform</td><td>Lapse/churn risk models, Model Registry, Serving, ML Observability</td><td><span class="badge-green">Slides 1&ndash;9</span></td></tr>
+          <tr><td>ML Ops &amp; Platform</td><td>Lapse/churn risk models, Model Registry, Serving, ML Observability, optional Task-Graph orchestration</td><td><span class="badge-green">Slides 1&ndash;9 + Optional</span></td></tr>
           <tr><td>GTM / Executive Chatbot</td><td>Cortex Analyst + Snowflake Intelligence + a Streamlit chat surface</td><td><span class="badge-green">Slides 10&ndash;14</span></td></tr>
         </tbody>
       </table>
@@ -731,7 +757,7 @@ mv.<span class="function">run_batch</span>(X=session.<span class="function">tabl
     <section class="slide" id="closing">
       <h2>Next Steps</h2>
       <div class="card-grid anim-fade">
-        <div class="card"><h4>1. Run the lab</h4><p>Execute <code>setup.sql</code>, then walk the notebook sections 2&ndash;13 to build the full pipeline live in a Snowflake account.</p></div>
+        <div class="card"><h4>1. Run the lab</h4><p>Execute <code>setup.sql</code>, then walk the notebook sections 2&ndash;13 to build the full pipeline live in a Snowflake account. Optional Section 14 orchestrates it as a scheduled Task Graph.</p></div>
         <div class="card"><h4>2. Chat with the agent</h4><p>Launch the Streamlit app or open Snowsight AI &amp; ML &rarr; Agents and ask the "wow" question.</p></div>
         <div class="card"><h4>3. Reframe for the account</h4><p>Rename the entity and features to the customer's domain; the lifecycle stays identical.</p></div>
         <div class="card"><h4>4. Scope the MLOps program</h4><p>Map Registry, Serving, and Observability to their governance and retraining requirements.</p></div>

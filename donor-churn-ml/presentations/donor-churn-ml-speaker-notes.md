@@ -21,7 +21,7 @@ the depth.
 - Set expectations: we walk the full lifecycle, then finish by talking to a Cortex Agent that calls the deployed model as a tool.
 
 **Internal Context:**
-- This deck is intentionally comprehensive (16 slides) because it doubles as an ML platform enablement asset. For a 15-minute flow, land slides 2, 3, 6, 9, 13, 14 and skim the rest.
+- This deck is intentionally comprehensive (17 slides, incl. one optional orchestration slide) because it doubles as an ML platform enablement asset. For a 15-minute flow, land slides 2, 3, 6, 9, 14, 15 and skim the rest.
 - The competitive wedge vs. a separate ML stack (Databricks, SageMaker) is "no data movement + one governance perimeter" — say it early.
 
 **References:**
@@ -209,7 +209,26 @@ the depth.
 
 ---
 
-## Slide 13: Cortex Agent — Model as a Tool
+## Slide 13 (Optional): Orchestrate the Pipeline as a Task Graph
+
+**Talking Points:**
+- Everything so far ran interactively; to productionize, wrap the same steps in a task graph (DAG) so retraining runs on a schedule or trigger, with automatic retries and full run history.
+- Built with the Snowflake Python API (`snowflake.core.task.dagv1`): four stages — prep → train+register → score → refresh monitor — wired with `>>` and deployed in one call.
+- The training stage is a Snowflake **ML Job on the compute pool**, attached natively to the task (not wrapped in a stored procedure) — the modern ML-Job-in-Task integration. Each run publishes a new Registry version and promotes it to DEFAULT.
+- Show it in Snowsight → Monitoring → Task History (Graph view): nodes light up as each stage runs; click the train node to drill into the ML Job.
+
+**Internal Context:**
+- This is the optional Section 14 of the lab — advanced. Requires the `DONOR_CHURN_ML_POOL` compute pool, `snowflake-ml-python >= 1.26`, and CREATE/EXECUTE TASK. Skip for audiences without a platform/MLOps focus.
+- Best slide for the platform team's "how do we operationalize this?" question. Snowflake ML also integrates with external orchestrators (Airflow/Dagster/Prefect), but Task Graphs are the native, zero-infra option.
+- Deploying the DAG does not run it — you trigger a one-off run or let the schedule fire. Parameterize the script for DEV/PROD and keep it in Git.
+
+**References:**
+- https://docs.snowflake.com/en/developer-guide/snowflake-ml/create-pipelines-deploy
+- https://docs.snowflake.com/en/developer-guide/snowflake-python-api/snowflake-python-managing-tasks
+
+---
+
+## Slide 14: Cortex Agent — Model as a Tool
 
 **Talking Points:**
 - The agent has two tools: Cortex Analyst (text-to-SQL over the governed semantic view) and a custom tool that calls the deployed lapse model.
@@ -226,7 +245,7 @@ the depth.
 
 ---
 
-## Slide 14: The "Wow" Moment
+## Slide 15: The "Wow" Moment
 
 **Talking Points:**
 - Ask the agent live: "Which of our major-gift donors in the West region are most at risk of lapsing this quarter, why, and what should we do?"
@@ -242,10 +261,10 @@ the depth.
 
 ---
 
-## Slide 15: Mapping to Live Use Cases
+## Slide 16: Mapping to Live Use Cases
 
 **Talking Points:**
-- Two common nonprofit-CRM initiatives map cleanly onto this demo: an ML Ops & Platform build (churn models, Registry, Serving, Observability — slides 1–9) and a GTM/Executive chatbot (Analyst + Snowflake Intelligence + Streamlit — slides 10–14).
+- Two common nonprofit-CRM initiatives map cleanly onto this demo: an ML Ops & Platform build (churn models, Registry, Serving, Observability, plus the optional Task-Graph orchestration — slides 1–9 + 13) and a GTM/Executive chatbot (Analyst + Snowflake Intelligence + Streamlit — slides 14–15).
 - The scenario is deliberately generic: swap donor → customer / patient / subscriber and the exact same lifecycle demonstrates churn, propensity, or risk.
 
 **Internal Context:**
@@ -257,10 +276,10 @@ the depth.
 
 ---
 
-## Slide 16: Next Steps
+## Slide 17: Next Steps
 
 **Talking Points:**
-- Concrete path: run `setup.sql`, walk the notebook sections 2–13, then chat with the agent (Streamlit app or Snowsight AI & ML → Agents).
+- Concrete path: run `setup.sql`, walk the notebook sections 2–13 (optional Section 14 orchestrates it as a Task Graph), then chat with the agent (Streamlit app or Snowsight AI & ML → Agents).
 - Reframe the entity/features for the customer's domain — the lifecycle is unchanged.
 - Offer to scope their MLOps program: map Registry, Serving, and Observability to their governance and retraining requirements.
 

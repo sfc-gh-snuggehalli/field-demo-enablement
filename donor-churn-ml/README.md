@@ -26,6 +26,7 @@ and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streaml
 - Cortex ML Functions: Forecasting, Anomaly Detection, Classification, Top Insights
 - Snowpark ML modeling (XGBoost) + distributed hyperparameter optimization
 - ML Jobs / Container Runtime for scalable remote (GPU-optional) training
+- Optional: orchestrating the pipeline as a Task Graph (DAG) — ML-Job training + retries + run history
 - Model Registry: versioning, metrics, signatures, DEFAULT promotion, lineage
 - Model Explainability: Shapley risk drivers per donor
 - Model Serving: batch scoring + single-donor real-time inference (Warehouse / SPCS)
@@ -36,7 +37,7 @@ and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streaml
 
 | File | Description |
 |------|-------------|
-| `presentations/donor-churn-ml.html` | Slide deck (16 slides) |
+| `presentations/donor-churn-ml.html` | Slide deck (17 slides) |
 | `presentations/donor-churn-ml-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
 | `lab/setup.sql` | Database, four schemas, warehouses, synthetic data, Cortex ML Functions, Analyst semantic view |
 | `lab/donor-churn-ml-lab.ipynb` | Hands-on lab notebook (~30–45 min) — builds the full ML lifecycle + agent |
@@ -57,6 +58,7 @@ with it.
 - The `SNOWFLAKE.CORTEX_USER` database role (for `AI_COMPLETE` and the agent).
 - `snowflake-ml-python >= 1.26` in the notebook runtime.
 - For ML Jobs / SPCS serving: privilege to `CREATE COMPUTE POOL` and `CREATE MODEL / MODEL MONITOR / AGENT`.
+- For the optional Task Graph extension (§14): `CREATE TASK` / `EXECUTE TASK` and the `DONOR_CHURN_ML_POOL` compute pool.
 - For the Streamlit app: `USAGE` on the agent and on the `TOP_CHURN_RISK` function.
 
 ### Setup
@@ -72,7 +74,7 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 
 > The Model Registry model, Model Monitor, the `PREDICT_DONOR_CHURN` / `TOP_CHURN_RISK`
 > tool functions, and the Cortex Agent are created **by the notebook**, because they depend
-> on the trained/deployed model. Run order: `setup.sql` → notebook sections 2–13 → Streamlit app.
+> on the trained/deployed model. Run order: `setup.sql` → notebook sections 2–13 (+ optional 14) → Streamlit app.
 
 ### Lab Sections
 
@@ -89,6 +91,7 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 11. Tool wrappers — `TOP_CHURN_RISK` / `PREDICT_DONOR_CHURN`
 12. Cortex Agent — Analyst + model-as-a-tool
 13. The "wow" moment + summary
+14. *(Optional extension)* Orchestrate training as a Task Graph (DAG) — `snowflake.core` task API chains prep → **ML Job** train+register → score → refresh monitor; view the graph in Snowsight
 
 ### Run in Snowflake (Workspaces / Git) — recommended for demos
 
@@ -99,7 +102,8 @@ connection setup needed):
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
 2. Open `donor-churn-ml/lab/setup.sql` and run it.
 3. Open `lab/donor-churn-ml-lab.ipynb` and walk sections 2–13 (creates the model, registry,
-   monitor, tool functions, and agent).
+   monitor, tool functions, and agent). Section 14 is an optional add-on that orchestrates the
+   pipeline as a scheduled Task Graph (DAG).
 4. Deploy `app/streamlit_app.py` as a Streamlit-in-Snowflake app, or chat in Snowsight
    **AI & ML → Agents**, and ask the "wow" question.
 
@@ -126,6 +130,7 @@ different owner, grant your role `USAGE, OPERATE` on it.
 - [ML Functions: Classification](https://docs.snowflake.com/en/user-guide/ml-functions/classification) · [Anomaly Detection](https://docs.snowflake.com/en/user-guide/ml-functions/anomaly-detection)
 - [Snowpark ML modeling](https://docs.snowflake.com/en/developer-guide/snowflake-ml/modeling)
 - [ML Jobs](https://docs.snowflake.com/en/developer-guide/snowflake-ml/ml-jobs/overview)
+- [ML pipelines & orchestration](https://docs.snowflake.com/en/developer-guide/snowflake-ml/create-pipelines-deploy) · [Task graphs (DAGs) with Python](https://docs.snowflake.com/en/developer-guide/snowflake-python-api/snowflake-python-managing-tasks)
 - [Model Registry](https://docs.snowflake.com/en/developer-guide/snowflake-ml/model-registry/overview)
 - [ML Observability](https://docs.snowflake.com/en/developer-guide/snowflake-ml/model-registry/model-observability) · [CREATE MODEL MONITOR](https://docs.snowflake.com/en/sql-reference/sql/create-model-monitor)
 - [Cortex Agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents) · [Create and manage agents](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-manage)
