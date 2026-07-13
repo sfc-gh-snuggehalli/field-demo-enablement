@@ -79,7 +79,9 @@ tool, plus a Streamlit chat app. Client-agnostic and reusable across accounts.
 | `presentations/donor-churn-ml.html` | Slide deck (16 slides) |
 | `presentations/donor-churn-ml-speaker-notes.md` | Speaker notes |
 | `lab/setup.sql` | DB, four schemas, warehouses, synthetic data, Cortex ML Functions, semantic view |
-| `lab/donor-churn-ml-lab.ipynb` | Hands-on lab notebook (full ML lifecycle + agent) |
+| `lab/donor-churn-01-features.ipynb` | Lab 1/3 — Feature Store, Datasets, Cortex ML Functions |
+| `lab/donor-churn-02-model.ipynb` | Lab 2/3 — Snowpark ML + Experiment Tracking + HPO, ML Jobs, Registry, Explainability |
+| `lab/donor-churn-03-serve-agent.ipynb` | Lab 3/3 — Serving, Observability, tool functions, Cortex Agent |
 | `app/streamlit_app.py` | Streamlit-in-Snowflake chat UI over the agent |
 <!-- MODULE_SECTIONS_END -->
 
@@ -118,7 +120,9 @@ field-demo-enablement/
 │   │   └── donor-churn-ml-speaker-notes.md
 │   ├── lab/
 │   │   ├── setup.sql
-│   │   └── donor-churn-ml-lab.ipynb
+│   │   ├── donor-churn-01-features.ipynb
+│   │   ├── donor-churn-02-model.ipynb
+│   │   └── donor-churn-03-serve-agent.ipynb
 │   └── app/
 │       └── streamlit_app.py
 <!-- REPO_TREE_END -->

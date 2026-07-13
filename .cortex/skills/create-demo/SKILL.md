@@ -97,6 +97,11 @@ Then use the notebook tools (`notebook_edit_cell`, `notebook_add_cell`) to subst
 Do NOT run cells — the lab runs in the user's Snowflake account. Confirm the file is valid
 JSON afterward (e.g. `python3 -c "import json,sys; json.load(open(sys.argv[1]))" <path>`).
 
+> **If the lab involves ML** (training, feature store, registry, serving, monitoring, agents-over-models),
+> STOP and load the `/machine-learning` skill (+ `feature-store`, `experiment-tracking` sub-skills)
+> before writing cells, then follow the ML/MLOps non-negotiables in the Quality Bar. Consider
+> splitting a long ML lifecycle into multiple lifecycle notebooks.
+
 ### Step 5b: Generate the data loader (skip if generate-data = NO)
 
 **data_gen.py** — Copy `templates/data_gen.py` to `<slug>/lab/data_gen.py`. Substitute
@@ -197,19 +202,42 @@ Plus updated root `README.md` (table row + section + tree node).
 - data_gen.py compiles (`py_compile`) and uses `write_pandas`; NOT executed here.
 - Structured data via SQL GENERATOR; unstructured text via data_gen.py write_pandas.
 - Objects depending on unstructured tables are created after data_gen.py in the run order.
-- **ML / MLOps demos:** objects that depend on a trained/deployed model — Model Registry
-  entries, Model Monitors, SQL tool-wrapper functions, and any agent that calls the model —
-  are created IN THE NOTEBOOK, after training/serving. `setup.sql` holds only model-independent
-  objects (data, Cortex ML Function objects, the Analyst semantic view). Document this run
-  order (setup.sql → notebook → app). Ground the ML APIs in real refs: Feature Store
-  (`FeatureStore`/`Entity`/`FeatureView`, `generate_dataset`), Datasets, Snowpark ML
-  (`snowflake.ml.modeling.xgboost`), distributed HPO, ML Jobs (`snowflake.ml.jobs.remote`,
-  compute pool, `snowflake-ml-python>=1.26`), Registry (`log_model`, `target_platforms`,
-  `default`), Explainability (`mv.run(function_name="explain")`), Serving (`mv.run` / `run_batch`),
-  Observability (`CREATE MODEL MONITOR`, `MODEL_MONITOR_*_METRIC`), and the model-as-a-tool
-  agent (custom tool `type: "generic"` backed by a SQL procedure/UDF; bind it in Snowsight UI).
-  For a strong lab signal, drive the training label from a hidden latent propensity (not the
-  raw features), so RFM/behavior features are genuinely predictive without leakage.
+- **ML / MLOps demos — REQUIRED: load the `/machine-learning` skill FIRST.** Before authoring any
+  demo that trains, tunes, registers, serves, monitors, or explains a model, invoke the
+  `machine-learning` skill and read the sub-skills you will touch — at minimum `feature-store`
+  (and its `create`) and `experiment-tracking`. Do NOT hand-write ML code from memory; the
+  sub-skills carry API signatures and gotchas that direct tool use misses. Then follow these
+  **non-negotiables** (learned from the donor-churn build):
+  1. **Feature Store is the real source of truth, not decoration.** Managed Feature Views must
+     COMPUTE features FROM the raw tables (aggregations off event dates), not re-`SELECT`
+     precomputed columns from a training table at one hardcoded timestamp. BOTH training and
+     inference must flow through the store (`generate_dataset` for training; `retrieve_feature_values`
+     for serving), so point-in-time correctness is actually demonstrated (same definitions,
+     different as-of → different values).
+  2. **Managed FVs must be deterministic** (Dynamic-Table-backed): no `CURRENT_DATE()`/
+     `CURRENT_TIMESTAMP()` inside the view. Use a static snapshot-calendar table for as-of dates.
+  3. **Experiment Tracking on every training section** — `snowflake.ml.experiment.ExperimentTracking`,
+     one experiment, one run per candidate config logging params + metrics; tie the winner to the
+     registry via `exp.log_model`.
+  4. **Use `predict_proba` for probabilities** — AUC, risk ranking, scored tables, and the monitor's
+     `PREDICTION_SCORE_COLUMNS` must use the probability, never the hard predicted class.
+  5. **Explainability must be enabled at registration** (`options={"enable_explainability": True}`
+     in `log_model`) or the `explain` function won't exist.
+  6. **Split long ML notebooks (>~10 sections) by lifecycle** into multiple notebooks, each opening
+     with a rehydrate cell (reconnect + reload Feature Store / dataset / model) so it runs standalone.
+  7. **No hardcoded row keys** (e.g. a specific donor_id) — pick demo rows dynamically.
+  Placement: objects that depend on a trained/deployed model — Model Registry entries, Model Monitors,
+  SQL tool-wrapper functions, and any agent that calls the model — are created IN THE NOTEBOOK, after
+  training/serving. `setup.sql` holds only model-independent objects (data, Cortex ML Function objects,
+  the Analyst semantic view). Document the run order (setup.sql → notebook(s) → app). Real ML API refs:
+  Feature Store (`FeatureStore`/`Entity`/`FeatureView`, `generate_dataset`, `retrieve_feature_values`),
+  Datasets, Snowpark ML (`snowflake.ml.modeling.xgboost`), distributed HPO, ML Jobs
+  (`snowflake.ml.jobs.remote`, compute pool, `snowflake-ml-python>=1.26`), Registry (`log_model`,
+  `target_platforms`, `default`), Explainability, Serving (`mv.run` / `run_batch`), Observability
+  (`CREATE MODEL MONITOR`, `MODEL_MONITOR_*_METRIC`), and the model-as-a-tool agent (custom tool
+  `type: "generic"` backed by a SQL procedure/UDF; bind it in Snowsight UI). For a strong lab signal,
+  drive the training label from a hidden latent propensity (not the raw features), so RFM/behavior
+  features are genuinely predictive without leakage.
 - **Agent/Streamlit demos:** optionally add `app/streamlit_app.py` (Streamlit-in-Snowflake chat
   over the agent via `_snowflake.send_snow_api_request` to `agents/<name>:run`); compile it
   with `py_compile`; NOT executed here.

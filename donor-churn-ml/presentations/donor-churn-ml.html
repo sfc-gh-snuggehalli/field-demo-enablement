@@ -539,18 +539,19 @@
     <!-- Slide 4: Feature Store -->
     <section class="slide" id="feature-store">
       <h2>1. Feature Store</h2>
-      <h3>Define donor features once; serve them point-in-time correct</h3>
-      <p>Register a <code>donor</code> entity and Feature Views for RFM, engagement decay, giving cadence, tenure, channel mix, and wealth signals. The store keeps features fresh and prevents train/serve skew.</p>
+      <h3>Compute features from raw data once; serve them point-in-time correct</h3>
+      <p>Register a <code>donor</code> entity and <strong>managed</strong> Feature Views that compute RFM, engagement, and wealth signals <strong>directly from the raw <code>DONATIONS</code>, <code>ENGAGEMENTS</code>, and <code>DONORS</code> tables</strong> &mdash; not copied from a precomputed table. A static snapshot calendar timestamps every value, so the store is the real source of truth for both training and inference.</p>
       <pre><span class="keyword">from</span> snowflake.ml.feature_store <span class="keyword">import</span> FeatureStore, Entity, FeatureView
 
 donor = <span class="function">Entity</span>(name=<span class="string">"DONOR"</span>, join_keys=[<span class="string">"DONOR_ID"</span>])
 fs.<span class="function">register_entity</span>(donor)
 
 rfm_fv = <span class="function">FeatureView</span>(
-    name=<span class="string">"DONOR_RFM"</span>, entities=[donor],
-    feature_df=rfm_df, timestamp_col=<span class="string">"AS_OF_TS"</span>)   <span class="comment"># point-in-time key</span>
+    name=<span class="string">"DONOR_RFM_FV"</span>, entities=[donor],
+    feature_df=rfm_df,                       <span class="comment"># aggregates DONATIONS per as-of</span>
+    timestamp_col=<span class="string">"AS_OF_TS"</span>, refresh_freq=<span class="string">"1 day"</span>)  <span class="comment"># managed (Dynamic Table)</span>
 fs.<span class="function">register_feature_view</span>(rfm_fv, version=<span class="string">"v1"</span>)</pre>
-      <div class="highlight-box anim-fade"><strong>Why it matters:</strong> the same feature definitions power training and inference, so the score a gift officer sees is computed exactly like the model was trained &mdash; a governance win for nonprofits handling donor PII.</div>
+      <div class="highlight-box anim-fade"><strong>Why it matters:</strong> three managed views (<code>DONOR_RFM_FV</code>, <code>DONOR_ENGAGEMENT_FV</code>, <code>DONOR_STATIC_FV</code>) feed <em>both</em> training (as-of 12 months ago) and serving (as-of today) from identical definitions &mdash; provably no train/serve skew, a governance win for nonprofits handling donor PII.</div>
     </section>
 
     <!-- Slide 5: Datasets -->
@@ -585,8 +586,8 @@ fs.<span class="function">register_feature_view</span>(rfm_fv, version=<span cla
 
     <!-- Slide 7: Snowpark ML + HPO -->
     <section class="slide" id="modeling">
-      <h2>4. Snowpark ML Modeling + Distributed HPO</h2>
-      <h3>Train an XGBoost lapse classifier where the data lives</h3>
+      <h2>4. Snowpark ML Modeling + Experiment Tracking + HPO</h2>
+      <h3>Train an XGBoost lapse classifier where the data lives &mdash; every run tracked</h3>
       <pre><span class="keyword">from</span> snowflake.ml.modeling.xgboost <span class="keyword">import</span> XGBClassifier
 
 model = <span class="function">XGBClassifier</span>(
@@ -595,8 +596,8 @@ model = <span class="function">XGBClassifier</span>(
     n_estimators=<span class="string">300</span>, max_depth=<span class="string">6</span>, learning_rate=<span class="string">0.05</span>)
 model.<span class="function">fit</span>(train_df)              <span class="comment"># runs in Snowflake; no data export</span></pre>
       <div class="two-col anim-fade">
-        <div class="card"><h4>Train / validation split</h4><p>Split comes straight from the versioned Dataset, so the eval set is reproducible.</p></div>
-        <div class="card"><h4>Distributed HPO</h4><p>Tune hyperparameters across nodes with Snowflake's optimized search or open-source Optuna / hyperopt.</p></div>
+        <div class="card"><h4>Experiment Tracking</h4><p>Each candidate config is logged as a run (params + AUC/F1 from <code>predict_proba</code>) under one experiment &mdash; compare side-by-side in AI &amp; ML &rarr; Experiments.</p></div>
+        <div class="card"><h4>Distributed HPO</h4><p>Sweep hyperparameters across the warehouse with <code>GridSearchCV</code>; the best config is refit and logged as the registered model.</p></div>
       </div>
     </section>
 
@@ -638,13 +639,14 @@ reg.<span class="function">get_model</span>(<span class="string">"DONOR_LAPSE_MO
       <h2>7. Model Explainability</h2>
       <h3>Shapley attributions turn a score into a reason a fundraiser trusts</h3>
       <pre><span class="comment"># Shapley values for any registered model</span>
+<span class="comment"># enabled at log_model via options={"enable_explainability": True}</span>
 explanations = mv.<span class="function">run</span>(donor_features, function_name=<span class="string">"explain"</span>)</pre>
       <table class="anim-fade">
         <thead><tr><th>Donor</th><th>Lapse prob.</th><th>Top risk drivers (Shapley)</th></tr></thead>
         <tbody>
-          <tr><td>#40821</td><td><span class="badge-red">0.91</span></td><td>Last gift 410 days ago; engagement down 63%</td></tr>
-          <tr><td>#12055</td><td><span class="badge-orange">0.68</span></td><td>Giving cadence broke; no event attendance in 12mo</td></tr>
-          <tr><td>#77310</td><td><span class="badge-green">0.12</span></td><td>Recent gift; rising engagement</td></tr>
+          <tr><td>Donor A</td><td><span class="badge-red">0.91</span></td><td>Last gift 410 days ago; engagement down 63%</td></tr>
+          <tr><td>Donor B</td><td><span class="badge-orange">0.68</span></td><td>Giving cadence broke; no event attendance in 12mo</td></tr>
+          <tr><td>Donor C</td><td><span class="badge-green">0.12</span></td><td>Recent gift; rising engagement</td></tr>
         </tbody>
       </table>
       <div class="highlight-box anim-fade"><strong>Feature importance from the live model:</strong> recency &rarr; tenure &rarr; engagement &rarr; wealth signal. The agent uses per-donor Shapley drivers to explain <em>why</em> each donor is at risk.</div>
@@ -750,7 +752,7 @@ DAGOperation(schema).<span class="function">deploy</span>(dag)             <span
           <tr><td>GTM / Executive Chatbot</td><td>Cortex Analyst + Snowflake Intelligence + a Streamlit chat surface</td><td><span class="badge-green">Slides 10&ndash;14</span></td></tr>
         </tbody>
       </table>
-      <div class="context-box anim-fade"><strong>Reusable across clients:</strong> the scenario is a generic nonprofit fundraising CRM. Swap the entity (donor &rarr; customer, patient, subscriber) and the same lifecycle demonstrates churn, propensity, or risk for any account.</div>
+      <div class="context-box anim-fade"><strong>Reusable across clients:</strong> the scenario is a generic nonprofit fundraising CRM. Swap the entity (donor &rarr; customer, patient, subscriber) and the same lifecycle demonstrates churn, propensity, or risk for any account. The hands-on lab ships as <strong>three notebooks</strong> &mdash; 01 Features, 02 Model, 03 Serve &amp; Agent.</div>
     </section>
 
     <!-- Slide 16: Next Steps -->

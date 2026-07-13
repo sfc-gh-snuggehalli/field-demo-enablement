@@ -21,8 +21,9 @@ and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streaml
 
 ## Topics Covered
 
-- Feature Store: entities, Feature Views, point-in-time correct retrieval
+- Feature Store: entities, managed point-in-time Feature Views computed from raw data, no train/serve skew
 - Datasets: immutable, versioned training snapshots
+- Experiment Tracking: comparable training runs (params + metrics) in AI & ML → Experiments
 - Cortex ML Functions: Forecasting, Anomaly Detection, Classification, Top Insights
 - Snowpark ML modeling (XGBoost) + distributed hyperparameter optimization
 - ML Jobs / Container Runtime for scalable remote (GPU-optional) training
@@ -40,7 +41,9 @@ and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streaml
 | `presentations/donor-churn-ml.html` | Slide deck (17 slides) |
 | `presentations/donor-churn-ml-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
 | `lab/setup.sql` | Database, four schemas, warehouses, synthetic data, Cortex ML Functions, Analyst semantic view |
-| `lab/donor-churn-ml-lab.ipynb` | Hands-on lab notebook (~30–45 min) — builds the full ML lifecycle + agent |
+| `lab/donor-churn-01-features.ipynb` | Lab notebook 1/3 — Feature Store (managed PIT views), Datasets, Cortex ML Functions |
+| `lab/donor-churn-02-model.ipynb` | Lab notebook 2/3 — Snowpark ML training + Experiment Tracking + HPO, ML Jobs, Registry, Explainability |
+| `lab/donor-churn-03-serve-agent.ipynb` | Lab notebook 3/3 — Serving, Observability, tool functions, Cortex Agent, optional DAG |
 | `app/streamlit_app.py` | Streamlit-in-Snowflake chat UI over the deployed agent |
 
 ## Hands-On Lab
@@ -74,19 +77,26 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 
 > The Model Registry model, Model Monitor, the `PREDICT_DONOR_CHURN` / `TOP_CHURN_RISK`
 > tool functions, and the Cortex Agent are created **by the notebook**, because they depend
-> on the trained/deployed model. Run order: `setup.sql` → notebook sections 2–13 (+ optional 14) → Streamlit app.
+> on the trained/deployed model. Run order: `setup.sql` → notebook **01 → 02 → 03** → Streamlit app.
 
-### Lab Sections
+### Lab Notebooks (run in order)
 
+The lab ships as **three lifecycle notebooks**; each opens with a rehydrate cell so it runs standalone against the persisted objects from the prior notebook.
+
+**`donor-churn-01-features.ipynb` — Features**
 1. Connect & explore the synthetic donor dataset
-2. Feature Store — donor entity + RFM/engagement/wealth Feature Views (point-in-time)
-3. Datasets — versioned training set from the Feature Store
+2. Feature Store — `DONOR` entity + **managed, point-in-time** Feature Views (`DONOR_RFM_FV`, `DONOR_ENGAGEMENT_FV`, `DONOR_STATIC_FV`) computed from raw `DONATIONS`/`ENGAGEMENTS`/`DONORS`
+3. Datasets — versioned training set generated from the Feature Store
 4. Cortex ML Functions — Forecast, Anomaly Detection, Classification baseline
-5. Snowpark ML — XGBoost lapse classifier + distributed HPO
+
+**`donor-churn-02-model.ipynb` — Model**
+5. Snowpark ML — XGBoost lapse classifier + **Experiment Tracking** + distributed HPO
 6. ML Jobs — remote training on a Container Runtime compute pool
-7. Model Registry — log, version, promote to DEFAULT
+7. Model Registry — log, version, promote to DEFAULT (explainability enabled)
 8. Explainability — Shapley risk drivers
-9. Model Serving — batch + single-donor scoring
+
+**`donor-churn-03-serve-agent.ipynb` — Serve & Agent**
+9. Model Serving — batch + single-donor scoring (probabilities, features via Feature Store)
 10. ML Observability — model monitor (segmented by region) + alert
 11. Tool wrappers — `TOP_CHURN_RISK` / `PREDICT_DONOR_CHURN`
 12. Cortex Agent — Analyst + model-as-a-tool
@@ -101,8 +111,9 @@ connection setup needed):
 1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
 2. Open `donor-churn-ml/lab/setup.sql` and run it.
-3. Open `lab/donor-churn-ml-lab.ipynb` and walk sections 2–13 (creates the model, registry,
-   monitor, tool functions, and agent). Section 14 is an optional add-on that orchestrates the
+3. Open and run `lab/donor-churn-01-features.ipynb`, then `lab/donor-churn-02-model.ipynb`, then
+   `lab/donor-churn-03-serve-agent.ipynb` (creates the features, model, registry, monitor, tool
+   functions, and agent). Section 14 in notebook 03 is an optional add-on that orchestrates the
    pipeline as a scheduled Task Graph (DAG).
 4. Deploy `app/streamlit_app.py` as a Streamlit-in-Snowflake app, or chat in Snowsight
    **AI & ML → Agents**, and ask the "wow" question.

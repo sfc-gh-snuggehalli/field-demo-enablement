@@ -65,12 +65,12 @@ the depth.
 ## Slide 4: Feature Store
 
 **Talking Points:**
-- Register a `donor` entity once, then define Feature Views for RFM, engagement decay, giving cadence, tenure, channel mix, and wealth signals.
-- The `timestamp_col` is the point-in-time key — it's what prevents train/serve skew and lets us retrieve features "as of" any date.
-- The same definitions feed both training and inference, so the score a gift officer sees is computed exactly like the model was trained.
+- Register a `donor` entity once, then define **managed** Feature Views that compute RFM, engagement, and wealth signals **directly from the raw `DONATIONS`, `ENGAGEMENTS`, and `DONORS` tables** — the store is the real source of truth, not a copy of a precomputed table.
+- A static snapshot calendar gives every value an `AS_OF_TS` — the point-in-time key that prevents train/serve skew and lets us retrieve features "as of" any date.
+- The same definitions feed both training (as-of 12 months ago) and inference (as-of today), so the score a gift officer sees is computed exactly like the model was trained. Notebook 01 proves it: the same view returns different values at the two as-of dates.
 
 **Internal Context:**
-- Feature Store objects are just dynamic tables + tags under the hood — reassure platform teams they can inspect and govern them with normal RBAC.
+- Managed Feature Views are Dynamic Tables under the hood, so their definitions must be deterministic — that's why the as-of dates come from a static calendar table, never `CURRENT_DATE()` inside the view. Reassure platform teams they inspect/govern them with normal RBAC.
 - Point-in-time correctness (ASOF JOIN) is the differentiator vs. hand-rolled feature tables; most home-grown pipelines leak future data.
 
 **References:**
@@ -112,14 +112,15 @@ the depth.
 
 ---
 
-## Slide 7: Snowpark ML Modeling + Distributed HPO
+## Slide 7: Snowpark ML Modeling + Experiment Tracking + HPO
 
 **Talking Points:**
 - Train an XGBoost lapse classifier with the `snowflake.ml.modeling` API — the fit runs in Snowflake, no data export.
-- The train/validation split comes straight from the versioned Dataset, so evaluation is reproducible.
-- Distributed HPO tunes hyperparameters across nodes; you can use Snowflake's optimized search or bring Optuna/hyperopt.
+- Every candidate config is logged as a run under one **experiment** (`DONOR_LAPSE`) via `snowflake.ml.experiment` — params + AUC/F1 from `predict_proba` — so runs compare side-by-side in AI & ML → Experiments.
+- Distributed HPO (`GridSearchCV`) sweeps hyperparameters across the warehouse; the best config is refit and becomes the registered model.
 
 **Internal Context:**
+- Evaluate AUC on `predict_proba` output, not the hard class — a common mistake that makes AUC look degenerate.
 - The modeling API mirrors scikit-learn (`input_cols`/`label_cols`/`output_cols`) — familiar to any data scientist, which lowers adoption friction.
 - If they ask about class imbalance (31% lapse), mention `scale_pos_weight` and threshold tuning; don't rabbit-hole live.
 
@@ -164,7 +165,7 @@ the depth.
 
 **Talking Points:**
 - Shapley attributions turn a probability into a reason a fundraiser trusts: "last gift 410 days ago, engagement down 63%."
-- Explainability runs on any registered model via the `explain` function — no separate tooling.
+- Explainability is enabled at registration (`options={"enable_explainability": True}` in `log_model`) and runs on the registered model via the `explain` function — no separate tooling.
 - The per-donor drivers are what the agent surfaces in the final ranked list.
 
 **Internal Context:**
@@ -270,6 +271,7 @@ the depth.
 **Internal Context:**
 - Use this slide to connect the demo to whatever the account has already told you they're building — pick the row that matches and go deeper there.
 - No client names in this asset by design, so it's safe to reuse across every account.
+- The hands-on lab is three notebooks — `donor-churn-01-features`, `-02-model`, `-03-serve-agent` — each standalone with a rehydrate cell, so you can demo one lifecycle stage without running the others end-to-end.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/snowflake-intelligence
