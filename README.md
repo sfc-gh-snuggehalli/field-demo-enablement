@@ -25,6 +25,7 @@ hands-on lab with SQL setup and a notebook.
 |--------|----------|--------|--------------|
 | AI Functions: Customer Experience Telemetry | Sales Engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
 | Conversational BI: Semantic Views + Cortex Analyst + Agent | Sales Engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/conversational-bi/presentations/conversational-bi.html) |
+| Donor Lapse/Churn Intelligence: Snowflake ML → Agent | SEs + Customer ML Teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -62,6 +63,24 @@ telemetry from the AI Functions module.
 | `presentations/conversational-bi-speaker-notes.md` | Speaker notes |
 | `lab/setup.sql` | Structured tables, semantic view, Cortex Search service, agent |
 | `lab/conversational-bi-lab.ipynb` | Hands-on lab notebook |
+
+### Donor Lapse/Churn Intelligence: Snowflake ML → Agent
+
+**Location:** `donor-churn-ml/`
+
+The complete Snowflake ML lifecycle for a generic nonprofit fundraising CRM: predict donor
+lapse, explain every score, and act on it in natural language. Feature Store → Datasets →
+Cortex ML Functions → Snowpark ML + HPO → ML Jobs → Model Registry → Explainability →
+Serving → Observability, culminating in a Cortex Agent that calls the deployed model as a
+tool, plus a Streamlit chat app. Client-agnostic and reusable across accounts.
+
+| File | Description |
+|------|-------------|
+| `presentations/donor-churn-ml.html` | Slide deck (16 slides) |
+| `presentations/donor-churn-ml-speaker-notes.md` | Speaker notes |
+| `lab/setup.sql` | DB, four schemas, warehouses, synthetic data, Cortex ML Functions, semantic view |
+| `lab/donor-churn-ml-lab.ipynb` | Hands-on lab notebook (full ML lifecycle + agent) |
+| `app/streamlit_app.py` | Streamlit-in-Snowflake chat UI over the agent |
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -92,6 +111,16 @@ field-demo-enablement/
 │   └── lab/
 │       ├── setup.sql
 │       └── conversational-bi-lab.ipynb
+├── donor-churn-ml/             # Donor Lapse/Churn Intelligence: Snowflake ML → Agent
+│   ├── README.md
+│   ├── presentations/
+│   │   ├── donor-churn-ml.html
+│   │   └── donor-churn-ml-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   └── donor-churn-ml-lab.ipynb
+│   └── app/
+│       └── streamlit_app.py
 <!-- REPO_TREE_END -->
 ```
 

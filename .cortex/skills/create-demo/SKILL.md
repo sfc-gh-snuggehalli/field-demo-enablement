@@ -112,6 +112,17 @@ return interesting results. Reading/writing to Snowflake:
 Validate it parses (`python3 -m py_compile <slug>/lab/data_gen.py`). Do NOT execute it here —
 it loads into the user's account. Keep row counts modest (hundreds–low thousands).
 
+### Step 5c: Generate a Streamlit chat app (optional — agent/chat demos)
+
+If the demo ends in a Cortex Agent (or otherwise benefits from a chat UI), add
+`<slug>/app/streamlit_app.py`: a Streamlit-in-Snowflake app that sends natural-language
+questions to the agent and renders answers inline. Use `_snowflake.send_snow_api_request`
+against `POST /api/v2/databases/<db>/schemas/<schema>/agents/<agent>:run` (no external auth
+needed in SiS), keep a `st.session_state` chat history, and pre-seed the demo's marquee
+questions in the sidebar. Validate with `python3 -m py_compile`; do NOT run it here. Note in
+the module README that it deploys as a Streamlit-in-Snowflake app and needs USAGE on the
+agent and any custom-tool function.
+
 ### Step 6: Generate the module README
 
 Copy `templates/module-README.md` to `<slug>/README.md` and fill all placeholders
@@ -159,10 +170,12 @@ on that warehouse first.
 ├── presentations/
 │   ├── <slug>.html
 │   └── <slug>-speaker-notes.md
-└── lab/                      (omitted if include-lab = NO)
-    ├── setup.sql
-    ├── data_gen.py           (omitted if generate-data = NO)
-    └── <slug>-lab.ipynb
+├── lab/                      (omitted if include-lab = NO)
+│   ├── setup.sql
+│   ├── data_gen.py           (omitted if generate-data = NO)
+│   └── <slug>-lab.ipynb
+└── app/                      (optional — agent/chat demos)
+    └── streamlit_app.py
 ```
 Plus updated root `README.md` (table row + section + tree node).
 
@@ -173,6 +186,10 @@ Plus updated root `README.md` (table row + section + tree node).
 
 ## Quality Bar
 
+- **Client-agnostic content** — demos are reusable across customers, so NEVER put a customer
+  or company name anywhere (deck, speaker notes, README, SQL/Python comments, agent config).
+  Use a generic scenario + personas (e.g. "a nonprofit fundraising CRM", "an ML platform team").
+  Verify with a name scan before finishing (e.g. `grep -ri "<customer>" <slug>/` returns nothing).
 - Real function names/signatures only — verify via docs (Step 2). No fabricated SQL.
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
@@ -180,5 +197,21 @@ Plus updated root `README.md` (table row + section + tree node).
 - data_gen.py compiles (`py_compile`) and uses `write_pandas`; NOT executed here.
 - Structured data via SQL GENERATOR; unstructured text via data_gen.py write_pandas.
 - Objects depending on unstructured tables are created after data_gen.py in the run order.
+- **ML / MLOps demos:** objects that depend on a trained/deployed model — Model Registry
+  entries, Model Monitors, SQL tool-wrapper functions, and any agent that calls the model —
+  are created IN THE NOTEBOOK, after training/serving. `setup.sql` holds only model-independent
+  objects (data, Cortex ML Function objects, the Analyst semantic view). Document this run
+  order (setup.sql → notebook → app). Ground the ML APIs in real refs: Feature Store
+  (`FeatureStore`/`Entity`/`FeatureView`, `generate_dataset`), Datasets, Snowpark ML
+  (`snowflake.ml.modeling.xgboost`), distributed HPO, ML Jobs (`snowflake.ml.jobs.remote`,
+  compute pool, `snowflake-ml-python>=1.26`), Registry (`log_model`, `target_platforms`,
+  `default`), Explainability (`mv.run(function_name="explain")`), Serving (`mv.run` / `run_batch`),
+  Observability (`CREATE MODEL MONITOR`, `MODEL_MONITOR_*_METRIC`), and the model-as-a-tool
+  agent (custom tool `type: "generic"` backed by a SQL procedure/UDF; bind it in Snowsight UI).
+  For a strong lab signal, drive the training label from a hidden latent propensity (not the
+  raw features), so RFM/behavior features are genuinely predictive without leakage.
+- **Agent/Streamlit demos:** optionally add `app/streamlit_app.py` (Streamlit-in-Snowflake chat
+  over the agent via `_snowflake.send_snow_api_request` to `agents/<name>:run`); compile it
+  with `py_compile`; NOT executed here.
 - Module README includes a "Run in Snowflake (Workspaces / Git)" section (Workspaces + `get_active_session()` is the recommended demo path).
 - Root README markers preserved; new module appears in table, sections, and tree.
