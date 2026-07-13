@@ -1,3 +1,5 @@
+# Synthetic data generator that loads unstructured CX text tables into Snowflake for the AI Functions demo.
+# Co-authored with CoCo
 """
 AI Functions: Customer Experience Telemetry — Synthetic data generator
 
@@ -160,14 +162,19 @@ def get_session(connection_name: str):
     except Exception:
         from snowflake.snowpark import Session
 
-        return Session.builder.config("connection_name", connection_name).create()
+        try:
+            return Session.builder.config("connection_name", connection_name).create()
+        except Exception:
+            # Fall back to the environment's default connection (e.g. sandbox/CI)
+            return Session.builder.config("connection_name", "default").create()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Load synthetic CX text tables")
     parser.add_argument("--connection", default=DEFAULT_CONNECTION,
                         help="Named connection in ~/.snowflake/connections.toml")
-    args = parser.parse_args()
+    # Use parse_known_args so injected kernel args (e.g. ipykernel's -f) are ignored.
+    args, _ = parser.parse_known_args()
 
     session = get_session(args.connection)
     session.sql(f"USE DATABASE {DB_NAME}").collect()
