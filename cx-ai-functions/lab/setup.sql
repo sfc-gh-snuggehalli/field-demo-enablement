@@ -77,6 +77,35 @@ FROM TABLE(GENERATOR(ROWCOUNT => 500));
 --   CHAT_THREADS(thread_id, customer_id, channel, created_at, transcript)
 --   CALL_TRANSCRIPTS(call_id, customer_id, agent_id, call_date, transcript)
 --   SUPPORT_TICKETS(ticket_id, customer_id, created_at, subject, body)
+--
+-- They are pre-created here as empty placeholders so downstream objects (e.g. the
+-- Cortex Search service in Section 7) can be created before data_gen.py runs.
+-- data_gen.py loads them with write_pandas(overwrite=True), which replaces these
+-- placeholders with the populated tables.
+
+CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.CHAT_THREADS (
+    thread_id      NUMBER,
+    customer_id    NUMBER,
+    channel        STRING,
+    created_at     TIMESTAMP_NTZ,
+    transcript     STRING
+);
+
+CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.CALL_TRANSCRIPTS (
+    call_id        NUMBER,
+    customer_id    NUMBER,
+    agent_id       STRING,
+    call_date      DATE,
+    transcript     STRING
+);
+
+CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.SUPPORT_TICKETS (
+    ticket_id      NUMBER,
+    customer_id    NUMBER,
+    created_at     TIMESTAMP_NTZ,
+    subject        STRING,
+    body           STRING
+);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 4. APP UX TELEMETRY MODEL (how a customer's own app data flows into Snowflake)
