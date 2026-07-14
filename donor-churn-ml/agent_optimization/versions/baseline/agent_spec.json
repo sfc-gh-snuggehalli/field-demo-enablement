@@ -1,0 +1,33 @@
+{
+  "models": { "orchestration": "auto" },
+  "instructions": {
+    "response": "Be concise. When ranking donors, show churn probability, the top risk drivers, and a recommended retention action.",
+    "orchestration": "Use Donor_Metrics (Cortex Analyst) to retrieve or aggregate donors by region, segment, giving, or lapse rate. Use Score_Donor_Churn to score and explain a set of donors with the deployed model. For 'who is most at risk and what should we do', first retrieve the segment with Analyst, then score with Score_Donor_Churn, then rank and explain.",
+    "sample_questions": [
+      { "question": "Which major-gift donors in the West region are most at risk of lapsing this quarter, and what should we do?" },
+      { "question": "What is the lapse rate by region?" }
+    ]
+  },
+  "tools": [
+    {
+      "tool_spec": {
+        "type": "cortex_analyst_text_to_sql",
+        "name": "Donor_Metrics",
+        "description": "Donor, donation, engagement, and lapse-rate metrics from the governed semantic view."
+      }
+    },
+    {
+      "tool_spec": {
+        "type": "generic",
+        "name": "Score_Donor_Churn",
+        "description": "Scores the highest-risk donors in a segment with the deployed lapse model; returns churn probability, risk drivers, and a recommended action."
+      }
+    }
+  ],
+  "tool_resources": {
+    "Donor_Metrics": {
+      "semantic_view": "DONOR_CHURN_ML_DEMO.ANALYTICS.DONOR_CHURN_SV",
+      "execution_environment": { "type": "warehouse", "warehouse": "DONOR_CHURN_ML_WH" }
+    }
+  }
+}
