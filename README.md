@@ -45,10 +45,10 @@ own UX data (chat threads + thumbs up/down) flows in via a stage → raw `VARIAN
 |------|-------------|
 | `presentations/cx-ai-functions.html` | Slide deck (20 slides) |
 | `presentations/cx-ai-functions-speaker-notes.md` | Speaker notes |
-| `lab/setup.sql` | Schemas, warehouse, structured `CUSTOMERS`, app-telemetry objects, semantic view, Cortex Search, agent |
-| `lab/data_gen.py` | Snowpark loader for the unstructured text tables |
-| `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — AI-function pipeline + app UX telemetry ingestion + AI Function Studio |
-| `lab/cx-ai-functions-extensions.ipynb` | Notebook 2 — semantic view / Analyst / Search / Agent (runs live) + cost & guardrails |
+| `lab/setup.sql` | One-step setup — schemas, warehouse, all structured + unstructured data, app-telemetry ingestion, semantic view, Cortex Search, agent |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — run the AI-function pipeline (+ read-only app-telemetry tour) + AI Function Studio |
+| `lab/cx-ai-functions-extensions.ipynb` | Notebook 2 — integrate: semantic view / Analyst / Search / Agent (runs live) + cost & guardrails |
 
 ### Donor Lapse/Churn Intelligence: Snowflake ML → Agent
 
@@ -89,7 +89,7 @@ field-demo-enablement/
 │   │   └── cx-ai-functions-speaker-notes.md
 │   └── lab/
 │       ├── setup.sql
-│       ├── data_gen.py
+│       ├── cleanup.sql
 │       ├── cx-ai-functions-lab.ipynb
 │       └── cx-ai-functions-extensions.ipynb
 ├── donor-churn-ml/             # Donor Lapse/Churn Intelligence: Snowflake ML → Agent

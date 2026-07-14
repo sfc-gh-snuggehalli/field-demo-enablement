@@ -1,29 +1,31 @@
 -- =============================================================================
 -- AI Functions + Conversational BI: Customer Experience Intelligence — Lab Setup
 -- =============================================================================
--- Run this script once before starting the notebooks. It provisions the whole
--- module on a single database (FIELD_CX_DEMO) and a single warehouse:
+-- Run this ONE script before the notebooks. It provisions AND fully populates the
+-- whole module on a single database (FIELD_CX_DEMO) and a single warehouse, so
+-- every downstream object is valid the moment this script finishes — no Python,
+-- no second data-loading step, and no re-creating the search service.
 --
---   AI_FUNCTIONS schema  — structured CUSTOMERS + the app UX telemetry model
---                          (stage, raw VARIANT landing table, curated app tables).
---                          The unstructured text tables (chat threads, call
---                          transcripts, support tickets) are loaded by data_gen.py.
+--   AI_FUNCTIONS schema  — structured CUSTOMERS, the unstructured text tables
+--                          (chat threads, call transcripts, support tickets), and
+--                          the app UX telemetry model (stage, raw VARIANT landing
+--                          table, curated APP_* tables). All loaded here in SQL.
 --   ANALYTICS schema     — business tables, one governed SEMANTIC VIEW, a Cortex
 --                          Search service over the chat telemetry, and a Cortex
---                          Agent that combines them.
+--                          Agent that combines them. Created LAST, over data that
+--                          already exists.
 --
--- Two notebooks run on top of this:
---   1. cx-ai-functions-lab.ipynb        — the AI-function pipeline + app UX
---                                          telemetry ingestion + AI Function Studio.
---   2. cx-ai-functions-extensions.ipynb — semantic view / Cortex Analyst / Cortex
---                                          Search / Agent + cost & guardrails.
+-- Two notebooks run on top of this (neither generates data — they demonstrate):
+--   1. cx-ai-functions-lab.ipynb        — run the AI-function pipeline + a read-only
+--                                          tour of the app-telemetry setup loaded,
+--                                          plus AI Function Studio and cost.
+--   2. cx-ai-functions-extensions.ipynb — integrate: semantic view / Cortex Analyst /
+--                                          Cortex Search / Agent + cost & guardrails.
 --
 -- Prerequisites:
 --   - A role with CREATE DATABASE/SCHEMA, CREATE WAREHOUSE, CREATE SEMANTIC VIEW,
 --     CREATE CORTEX SEARCH SERVICE, and CREATE AGENT on this schema.
 --   - The SNOWFLAKE.CORTEX_USER database role (required for all AI_* functions).
---   - Python + snowflake-snowpark-python + pandas to run data_gen.py, OR run its
---     cells from a Snowflake Notebook.
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -65,67 +67,208 @@ SELECT
 FROM TABLE(GENERATOR(ROWCOUNT => 500));
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3. UNSTRUCTURED SAMPLE DATA (loaded by lab/data_gen.py)
+-- 3. UNSTRUCTURED SAMPLE DATA (SQL GENERATOR)
 -- ─────────────────────────────────────────────────────────────────────────────
--- The following text tables are CREATED and loaded by the companion Python script
--- via session.write_pandas(..., auto_create_table=True). Run it after this script:
+-- The three text tables the AI functions run against are generated here in pure
+-- SQL. Each row draws a topic and a
+-- sentiment; ARRAY_CONSTRUCT + GET pick a realistic snippet for that combination,
+-- and the transcript is assembled with string concatenation. Sentiment is skewed
+-- toward negative/mixed so AI_SENTIMENT, AI_CLASSIFY, AI_AGG, and AI_FILTER return
+-- interesting, non-uniform results.
 --
---     python lab/data_gen.py            # local (named connection), or
---     %run from a Snowflake Notebook cell using get_active_session()
---
--- Tables created by data_gen.py (all join to CUSTOMERS.CUSTOMER_ID):
---   CHAT_THREADS(thread_id, customer_id, channel, created_at, transcript)
---   CALL_TRANSCRIPTS(call_id, customer_id, agent_id, call_date, transcript)
---   SUPPORT_TICKETS(ticket_id, customer_id, created_at, subject, body)
---
--- They are pre-created here as empty placeholders so downstream objects (e.g. the
--- Cortex Search service in Section 7) can be created before data_gen.py runs.
--- data_gen.py loads them with write_pandas(overwrite=True), which replaces these
--- placeholders with the populated tables.
+-- Topic taxonomy (index -> topic):
+--   0 valuation_accuracy  1 pricing_billing  2 onboarding
+--   3 bug_report          4 cancellation     5 feature_request
+-- Sentiment (index): 0 negative  1 positive  2 neutral   (weighted ~45/35/20)
 
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.CHAT_THREADS (
-    thread_id      NUMBER,
-    customer_id    NUMBER,
-    channel        STRING,
-    created_at     TIMESTAMP_NTZ,
-    transcript     STRING
-);
+-- 3a. CHAT_THREADS — multi-turn customer <-> assistant conversations.
+CREATE OR REPLACE TABLE AI_FUNCTIONS.CHAT_THREADS AS
+WITH base AS (
+    SELECT
+        seq4() + 1                                                    AS thread_id,
+        UNIFORM(1, 500, RANDOM())                                     AS customer_id,
+        ['web_chat','in_app','mobile'][UNIFORM(0, 2, RANDOM())]::STRING AS channel,
+        DATEADD('minute', -UNIFORM(1, 260000, RANDOM()), CURRENT_TIMESTAMP()) AS created_at,
+        UNIFORM(0, 5, RANDOM())                                       AS topic_idx,
+        CASE WHEN UNIFORM(1, 100, RANDOM()) <= 45 THEN 0
+             WHEN UNIFORM(1, 100, RANDOM()) <= 64 THEN 2
+             ELSE 1 END                                               AS sentiment_idx
+    FROM TABLE(GENERATOR(ROWCOUNT => 1200))
+),
+snippet AS (
+    SELECT base.*,
+        GET(CASE topic_idx
+            WHEN 0 THEN ARRAY_CONSTRUCT(
+                'Your valuation is way off. It says my house is worth 80k less than three appraisers told me.',
+                'The home value estimate was spot on - matched my recent appraisal within a couple percent.',
+                'How often does the estimated home value get refreshed after I update the square footage?')
+            WHEN 1 THEN ARRAY_CONSTRUCT(
+                'I was charged twice this month and the Pro plan price jumped without any notice.',
+                'Upgrading to Pro was worth it, the comps report alone pays for the subscription.',
+                'Can you explain the difference between the Starter and Pro plans for billing?')
+            WHEN 2 THEN ARRAY_CONSTRUCT(
+                'I have been stuck on the onboarding step for an hour, the address import keeps failing.',
+                'Setup was painless, I connected my listings and had a dashboard in ten minutes.',
+                'Where do I find the guide for importing my B2B partner property portfolio?')
+            WHEN 3 THEN ARRAY_CONSTRUCT(
+                'The valuation chart is completely broken, it throws an error every time I open it.',
+                'Thanks for the quick fix - the map view loads correctly now.',
+                'Is the mobile app supposed to show the same comps as the web version?')
+            WHEN 4 THEN ARRAY_CONSTRUCT(
+                'I want to cancel immediately and get a refund, this product is not working for me.',
+                'I was going to cancel but the new market-trends feature convinced me to stay.',
+                'If I cancel mid-cycle, do I keep access until the end of the billing period?')
+            ELSE ARRAY_CONSTRUCT(
+                'Every competitor has API access and you still do not. This is a dealbreaker for our team.',
+                'Love the product - it would be perfect if you added rental yield estimates too.',
+                'Are there plans to support commercial property valuations for B2B accounts?')
+        END, sentiment_idx)::STRING                                   AS user_snippet
+    FROM base
+)
+SELECT
+    thread_id,
+    customer_id,
+    channel,
+    created_at,
+    'Customer: Hi, I need help with my account.\n' ||
+    'Assistant: Happy to help - what''s going on?\n' ||
+    'Customer: ' || user_snippet || '\n' ||
+    'Assistant: Thanks for the detail, let me look into that for you.\n' ||
+    'Customer: ' || GET(ARRAY_CONSTRUCT(
+        'Please hurry, this is frustrating.',
+        'Appreciate it.',
+        'Okay, thanks.'), sentiment_idx)::STRING                      AS transcript
+FROM snippet;
 
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.CALL_TRANSCRIPTS (
-    call_id        NUMBER,
-    customer_id    NUMBER,
-    agent_id       STRING,
-    call_date      DATE,
-    transcript     STRING
-);
+-- 3b. CALL_TRANSCRIPTS — text stand-ins for support call recordings.
+CREATE OR REPLACE TABLE AI_FUNCTIONS.CALL_TRANSCRIPTS AS
+WITH base AS (
+    SELECT
+        seq4() + 1                                                    AS call_id,
+        UNIFORM(1, 500, RANDOM())                                     AS customer_id,
+        'agent_' || LPAD(UNIFORM(1, 10, RANDOM()), 2, '0')            AS agent_id,
+        DATEADD('day', -UNIFORM(0, 180, RANDOM()), CURRENT_DATE())    AS call_date,
+        UNIFORM(0, 5, RANDOM())                                       AS topic_idx,
+        CASE WHEN UNIFORM(1, 100, RANDOM()) <= 45 THEN 0
+             WHEN UNIFORM(1, 100, RANDOM()) <= 64 THEN 2
+             ELSE 1 END                                               AS sentiment_idx
+    FROM TABLE(GENERATOR(ROWCOUNT => 400))
+),
+snippet AS (
+    SELECT base.*,
+        GET(CASE topic_idx
+            WHEN 0 THEN ARRAY_CONSTRUCT(
+                'Your valuation is way off. It says my house is worth 80k less than three appraisers told me.',
+                'The home value estimate was spot on - matched my recent appraisal within a couple percent.',
+                'How often does the estimated home value get refreshed after I update the square footage?')
+            WHEN 1 THEN ARRAY_CONSTRUCT(
+                'I was charged twice this month and the Pro plan price jumped without any notice.',
+                'Upgrading to Pro was worth it, the comps report alone pays for the subscription.',
+                'Can you explain the difference between the Starter and Pro plans for billing?')
+            WHEN 2 THEN ARRAY_CONSTRUCT(
+                'I have been stuck on the onboarding step for an hour, the address import keeps failing.',
+                'Setup was painless, I connected my listings and had a dashboard in ten minutes.',
+                'Where do I find the guide for importing my B2B partner property portfolio?')
+            WHEN 3 THEN ARRAY_CONSTRUCT(
+                'The valuation chart is completely broken, it throws an error every time I open it.',
+                'Thanks for the quick fix - the map view loads correctly now.',
+                'Is the mobile app supposed to show the same comps as the web version?')
+            WHEN 4 THEN ARRAY_CONSTRUCT(
+                'I want to cancel immediately and get a refund, this product is not working for me.',
+                'I was going to cancel but the new market-trends feature convinced me to stay.',
+                'If I cancel mid-cycle, do I keep access until the end of the billing period?')
+            ELSE ARRAY_CONSTRUCT(
+                'Every competitor has API access and you still do not. This is a dealbreaker for our team.',
+                'Love the product - it would be perfect if you added rental yield estimates too.',
+                'Are there plans to support commercial property valuations for B2B accounts?')
+        END, sentiment_idx)::STRING                                   AS caller_snippet
+    FROM base
+)
+SELECT
+    call_id,
+    customer_id,
+    agent_id,
+    call_date,
+    'Agent: Thank you for calling home valuation support, this is ' || agent_id || '.\n' ||
+    'Caller: ' || caller_snippet || '\n' ||
+    'Agent: I understand. Let me pull up your account and take a look.\n' ||
+    'Caller: ' || GET(ARRAY_CONSTRUCT(
+        'I have called about this three times now.',
+        'Great, thank you so much.',
+        'Sure, take your time.'), sentiment_idx)::STRING              AS transcript
+FROM snippet;
 
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.SUPPORT_TICKETS (
-    ticket_id      NUMBER,
-    customer_id    NUMBER,
-    created_at     TIMESTAMP_NTZ,
-    subject        STRING,
-    body           STRING
-);
+-- 3c. SUPPORT_TICKETS — free-text tickets with a topic-derived subject.
+CREATE OR REPLACE TABLE AI_FUNCTIONS.SUPPORT_TICKETS AS
+WITH base AS (
+    SELECT
+        seq4() + 1                                                    AS ticket_id,
+        UNIFORM(1, 500, RANDOM())                                     AS customer_id,
+        DATEADD('hour', -UNIFORM(0, 4320, RANDOM()), CURRENT_TIMESTAMP()) AS created_at,
+        UNIFORM(0, 5, RANDOM())                                       AS topic_idx,
+        CASE WHEN UNIFORM(1, 100, RANDOM()) <= 45 THEN 0
+             WHEN UNIFORM(1, 100, RANDOM()) <= 64 THEN 2
+             ELSE 1 END                                               AS sentiment_idx
+    FROM TABLE(GENERATOR(ROWCOUNT => 600))
+)
+SELECT
+    ticket_id,
+    customer_id,
+    created_at,
+    GET(ARRAY_CONSTRUCT(
+        'Estimated value looks wrong',
+        'Billing question',
+        'Trouble getting started',
+        'Something is broken',
+        'Cancellation request',
+        'Feature suggestion'), topic_idx)::STRING                     AS subject,
+    GET(CASE topic_idx
+        WHEN 0 THEN ARRAY_CONSTRUCT(
+            'Your valuation is way off. It says my house is worth 80k less than three appraisers told me.',
+            'The home value estimate was spot on - matched my recent appraisal within a couple percent.',
+            'How often does the estimated home value get refreshed after I update the square footage?')
+        WHEN 1 THEN ARRAY_CONSTRUCT(
+            'I was charged twice this month and the Pro plan price jumped without any notice.',
+            'Upgrading to Pro was worth it, the comps report alone pays for the subscription.',
+            'Can you explain the difference between the Starter and Pro plans for billing?')
+        WHEN 2 THEN ARRAY_CONSTRUCT(
+            'I have been stuck on the onboarding step for an hour, the address import keeps failing.',
+            'Setup was painless, I connected my listings and had a dashboard in ten minutes.',
+            'Where do I find the guide for importing my B2B partner property portfolio?')
+        WHEN 3 THEN ARRAY_CONSTRUCT(
+            'The valuation chart is completely broken, it throws an error every time I open it.',
+            'Thanks for the quick fix - the map view loads correctly now.',
+            'Is the mobile app supposed to show the same comps as the web version?')
+        WHEN 4 THEN ARRAY_CONSTRUCT(
+            'I want to cancel immediately and get a refund, this product is not working for me.',
+            'I was going to cancel but the new market-trends feature convinced me to stay.',
+            'If I cancel mid-cycle, do I keep access until the end of the billing period?')
+        ELSE ARRAY_CONSTRUCT(
+            'Every competitor has API access and you still do not. This is a dealbreaker for our team.',
+            'Love the product - it would be perfect if you added rental yield estimates too.',
+            'Are there plans to support commercial property valuations for B2B accounts?')
+    END, sentiment_idx)::STRING                                       AS body
+FROM base;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4. APP UX TELEMETRY MODEL (how a customer's own app data flows into Snowflake)
+-- 4. APP UX TELEMETRY MODEL + INGESTION (how a customer's app data flows into Snowflake)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- This section models what a real conversational app emits: message-level turns
--- and explicit feedback (thumbs up / down). It demonstrates BOTH ingestion paths:
+-- and explicit feedback (thumbs up / down). It demonstrates BOTH ingestion paths
+-- and RUNS the full flow here, so the curated tables and the thumbs_down_rate
+-- metric are populated before any consumer is created:
 --
 --   (a) RAW / semi-structured landing — an internal stage receives JSON files the
 --       app drops; COPY INTO loads them verbatim into a VARIANT column. This is the
---       immutable landing zone: schema-on-read, captures everything the app sends
---       with no schema coordination. (In production the continuous path is Snowpipe
---       or Snowpipe Streaming; the notebook narrates that.)
+--       immutable landing zone: schema-on-read, captures everything the app sends.
+--       (In production the continuous path is Snowpipe or Snowpipe Streaming.)
 --
 --   (b) CURATED / structured — LATERAL FLATTEN turns the VARIANT into typed tables
 --       (APP_THREADS / APP_MESSAGES / APP_FEEDBACK) that are governed, joinable to
 --       CUSTOMERS, performant, and feed the AI functions + semantic view.
 --
--- The stage + raw table are created here; the notebook (Section: "App UX
--- telemetry") generates sample JSON, lands it in the stage, COPYs it in, and
--- flattens it — so attendees watch the whole flow run.
+-- Notebook 1 tours these already-loaded objects read-only (SELECT from the raw and
+-- curated tables) to explain how the data got here — it does not regenerate them.
 
 -- 4a. Internal stage that simulates where the app drops event files.
 CREATE STAGE IF NOT EXISTS AI_FUNCTIONS.APP_EVENTS_STAGE
@@ -133,41 +276,135 @@ CREATE STAGE IF NOT EXISTS AI_FUNCTIONS.APP_EVENTS_STAGE
   COMMENT = 'Landing zone for raw app UX telemetry (one JSON doc per chat thread)';
 
 -- 4b. Raw landing table — one VARIANT payload per file/record, loaded as-is.
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.RAW_APP_EVENTS (
+CREATE OR REPLACE TABLE AI_FUNCTIONS.RAW_APP_EVENTS (
     payload        VARIANT,
     source_file    STRING,
     loaded_at      TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 )
 COMMENT = 'Raw app telemetry exactly as the app emitted it (schema-on-read).';
 
--- 4c. Curated structured tables (populated in the notebook by flattening RAW_APP_EVENTS).
---     Defined here so the semantic view / search / agent can reference them, and so
---     the shapes are documented even before the notebook runs.
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.APP_THREADS (
-    thread_id      STRING,
-    customer_id    NUMBER,
-    channel        STRING,
-    app_version    STRING,
-    started_at     TIMESTAMP_NTZ
-);
+-- 4c. Seed the message-level events (topic + sentiment drive realistic text + feedback).
+CREATE OR REPLACE TEMPORARY TABLE AI_FUNCTIONS.APP_EVENTS_SEED AS
+WITH base AS (
+    SELECT
+        'thr_' || LPAD(seq4() + 1, 5, '0')                            AS thread_id,
+        UNIFORM(1, 500, RANDOM())                                     AS customer_id,
+        ['web_chat','in_app','mobile'][UNIFORM(0, 2, RANDOM())]::STRING AS channel,
+        '3.' || UNIFORM(1, 9, RANDOM())::STRING || '.0'               AS app_version,
+        DATEADD('minute', -UNIFORM(1, 260000, RANDOM()), CURRENT_TIMESTAMP()) AS started_at,
+        UNIFORM(1, 100, RANDOM())                                     AS s,
+        UNIFORM(0, 5, RANDOM())                                       AS topic_idx
+    FROM TABLE(GENERATOR(ROWCOUNT => 150))
+),
+labeled AS (
+    SELECT base.*, CASE WHEN s <= 45 THEN 0 WHEN s <= 80 THEN 1 ELSE 2 END AS sentiment_idx
+    FROM base
+)
+SELECT
+    thread_id, customer_id, channel, app_version, started_at, sentiment_idx,
+    GET(CASE topic_idx
+        WHEN 0 THEN ARRAY_CONSTRUCT(
+            'Your valuation is way off - it says my house is worth 80k less than three appraisers told me.',
+            'The home value estimate was spot on, within a couple percent of my appraisal.',
+            'How often does the estimated value refresh after I update the square footage?')
+        WHEN 1 THEN ARRAY_CONSTRUCT(
+            'I was charged twice this month and the Pro price jumped with no notice.',
+            'Upgrading to Pro was worth it - the comps report alone pays for it.',
+            'Can you explain the difference between the Starter and Pro plans?')
+        WHEN 2 THEN ARRAY_CONSTRUCT(
+            'I have been stuck on onboarding for an hour, the address import keeps failing.',
+            'Setup was painless, I had a dashboard in ten minutes.',
+            'Where is the guide for importing my B2B property portfolio?')
+        WHEN 3 THEN ARRAY_CONSTRUCT(
+            'The valuation chart is completely broken, it errors every time I open it.',
+            'Thanks for the quick fix - the map view loads correctly now.',
+            'Is the mobile app supposed to show the same comps as web?')
+        WHEN 4 THEN ARRAY_CONSTRUCT(
+            'I want to cancel immediately and get a refund, this is not working for me.',
+            'I was going to cancel but the new market-trends feature convinced me to stay.',
+            'If I cancel mid-cycle, do I keep access until the end of the period?')
+        ELSE ARRAY_CONSTRUCT(
+            'Every competitor has API access and you still do not. Dealbreaker for our team.',
+            'Love the product - rental yield estimates would make it perfect.',
+            'Are there plans to support commercial property valuations for B2B?')
+    END, sentiment_idx)::STRING                                       AS user_text,
+    GET(ARRAY_CONSTRUCT(
+        'I hear you - I am escalating this to our team right now.',
+        'Glad to hear it! Anything else I can help with?',
+        'Here is what I found for you.'), sentiment_idx)::STRING      AS asst_text,
+    'msg_' || thread_id || '_1'                                       AS user_msg_id,
+    'msg_' || thread_id || '_2'                                       AS asst_msg_id,
+    -- ~65% of threads leave feedback; negatives skew thumbs-down, positives thumbs-up
+    CASE WHEN UNIFORM(1, 100, RANDOM()) <= 65
+         THEN CASE sentiment_idx WHEN 0 THEN -1 WHEN 1 THEN 1
+                   ELSE GET(ARRAY_CONSTRUCT(-1, 1), UNIFORM(0, 1, RANDOM()))::INT END
+         ELSE NULL END                                                AS rating
+FROM labeled;
 
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.APP_MESSAGES (
-    message_id     STRING,
-    thread_id      STRING,
-    turn_no        NUMBER,
-    role           STRING,          -- 'user' or 'assistant'
-    content        STRING,
-    model          STRING,
-    created_at     TIMESTAMP_NTZ
-);
+-- 4d. Serialize each thread to a single JSON document (messages[] + feedback[]).
+CREATE OR REPLACE TEMPORARY TABLE AI_FUNCTIONS.APP_EVENTS_JSON AS
+SELECT OBJECT_CONSTRUCT(
+    'thread_id',   thread_id,
+    'customer_id', customer_id,
+    'channel',     channel,
+    'app_version', app_version,
+    'started_at',  started_at::STRING,
+    'messages', ARRAY_CONSTRUCT(
+        OBJECT_CONSTRUCT('message_id', user_msg_id, 'turn_no', 1, 'role', 'user',
+                         'content', user_text, 'created_at', started_at::STRING),
+        OBJECT_CONSTRUCT('message_id', asst_msg_id, 'turn_no', 2, 'role', 'assistant',
+                         'content', asst_text, 'model', 'llama3.1-8b',
+                         'created_at', DATEADD('second', 20, started_at)::STRING)
+    ),
+    'feedback', IFF(rating IS NULL, ARRAY_CONSTRUCT(),
+        ARRAY_CONSTRUCT(OBJECT_CONSTRUCT('message_id', asst_msg_id, 'rating', rating,
+                         'created_at', DATEADD('second', 30, started_at)::STRING)))
+) AS payload
+FROM AI_FUNCTIONS.APP_EVENTS_SEED;
 
-CREATE TABLE IF NOT EXISTS AI_FUNCTIONS.APP_FEEDBACK (
-    message_id     STRING,
-    thread_id      STRING,
-    rating         NUMBER,          -- +1 thumbs up, -1 thumbs down
-    comment        STRING,
-    created_at     TIMESTAMP_NTZ
-);
+-- 4e. Drop the JSON docs into the stage (this is the step your app would do).
+COPY INTO @AI_FUNCTIONS.APP_EVENTS_STAGE/app_events
+FROM (SELECT payload FROM AI_FUNCTIONS.APP_EVENTS_JSON)
+FILE_FORMAT = (TYPE = JSON)
+OVERWRITE = TRUE;
+
+-- 4f. Load the raw events, as-is, into the VARIANT landing table.
+TRUNCATE TABLE AI_FUNCTIONS.RAW_APP_EVENTS;
+COPY INTO AI_FUNCTIONS.RAW_APP_EVENTS (payload, source_file)
+FROM (SELECT $1, METADATA$FILENAME FROM @AI_FUNCTIONS.APP_EVENTS_STAGE/app_events)
+FILE_FORMAT = (TYPE = JSON);
+
+-- 4g. Curate into typed tables via LATERAL FLATTEN of the messages[]/feedback[] arrays.
+CREATE OR REPLACE TABLE AI_FUNCTIONS.APP_THREADS AS
+SELECT
+    payload:thread_id::STRING                                         AS thread_id,
+    payload:customer_id::NUMBER                                       AS customer_id,
+    payload:channel::STRING                                          AS channel,
+    payload:app_version::STRING                                      AS app_version,
+    payload:started_at::TIMESTAMP_NTZ                                AS started_at
+FROM AI_FUNCTIONS.RAW_APP_EVENTS;
+
+CREATE OR REPLACE TABLE AI_FUNCTIONS.APP_MESSAGES AS
+SELECT
+    m.value:message_id::STRING                                       AS message_id,
+    r.payload:thread_id::STRING                                      AS thread_id,
+    m.value:turn_no::NUMBER                                          AS turn_no,
+    m.value:role::STRING                                             AS role,
+    m.value:content::STRING                                          AS content,
+    m.value:model::STRING                                            AS model,
+    m.value:created_at::TIMESTAMP_NTZ                                AS created_at
+FROM AI_FUNCTIONS.RAW_APP_EVENTS r,
+     LATERAL FLATTEN(input => r.payload:messages) m;
+
+CREATE OR REPLACE TABLE AI_FUNCTIONS.APP_FEEDBACK AS
+SELECT
+    f.value:message_id::STRING                                       AS message_id,
+    r.payload:thread_id::STRING                                      AS thread_id,
+    f.value:rating::NUMBER                                           AS rating,
+    f.value:comment::STRING                                          AS comment,
+    f.value:created_at::TIMESTAMP_NTZ                                AS created_at
+FROM AI_FUNCTIONS.RAW_APP_EVENTS r,
+     LATERAL FLATTEN(input => r.payload:feedback) f;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 5. ANALYTICS: business tables (structured GENERATOR data)
@@ -236,8 +473,8 @@ SELECT
 FROM ANALYTICS.CUSTOMERS;
 
 -- Thumbs feedback rolled up to the customer level so the semantic view can expose a
--- governed "thumbs-down rate". Sourced from the app telemetry curated in the
--- notebook; COALESCE keeps a row per customer even before the notebook has run.
+-- governed "thumbs-down rate". Sourced from the app telemetry curated above in
+-- Section 4 — so this is populated with real ratings, not zeros.
 CREATE OR REPLACE TABLE ANALYTICS.CUSTOMER_FEEDBACK AS
 SELECT
     c.customer_id,
@@ -349,9 +586,8 @@ CREATE OR REPLACE SEMANTIC VIEW ANALYTICS.CX_ANALYTICS_SV
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 7. ANALYTICS: Cortex Search over the unstructured CX telemetry
 -- ─────────────────────────────────────────────────────────────────────────────
--- Reads FIELD_CX_DEMO.AI_FUNCTIONS.CHAT_THREADS (loaded by data_gen.py). If you
--- have not run data_gen.py yet, run it before this statement (or re-run this
--- statement afterward).
+-- Built over AI_FUNCTIONS.CHAT_THREADS, which Section 3 already populated — so the
+-- service indexes real transcripts immediately, with no re-create step.
 
 CREATE OR REPLACE CORTEX SEARCH SERVICE ANALYTICS.CHAT_SEARCH
   ON transcript
@@ -425,12 +661,16 @@ CREATE OR REPLACE AGENT ANALYTICS.CX_INTELLIGENCE_AGENT
   $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Setup complete.
---   1) You just ran this script (schemas, warehouse, structured + app-telemetry
---      objects, semantic view, search service, agent).
---   2) Run: python lab/data_gen.py   (loads CHAT_THREADS, CALL_TRANSCRIPTS, SUPPORT_TICKETS)
---      then re-run Section 7 (CHAT_SEARCH) if it ran before the data was present.
---   3) Open lab/cx-ai-functions-lab.ipynb (AI-function pipeline + app UX telemetry),
---      then lab/cx-ai-functions-extensions.ipynb (semantic view / Analyst / Search /
---      Agent + cost & guardrails), or chat with CX_INTELLIGENCE_AGENT in Snowsight.
+-- Setup complete — the environment is fully populated and every object is valid.
+--   You just created the schemas, warehouse, ALL structured + unstructured data,
+--   the app-telemetry (raw + curated), the semantic view, the search service, and
+--   the agent. Cortex Search returns hits, thumbs_down_rate is non-zero, and the
+--   agent answers — no second data step, no re-create.
+--
+-- Next:
+--   1) Open lab/cx-ai-functions-lab.ipynb — run the AI-function pipeline (and tour
+--      the app-telemetry setup loaded), AI Function Studio, and cost.
+--   2) Open lab/cx-ai-functions-extensions.ipynb — integrate the semantic view /
+--      Cortex Analyst / Cortex Search / Agent + cost & guardrails.
+--   Or just chat with CX_INTELLIGENCE_AGENT in Snowsight.
 -- ─────────────────────────────────────────────────────────────────────────────

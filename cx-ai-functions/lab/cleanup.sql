@@ -22,7 +22,7 @@ DROP WAREHOUSE IF EXISTS CX_AI_FUNCTIONS_WH;
 DROP WAREHOUSE IF EXISTS CONVERSATIONAL_BI_WH;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Cleanup complete. Re-run lab/setup.sql (then lab/data_gen.py) to rebuild.
+-- Cleanup complete. Re-run lab/setup.sql to rebuild (it loads all data too).
 -- ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -63,7 +63,7 @@ DROP WAREHOUSE IF EXISTS CONVERSATIONAL_BI_WH;
 -- DROP TABLE IF EXISTS AI_FUNCTIONS.RAW_APP_EVENTS;
 -- DROP STAGE IF EXISTS AI_FUNCTIONS.APP_EVENTS_STAGE;
 --
--- -- AI_FUNCTIONS: unstructured text (data_gen.py) + structured base
+-- -- AI_FUNCTIONS: unstructured text (setup.sql) + structured base
 -- DROP TABLE IF EXISTS AI_FUNCTIONS.CHAT_THREADS;
 -- DROP TABLE IF EXISTS AI_FUNCTIONS.CALL_TRANSCRIPTS;
 -- DROP TABLE IF EXISTS AI_FUNCTIONS.SUPPORT_TICKETS;

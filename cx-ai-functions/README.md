@@ -40,11 +40,10 @@ product teams evaluating customer-experience analytics.
 |------|-------------|
 | `presentations/cx-ai-functions.html` | Slide deck (20 slides) |
 | `presentations/cx-ai-functions-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
-| `lab/setup.sql` | SQL setup — schemas `AI_FUNCTIONS` + `ANALYTICS`, warehouse, structured `CUSTOMERS`, app-telemetry objects, semantic view, Cortex Search, agent |
-| `lab/data_gen.py` | Snowpark loader for the unstructured text tables |
+| `lab/setup.sql` | One-step SQL setup — schemas `AI_FUNCTIONS` + `ANALYTICS`, warehouse, **all** structured + unstructured data, app-telemetry ingestion (stage → raw → curated), semantic view, Cortex Search, agent |
 | `lab/cleanup.sql` | Tear everything down to start fresh (drops the database + warehouse) |
-| `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — AI-function pipeline + app UX telemetry ingestion + AI Function Studio |
-| `lab/cx-ai-functions-extensions.ipynb` | Notebook 2 — semantic view / Cortex Analyst / Cortex Search / Agent (runs live) + cost & guardrails |
+| `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — run the AI-function pipeline (+ a read-only tour of the app-telemetry setup loaded) + AI Function Studio |
+| `lab/cx-ai-functions-extensions.ipynb` | Notebook 2 — integrate: semantic view / Cortex Analyst / Cortex Search / Agent (runs live) + cost & guardrails |
 
 ## Hands-On Lab
 
@@ -55,22 +54,23 @@ Run each AI Function over synthetic conversation data, then assemble a governed
 
 - A role granted the `SNOWFLAKE.CORTEX_USER` database role (required for all `AI_*` functions)
 - Privileges to create a database and a warehouse (or access to existing ones)
-- Python with `snowflake-snowpark-python` and `pandas` to run `data_gen.py` locally
-  (or run it from a Snowflake Notebook cell)
+- Privileges to create a semantic view, a Cortex Search service, and an agent on the schema
 
 ### Setup
 
-Run in this order:
+One setup step, then two notebooks — nothing else generates data, so every object is valid and
+populated the moment setup finishes:
 
-1. `lab/setup.sql` — creates `FIELD_CX_DEMO`, schemas `AI_FUNCTIONS` + `ANALYTICS`, warehouse
-   `CX_AI_FUNCTIONS_WH`, the structured `CUSTOMERS` table, the app-telemetry objects (stage +
-   `RAW_APP_EVENTS` + curated `APP_*` tables), the `CX_ANALYTICS_SV` semantic view, the
-   `CHAT_SEARCH` service, and the `CX_INTELLIGENCE_AGENT`.
-2. `python lab/data_gen.py` — loads `CHAT_THREADS`, `CALL_TRANSCRIPTS`, and `SUPPORT_TICKETS`
-   via `write_pandas`. (Re-run the `CHAT_SEARCH` statement in setup.sql afterward if it ran
-   before the data existed.)
-3. Open `lab/cx-ai-functions-lab.ipynb`, then `lab/cx-ai-functions-extensions.ipynb`, in
-   Snowflake Notebooks.
+1. **Setup** — run `lab/setup.sql`. It creates `FIELD_CX_DEMO`, schemas `AI_FUNCTIONS` +
+   `ANALYTICS`, warehouse `CX_AI_FUNCTIONS_WH`, **all** structured data, the unstructured text
+   tables (`CHAT_THREADS` / `CALL_TRANSCRIPTS` / `SUPPORT_TICKETS`) via SQL `GENERATOR`, runs the
+   full app-telemetry ingestion (stage → `RAW_APP_EVENTS` → curated `APP_*` tables), builds
+   `CUSTOMER_FEEDBACK` from the real thumbs data, then creates the `CX_ANALYTICS_SV` semantic view,
+   the `CHAT_SEARCH` service, and the `CX_INTELLIGENCE_AGENT` **over data that already exists** — so
+   search returns hits, `thumbs_down_rate` is non-zero, and the agent answers immediately, with no
+   re-create.
+2. **Run the AI functions** — open `lab/cx-ai-functions-lab.ipynb`.
+3. **Integrate** — open `lab/cx-ai-functions-extensions.ipynb`.
 
 ### Run in Snowflake (Workspaces / Git) — recommended for demos
 
@@ -79,19 +79,17 @@ auth (no local OAuth / connection setup needed):
 
 1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
-2. Open `cx-ai-functions/lab/setup.sql` and run it.
-3. Run `lab/data_gen.py` as a notebook cell (it uses `get_active_session()` in-notebook — no
-   `--connection` needed).
-4. Open `lab/cx-ai-functions-lab.ipynb` and walk the sections; the AI functions run live.
+2. Open `cx-ai-functions/lab/setup.sql` and run it — this creates and fully populates everything.
+3. Open `lab/cx-ai-functions-lab.ipynb` and walk the sections; the AI functions run live.
+4. Open `lab/cx-ai-functions-extensions.ipynb` for the integrations + cost/guardrails.
 
-Running locally instead? Use `snow sql -f lab/setup.sql` and
-`python lab/data_gen.py --connection <name>`, with a connection whose role can create the objects
-and use a warehouse.
+Running locally instead? Use `snow sql -f lab/setup.sql` with a connection whose role can create the
+objects and use a warehouse — no Python or second data step required.
 
 ### Lab Sections
 
 1. Connect & explore the raw conversations
-1b. App UX telemetry — land chat threads + thumbs up/down via stage → `VARIANT` → curated tables
+1b. App UX telemetry — a read-only tour of how setup landed chat threads + thumbs up/down via stage → `VARIANT` → curated tables
 2. Sentiment with `AI_SENTIMENT`
 3. Topic modeling with `AI_CLASSIFY`
 4. Structured fields with `AI_EXTRACT`
