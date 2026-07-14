@@ -77,7 +77,7 @@ USE SCHEMA RAW;
 
 -- 3a. DONORS — one row per donor. Each donor gets a LATENT churn propensity that
 --     drives how recently / how often they give and engage. The latent columns
---     (churn_prob, is_churner, base_recency_days, lifetime_gifts, engage_target)
+--     (churn_prob, is_churner, base_recency_days, gift_cadence_days, engage_cadence_days)
 --     are used ONLY to shape the DONATIONS/ENGAGEMENTS timelines below — they are
 --     NOT used as model features and NOT exposed to the semantic view, so the
 --     trained models must learn lapse from RFM + engagement behavior (no leakage).
@@ -120,22 +120,31 @@ SELECT
     donor_id, org_id, acquisition_date, channel, region, wealth_signal_score,
     donor_segment, churn_prob,
     (u < churn_prob)                                                      AS is_churner,
-    -- Most-recent gift is OLD for churners, recent for retained donors.
-    IFF(u < churn_prob, UNIFORM(430, 1100, RANDOM()), UNIFORM(1, 250, RANDOM())) AS base_recency_days,
-    IFF(u < churn_prob, UNIFORM(1, 6, RANDOM()),      UNIFORM(8, 24, RANDOM()))  AS lifetime_gifts,
-    IFF(u < churn_prob, UNIFORM(0, 10, RANDOM()),     UNIFORM(6, 45, RANDOM()))  AS engage_target
+    -- REALISTIC, STATIONARY timelines. Each donor gives on a regular CADENCE right up to a
+    -- "last active" point (base_recency_days ago). Low-propensity donors keep giving up to
+    -- ~today (small recency); higher-propensity donors went quiet longer ago. Because gifts
+    -- recur on a cadence, the recency distribution looks the SAME at the training as-of (12
+    -- months ago) and at serving time (now) -> NO train/serve skew. base_recency is a NOISY,
+    -- CONTINUOUS function of the propensity with wide overlap, so the ~365-day lapse boundary
+    -- is crossed STOCHASTICALLY (reactivation + sudden lapse) and the model yields a
+    -- CALIBRATED spread of probabilities instead of saturated 0/1 scores.
+    GREATEST(1,  LEAST(1500, ROUND(
+        IFF(u < churn_prob, UNIFORM(180, 1000, RANDOM()), UNIFORM(1, 90, RANDOM()))
+        + UNIFORM(-40, 40, RANDOM()))))                                                   AS base_recency_days,
+    GREATEST(20, LEAST(140,  ROUND(45 + churn_prob * 45  + UNIFORM(-15, 15, RANDOM()))))   AS gift_cadence_days,
+    GREATEST(10, LEAST(90,   ROUND(25 + churn_prob * 30  + UNIFORM(-10, 10, RANDOM()))))   AS engage_cadence_days
 FROM e;
 
--- 3b. DONATIONS — expand each donor into `lifetime_gifts` gifts. The most recent
---     gift sits ~base_recency_days ago; older gifts step further back.
+-- 3b. DONATIONS — each donor gives on a regular CADENCE from acquisition up to their most
+--     recent gift (base_recency_days ago). Regular recurrence makes recency ~STATIONARY
+--     across snapshots, so the training (as-of) and serving (now) feature distributions match.
 CREATE OR REPLACE TABLE DONATIONS AS
-WITH nums AS (SELECT seq4() AS k FROM TABLE(GENERATOR(ROWCOUNT => 25)))
+WITH nums AS (SELECT seq4() AS k FROM TABLE(GENERATOR(ROWCOUNT => 90)))
 SELECT
     ROW_NUMBER() OVER (ORDER BY d.donor_id, n.k)                          AS gift_id,
     d.donor_id,
-    GREATEST(d.acquisition_date,
-        DATEADD('day', -(d.base_recency_days + n.k * UNIFORM(20, 90, RANDOM())),
-                CURRENT_DATE()))                                          AS gift_date,
+    DATEADD('day', -(d.base_recency_days + n.k * d.gift_cadence_days),
+            CURRENT_DATE())                                               AS gift_date,
     'CMP_' || LPAD(UNIFORM(1, 40, RANDOM())::STRING, 3, '0')             AS campaign_id,
     ['Annual Fund','Year-End','Emergency Appeal','Capital Campaign','Membership','Giving Tuesday']
         [UNIFORM(0, 5, RANDOM())]::STRING                                 AS appeal_type,
@@ -146,22 +155,22 @@ SELECT
             ELSE               10 + UNIFORM(1, 1000, RANDOM()) * 0.15
         END, 2)                                                           AS gift_amount
 FROM DONORS d
-JOIN nums n ON n.k < d.lifetime_gifts;
+JOIN nums n
+  ON DATEADD('day', -(d.base_recency_days + n.k * d.gift_cadence_days), CURRENT_DATE()) >= d.acquisition_date;
 
--- 3c. ENGAGEMENTS — expand each donor into `engage_target` touchpoints, more
---     recent than gifts. Churners engage less and less recently.
+-- 3c. ENGAGEMENTS — recurring touchpoints on a shorter cadence, more recent than gifts.
 CREATE OR REPLACE TABLE ENGAGEMENTS AS
-WITH nums AS (SELECT seq4() AS k FROM TABLE(GENERATOR(ROWCOUNT => 50)))
+WITH nums AS (SELECT seq4() AS k FROM TABLE(GENERATOR(ROWCOUNT => 160)))
 SELECT
     ROW_NUMBER() OVER (ORDER BY d.donor_id, n.k)                          AS engagement_id,
     d.donor_id,
-    GREATEST(d.acquisition_date,
-        DATEADD('day', -(ROUND(d.base_recency_days * 0.7) + n.k * UNIFORM(10, 40, RANDOM())),
-                CURRENT_DATE()))::TIMESTAMP_NTZ                           AS event_date,
+    DATEADD('day', -(ROUND(d.base_recency_days * 0.6) + n.k * d.engage_cadence_days),
+            CURRENT_DATE())::TIMESTAMP_NTZ                                AS event_date,
     ['email_open','click','event_attend','volunteer']
         [UNIFORM(0, 3, RANDOM())]::STRING                                 AS event_type
 FROM DONORS d
-JOIN nums n ON n.k < d.engage_target;
+JOIN nums n
+  ON DATEADD('day', -(ROUND(d.base_recency_days * 0.6) + n.k * d.engage_cadence_days), CURRENT_DATE()) >= d.acquisition_date;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 4. POINT-IN-TIME TRAINING BASE  (features as-of a snapshot; label from the
