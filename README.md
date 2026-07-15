@@ -76,21 +76,22 @@ tool, plus a Streamlit chat app.
 **Location:** `gtm-agents-migration/`
 
 Migrate an AI-over-sales-email workload from an external brain (Claude Code + the Snowflake-managed MCP
-server) to an in-data-plane multi-agent architecture (Cortex Agents + Snowflake CoWork), proving lower
-latency, lower cost, stronger governance, and built-in observability over the same governed tools.
-A supervisor orchestrates scoring / recommendation / coaching specialists via agent-to-agent `DATA_AGENT_RUN`,
-with a cheap-model-plus-escalation cost story and an `AI_FILTER` targeting gate.
+server) to an in-data-plane multi-agent architecture (Cortex Agents + Snowflake CoWork), proving the gains on
+four pillars Snowflake can measure — governance/security, cost control, observability, and data locality — over
+the same governed tools (the Claude + MCP comparison stays qualitative). A supervisor orchestrates scoring /
+recommendation / coaching specialists via agent-to-agent `DATA_AGENT_RUN`, with a cheap-model-plus-escalation
+approach and an `AI_FILTER` targeting gate.
 
 | File | Description |
 |------|-------------|
 | `presentations/gtm-agents-migration.html` | Slide deck (12 slides) |
 | `presentations/gtm-agents-migration-speaker-notes.md` | Speaker notes |
 | `lab/setup.sql` | Part 0 foundation — DB/schema/warehouse/role, synthetic data, semantic view, Cortex Search, governed UDF, log tables |
-| `lab/gtm-01-foundation.ipynb` | Part 0 — data tour + Cortex Analyst + Checkpoint 0 |
-| `lab/gtm-02-before-mcp.ipynb` | Part A — MCP server + OAuth + Claude connect stubs + Checkpoint A |
-| `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate + Checkpoint B |
-| `lab/gtm-04-evals.ipynb` | Part C — evals harness + Checkpoint C |
-| `app/streamlit_app.py` | Parts D & E — Streamlit observability + before/after comparison |
+| `lab/gtm-01-foundation.ipynb` | Part 0 — data tour + Cortex Analyst |
+| `lab/gtm-02-before-mcp.ipynb` | Part A — MCP server + OAuth + Claude connect stubs |
+| `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate |
+| `lab/gtm-04-evals.ipynb` | Part C — evals harness + four-pillar observability/before-after recap |
+| `lab/tests/checkpoints.ipynb` | Internal QA (not client-facing) — PASS/FAIL checkpoints for the four notebooks |
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -131,15 +132,15 @@ field-demo-enablement/
 │   ├── presentations/
 │   │   ├── gtm-agents-migration.html
 │   │   └── gtm-agents-migration-speaker-notes.md
-│   ├── lab/
-│   │   ├── setup.sql
-│   │   ├── cleanup.sql
-│   │   ├── gtm-01-foundation.ipynb
-│   │   ├── gtm-02-before-mcp.ipynb
-│   │   ├── gtm-03-after-agents.ipynb
-│   │   └── gtm-04-evals.ipynb
-│   └── app/
-│       └── streamlit_app.py
+│   └── lab/
+│       ├── setup.sql
+│       ├── cleanup.sql
+│       ├── gtm-01-foundation.ipynb
+│       ├── gtm-02-before-mcp.ipynb
+│       ├── gtm-03-after-agents.ipynb
+│       ├── gtm-04-evals.ipynb
+│       └── tests/
+│           └── checkpoints.ipynb
 <!-- REPO_TREE_END -->
 ```
 

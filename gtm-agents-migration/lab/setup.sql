@@ -287,23 +287,9 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE FRAMEWORK_SEARCH
     FROM EMAIL_FRAMEWORK;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 6. SHARED LOGGING / METRICS TABLES  (used by Parts A, B, C, D, E)
+-- 6. SHARED LOGGING / METRICS TABLES  (used by Parts A, B, C and the gtm-04 recap)
 -- ─────────────────────────────────────────────────────────────────────────────
--- 6a. Per-request latency & cost. NOTE: this table holds only REAL, measured values (no synthetic
---     external-round-trip overhead or estimated credits). Per-request agent latency for the dashboard is
---     read from AI Observability (GET_AI_OBSERVABILITY_EVENTS), and per-request Cortex Agent credits are
---     not exposed for this account — so the app does not read est_credits/latency from here today.
-CREATE TABLE IF NOT EXISTS REQUEST_LOG (
-    request_id   STRING,
-    source       STRING,          -- 'MCP' (before) | 'AGENTS' (after)
-    scenario     STRING,          -- e.g. 'score_email', 'recommend', 'coach'
-    latency_ms   NUMBER,
-    tokens       NUMBER,
-    est_credits  FLOAT,
-    ts           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
-);
-
--- 6b. Scoring-agent routing decisions (model used, confidence, escalation)
+-- 6a. Scoring-agent routing decisions (model used, confidence, escalation)
 CREATE TABLE IF NOT EXISTS ROUTING_LOG (
     email_id     NUMBER,
     model_used   STRING,
@@ -313,18 +299,18 @@ CREATE TABLE IF NOT EXISTS ROUTING_LOG (
     ts           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 
--- 6c. Targeted-analysis volume comparison (AI_FILTER gate vs analyze-everything). The honest cost metric
---     is VOLUME (emails_scanned vs emails_treated) — real query results. est_credits is intentionally left
---     NULL: a per-email credit rate would be an assumption, so we do not populate or chart it.
-CREATE TABLE IF NOT EXISTS COST_COMPARISON (
+-- 6b. Targeted-analysis VOLUME comparison (AI_FILTER gate vs analyze-everything). This is a volume metric,
+--     not a cost metric: it counts emails_scanned vs emails_treated (real query results) to show that the
+--     gate sends proportionally fewer emails to the model. We deliberately do NOT attach a credit/dollar
+--     figure — a per-email credit rate would be an assumption, and no MCP-side cost exists to compare against.
+CREATE TABLE IF NOT EXISTS FILTER_VOLUME (
     approach       STRING,        -- 'analyze_all' | 'targeted_filter'
     emails_scanned NUMBER,
     emails_treated NUMBER,
-    est_credits    FLOAT,         -- intentionally NULL (see note above)
     ts             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 
--- 6d. Native agent-evaluation infrastructure (Part C) ---------------------------
+-- 6c. Native agent-evaluation infrastructure (Part C) ---------------------------
 -- Internal stage that holds the eval-config YAML consumed by EXECUTE_AI_EVALUATION.
 CREATE STAGE IF NOT EXISTS EVAL_STAGE
   DIRECTORY = (ENABLE = TRUE)
@@ -373,8 +359,8 @@ SELECT column1, TRY_PARSE_JSON(column2) FROM VALUES
 ('Who are our top competitors and what is their pricing?',
  '{"ground_truth_output": "The agent should decline gracefully. Competitor intelligence and pricing are not in the governed GTM data; it should redirect to what it can do (scoring, recommendations, coaching). It must NOT call any specialist tool.", "ground_truth_invocations": [], "intent": "out_of_scope", "process": "refusal"}');
 
--- Rollup of eval scores per run x metric — powers the Streamlit Eval Dashboard and
--- the scheduled regression check without re-reading GET_AI_EVALUATION_DATA live.
+-- Rollup of eval scores per run x metric — powers the gtm-04 recap and the scheduled
+-- regression check without re-reading GET_AI_EVALUATION_DATA live.
 CREATE TABLE IF NOT EXISTS EVAL_SCORE_HISTORY (
     run_name       STRING,
     run_ts         TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
@@ -390,9 +376,8 @@ CREATE TABLE IF NOT EXISTS EVAL_SCORE_HISTORY (
 -- ─────────────────────────────────────────────────────────────────────────────
 GRANT SELECT ON ALL TABLES IN SCHEMA GTMAGENTS.DEMO   TO ROLE GTMAGENTS_ROLE;
 GRANT SELECT ON FUTURE TABLES IN SCHEMA GTMAGENTS.DEMO TO ROLE GTMAGENTS_ROLE;
-GRANT INSERT ON TABLE REQUEST_LOG      TO ROLE GTMAGENTS_ROLE;
 GRANT INSERT ON TABLE ROUTING_LOG      TO ROLE GTMAGENTS_ROLE;
-GRANT INSERT ON TABLE COST_COMPARISON  TO ROLE GTMAGENTS_ROLE;
+GRANT INSERT ON TABLE FILTER_VOLUME    TO ROLE GTMAGENTS_ROLE;
 GRANT SELECT ON TABLE AGENT_EVAL_QUESTIONS TO ROLE GTMAGENTS_ROLE;
 GRANT INSERT, SELECT ON TABLE EVAL_SCORE_HISTORY TO ROLE GTMAGENTS_ROLE;
 GRANT READ, WRITE ON STAGE EVAL_STAGE  TO ROLE GTMAGENTS_ROLE;
@@ -405,8 +390,7 @@ GRANT USAGE  ON FUNCTION GTM_TEAM_PERFORMANCE(STRING)  TO ROLE GTMAGENTS_ROLE;
 --   1) lab/gtm-01-foundation.ipynb   (tour data + Cortex Analyst)
 --   2) lab/gtm-02-before-mcp.ipynb   (MCP server + OAuth + Claude connect)
 --   3) lab/gtm-03-after-agents.ipynb (multi-agent supervisor + AI_FILTER)
---   4) lab/gtm-04-evals.ipynb        (native agent evaluation of GTM_SUPERVISOR)
---   5) app/streamlit_app.py          (observability + comparison — Parts D & E)
+--   4) lab/gtm-04-evals.ipynb        (native agent evaluation of GTM_SUPERVISOR + the four-pillar recap)
 --
 -- Internal QA (not client-facing): lab/tests/checkpoints.ipynb runs the PASS/FAIL
 -- checkpoints for all four notebooks after they've been executed.

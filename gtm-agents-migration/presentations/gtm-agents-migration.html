@@ -624,11 +624,12 @@ $$;
     <span class="string">'GTMAGENTS'</span>, <span class="string">'DEMO'</span>, <span class="string">'GTM_SUPERVISOR'</span>, <span class="string">'CORTEX AGENT'</span>));
 <span class="comment">-- spans: ToolCall-ScoringSpecialist, SqlExecution, ReasoningAgentStep... with tokens + latency</span></pre>
       <div class="card-grid anim-fade">
-        <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side.</p></div>
-        <div class="card"><h4>Latency & efficiency</h4><p>Measured per-request agent latency (server-side) and the real AI_FILTER volume cut, sourced from live query results.</p></div>
-        <div class="card"><h4>Eval dashboard</h4><p>Answer correctness, tool-selection accuracy, and drift across runs.</p></div>
-        <div class="card"><h4>Recommendations</h4><p>Top converting patterns from the semantic model.</p></div>
+        <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side. Read directly with a SQL query, no external tooling.</p></div>
+        <div class="card"><h4>Latency &amp; efficiency</h4><p>Measured per-request agent latency (server-side) and the real AI_FILTER volume cut, both from live query results.</p></div>
+        <div class="card"><h4>Native evals</h4><p>Answer correctness, tool-selection accuracy, and drift across runs &mdash; persisted to a history table.</p></div>
+        <div class="card"><h4>Winning patterns</h4><p>Top converting email patterns surfaced from the governed semantic model.</p></div>
       </div>
+      <p style="font-size:0.9rem">Every one of these is a query against objects that live in Snowflake &mdash; the <code>gtm-04</code> notebook pulls them together as a four-pillar recap. No dashboard app required.</p>
     </section>
 
     <!-- Slide 10: Comparison -->
@@ -646,7 +647,7 @@ $$;
           <tr><td>Latency</td><td><span class="badge-orange">Not measurable in Snowflake</span></td><td><span class="badge-green">Observable, server-side</span></td></tr>
         </tbody>
       </table>
-      <p style="font-size:0.9rem">In-plane agent latency comes live from <code>AI Observability</code> and the volume cut from <code>COST_COMPARISON</code> (a real AI_FILTER run). The MCP column is qualitative because external-brain latency and cost are billed by Anthropic, outside Snowflake.</p>
+      <p style="font-size:0.9rem">In-plane agent latency comes live from <code>AI Observability</code> and the volume cut from <code>FILTER_VOLUME</code> (a real AI_FILTER run). The MCP column is qualitative because external-brain latency and cost are billed by Anthropic, outside Snowflake.</p>
     </section>
 
     <!-- Slide 11: Decision -->
@@ -665,7 +666,7 @@ $$;
       <div class="card-grid anim-fade">
         <div class="card"><h4>1. Run the foundation</h4><p>Execute <code>lab/setup.sql</code>, then <code>gtm-01-foundation</code> &mdash; tour the data and confirm the three tools.</p></div>
         <div class="card"><h4>2. Stand up both paths</h4><p><code>gtm-02-before-mcp</code> (MCP + OAuth + Claude connect) and <code>gtm-03-after-agents</code> (multi-agent).</p></div>
-        <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> runs a native agent evaluation (answer correctness, tool-selection accuracy) and promotes the better version; deploy the Streamlit command center.</p></div>
+        <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> runs a native agent evaluation (answer correctness, tool-selection accuracy) and promotes the better version, then closes with a four-pillar observability recap.</p></div>
         <div class="card"><h4>4. Demo the delta</h4><p>Ask the same question in Claude (before) and CoWork (after); show the governance, cost-control, and observability gap live &mdash; and the budget cap and per-tool grants that only exist in-plane.</p></div>
       </div>
       <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">
