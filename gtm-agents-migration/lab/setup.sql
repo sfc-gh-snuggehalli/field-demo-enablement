@@ -29,28 +29,39 @@
 -- 1. DATABASE, SCHEMA, WAREHOUSE, ROLE
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE DATABASE IF NOT EXISTS GTMAGENTS;
-USE DATABASE GTMAGENTS;
-CREATE SCHEMA IF NOT EXISTS DEMO;
-USE SCHEMA GTMAGENTS.DEMO;
+-- Create the containers as ACCOUNTADMIN (a lab prerequisite), then hand OWNERSHIP
+-- to SYSADMIN. This is the key idempotency step: whether this is a fresh run or a
+-- rerun where a prior run left these owned by ACCOUNTADMIN, SYSADMIN ends up owning
+-- them either way. The rest of setup.sql AND all four notebooks run as SYSADMIN, so
+-- SYSADMIN must own the objects it creates/replaces (procedures, agents, tables).
+USE ROLE ACCOUNTADMIN;
 
+CREATE DATABASE IF NOT EXISTS GTMAGENTS;
+CREATE SCHEMA IF NOT EXISTS GTMAGENTS.DEMO;
 CREATE WAREHOUSE IF NOT EXISTS GTMAGENTS_WH
   WAREHOUSE_SIZE = 'MEDIUM'
   AUTO_SUSPEND = 120
   AUTO_RESUME = TRUE
   INITIALLY_SUSPENDED = TRUE;
 
-USE WAREHOUSE GTMAGENTS_WH;
+GRANT OWNERSHIP ON DATABASE GTMAGENTS  TO ROLE SYSADMIN COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON SCHEMA GTMAGENTS.DEMO TO ROLE SYSADMIN COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON WAREHOUSE GTMAGENTS_WH TO ROLE SYSADMIN COPY CURRENT GRANTS;
 
 -- Dedicated least-privilege role that the MCP server session and the agents use.
 -- (Governance talking point: one role scopes every tool, MCP or agent, the same way.)
-USE ROLE SECURITYADMIN;
 CREATE ROLE IF NOT EXISTS GTMAGENTS_ROLE;
 GRANT ROLE GTMAGENTS_ROLE TO ROLE SYSADMIN;
 -- Cortex access for the role (needed for Analyst / agents / AI functions).
 GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE GTMAGENTS_ROLE;
-USE ROLE SYSADMIN;
 
+-- Everything below runs as SYSADMIN, the owner of the objects it creates.
+USE ROLE SYSADMIN;
+USE DATABASE GTMAGENTS;
+USE SCHEMA GTMAGENTS.DEMO;
+USE WAREHOUSE GTMAGENTS_WH;
+
+-- Object usage for the least-privilege role (granted by SYSADMIN as the owner).
 GRANT USAGE ON DATABASE GTMAGENTS TO ROLE GTMAGENTS_ROLE;
 GRANT USAGE ON SCHEMA GTMAGENTS.DEMO TO ROLE GTMAGENTS_ROLE;
 GRANT USAGE, OPERATE ON WAREHOUSE GTMAGENTS_WH TO ROLE GTMAGENTS_ROLE;
