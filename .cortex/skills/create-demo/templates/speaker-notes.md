@@ -14,8 +14,8 @@
   **Talking Points:**
   - What to say out loud walking the audience through the slide.
 
-  **Internal Context:**
-  - SE-only framing: competitive angles, gotchas, limits, common objections.
+  **Presenter Notes:**
+  - Facilitator guidance: prerequisites, gotchas, limits, common questions.
 
   **References:**
   - https://docs.snowflake.com/...
@@ -28,8 +28,8 @@
 **Talking Points:**
 - {{SLIDE1_TALKING_POINTS}}
 
-**Internal Context:**
-- {{SLIDE1_INTERNAL_CONTEXT}}
+**Presenter Notes:**
+- {{SLIDE1_PRESENTER_NOTES}}
 
 **References:**
 - {{SLIDE1_REFERENCES}}
@@ -41,8 +41,8 @@
 **Talking Points:**
 - {{SLIDE2_TALKING_POINTS}}
 
-**Internal Context:**
-- {{SLIDE2_INTERNAL_CONTEXT}}
+**Presenter Notes:**
+- {{SLIDE2_PRESENTER_NOTES}}
 
 **References:**
 - {{SLIDE2_REFERENCES}}
@@ -54,8 +54,8 @@
 **Talking Points:**
 - {{SLIDE3_TALKING_POINTS}}
 
-**Internal Context:**
-- {{SLIDE3_INTERNAL_CONTEXT}}
+**Presenter Notes:**
+- {{SLIDE3_PRESENTER_NOTES}}
 
 **References:**
 - {{SLIDE3_REFERENCES}}

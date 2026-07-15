@@ -2,7 +2,7 @@
 
 ## Account Context Summary
 
-Generic field-enablement scenario (synthetic, brand-free): a B2C + B2B home-valuation /
+Generic demo scenario (synthetic, brand-free): a B2C + B2B home-valuation /
 proptech company runs a customer-facing GPT chat assistant and a support line. A small,
 fast-growing data team wants to understand which conversations are meaningful, what customers
 ask about, and how they feel — without standing up ML infrastructure. This module shows how
@@ -20,8 +20,8 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Emphasize the four stats — one SQL call from text to sentiment, zero models to host, one pipeline for chat and voice, and it all runs governed next to your data.
 - This is not a data-science project; it's a query pattern any analyst on the team can own.
 
-**Internal Context:**
-- Audience is SEs/field. The hook that lands with small data teams is "no infra": no endpoints, no model hosting, no MLOps.
+**Presenter Notes:**
+- The hook that lands with small data teams is "no infra": no endpoints, no model hosting, no MLOps.
 - Requires the `SNOWFLAKE.CORTEX_USER` database role. Call that out early so the lab doesn't stall on privileges.
 
 **References:**
@@ -36,9 +36,9 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Walk the four cards: volume of conversations, no structured read, buried churn signals, and ML being too heavy for a small team.
 - Land the warning box: the richest CX signal is unstructured and invisible to analytics today.
 
-**Internal Context:**
+**Presenter Notes:**
 - This is the emotional hook — let the customer name their own version of "we can't read all of it." Most have exactly this pain.
-- Competitive angle: alternatives require exporting text to a third-party NLP/LLM service, which raises data-movement and governance objections that Snowflake avoids.
+- Note the contrast: alternatives require exporting text to a third-party NLP/LLM service, which raises data-movement and governance concerns that Snowflake avoids.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql
@@ -52,7 +52,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - The built-in functions handle the common cases; AI Function Studio covers custom AI_COMPLETE functions in the same layer.
 - Call out both ends: app UX telemetry (chat + thumbs up/down) feeds in at the top via a stage, and the enriched telemetry at the bottom is exactly what the semantic view and agent (later in this deck) consume.
 
-**Internal Context:**
+**Presenter Notes:**
 - This is the "text in, governed telemetry out, no models to deploy" mental model — every later slide fills in one function in this diagram.
 - The semantic view + Analyst + agent are now part of this same module (the old Conversational-BI module folded in); use the last box to tee up the Governed Metrics and CX Agent slides later.
 
@@ -68,7 +68,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Show the shape before the detail: ingest → sentiment → topics → extract → themes → at-risk.
 - Each step is a single AI Function over a conversation table; the output is a governed telemetry table.
 
-**Internal Context:**
+**Presenter Notes:**
 - Set expectations: functions run row-by-row (AI_SENTIMENT/CLASSIFY/EXTRACT/FILTER) except the aggregate functions (AI_AGG/AI_SUMMARIZE_AGG), which are set-based.
 - Recommend a warehouse no larger than MEDIUM for AI functions — larger doesn't speed them up and just costs more.
 
@@ -80,11 +80,11 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 ## Slide 5: App UX Telemetry
 
 **Talking Points:**
-- This answers the #1 field question: "how does my app's data actually get into Snowflake?" Chat threads and thumbs up/down land as JSON in a stage, then flow to curated tables.
+- This answers the most common question: "how does my app's data actually get into Snowflake?" Chat threads and thumbs up/down land as JSON in a stage, then flow to curated tables.
 - Two patterns, both shown live: raw `VARIANT` landing (`COPY INTO`, schema-on-read) and curated typed tables (`LATERAL FLATTEN`). Raw is the durable landing zone; curated is what you serve.
 - In production the manual `COPY` becomes Snowpipe or Snowpipe Streaming; the FLATTEN can be a Dynamic Table or Task.
 
-**Internal Context:**
+**Presenter Notes:**
 - The customer points their own app at the stage with this JSON shape and nothing downstream changes — that's the reusable-template message.
 - Thumbs up/down rolls up to `ANALYTICS.CUSTOMER_FEEDBACK`, which the semantic view exposes as `thumbs_down_rate` — connecting app UX to a governed metric the agent can answer.
 
@@ -100,7 +100,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_SENTIMENT(text[, categories])` returns overall sentiment plus per-category (aspect) sentiment in one call.
 - Categories are the "aspects" you care about — valuation accuracy, pricing, onboarding — up to ten.
 
-**Internal Context:**
+**Presenter Notes:**
 - Returns an OBJECT; parse with `:categories`. Each category is positive/negative/neutral/mixed/unknown ("unknown" = not mentioned).
 - It's the successor to `ENTITY_SENTIMENT`. Supports several languages; categories can be given in English regardless of text language.
 
@@ -115,7 +115,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_CLASSIFY(input, categories[, config])` maps each conversation to your support taxonomy; `:labels` holds the result.
 - Use `output_mode: 'multi'` when a thread spans topics; add label descriptions and few-shot examples to raise accuracy.
 
-**Internal Context:**
+**Presenter Notes:**
 - This is "supervised" topic modeling — you supply the categories. For emergent/unknown themes, pair with AI_AGG on the next slides ("unsupervised" discovery).
 - Keep categories mutually exclusive and descriptive; >~20 categories starts degrading accuracy. Labels are case-sensitive.
 
@@ -130,7 +130,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_EXTRACT(text => ..., responseFormat => {...})` pulls named fields from free text; result is under `:response`.
 - Ask one clear question per field, in plain English.
 
-**Internal Context:**
+**Presenter Notes:**
 - Same function extracts from documents via `file => TO_FILE(...)` — good expansion story into invoices/contracts later.
 - Optional `scores => TRUE` returns confidence per field for human-in-the-loop thresholds. Client-side encrypted stages are not supported.
 
@@ -145,7 +145,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_AGG(expr, instruction)` reduces a whole column of text with a natural-language instruction; `AI_SUMMARIZE_AGG(expr)` gives a general summary.
 - Both support `GROUP BY`, so you get per-topic or per-segment themes.
 
-**Internal Context:**
+**Presenter Notes:**
 - Key differentiator: these handle datasets larger than the model context window and are optimized for set-based aggregation (roughly 2x AI_COMPLETE throughput at scale).
 - This is the "unsupervised topic modeling" answer to the customer's ask — surface dominant themes without predefining them.
 - Give a declarative instruction ("Summarize the complaints"), not a question ("Can you summarize?").
@@ -162,7 +162,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_FILTER` evaluates a natural-language predicate and returns BOOLEAN, so it drops straight into `WHERE`.
 - Concatenate an instruction with the transcript to flag frustration / cancellation intent.
 
-**Internal Context:**
+**Presenter Notes:**
 - The revenue move: join survivors to billing/MRR so the CX team prioritizes saves by dollar value, not just recency.
 - NULLs on unprocessable rows won't fail the query — mention error-handling behavior if asked.
 
@@ -177,7 +177,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - `AI_TRANSCRIBE(TO_FILE(...))` turns call recordings into text; from there it's the exact same sentiment/topic/filter pipeline.
 - Chat, in-app, and phone converge into one telemetry table.
 
-**Internal Context:**
+**Presenter Notes:**
 - In the lab, `CALL_TRANSCRIPTS` is shipped as text so nobody needs to stage audio — call this out so the audience isn't confused about the transcribe step.
 - Good place to note multimodal reach: the same AI-function family also covers images and documents.
 
@@ -198,7 +198,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - **SQL / notebook (repeatable):** Section 8 of the lab runs the exact same three stored procedures (`CREATE_AI_FUNCTION` → `EVALUATE_AI_FUNCTION` → `OPTIMIZE_AI_FUNCTION`). The function created in SQL also shows up in the Studio UI, so you can start in the notebook and finish in the UI.
 - Pre-built for you in this account: `FIELD_CX_DEMO.AI_FUNCTIONS.ROUTE_ESCALATION` + `ESCALATION_EVAL` (24 labeled rows). Baseline `exact_match` = **0.96** (23/24) on `llama3.1-8b`.
 
-**Internal Context:**
+**Presenter Notes:**
 - Position Studio as the "optimization" chapter, not the starting point — don't lead with custom functions when a built-in exists.
 - Great trust-builder: showing measured accuracy/cost trade-offs turns a hand-wave into evidence.
 - Optimize runs 10+ minutes — run it live only if you can talk through the Pareto concept while it works, otherwise run it beforehand and show the stored results (`SHOW RUN METRICS`).
@@ -215,7 +215,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 **Talking Points:**
 - Use the table as a cheat sheet: match each CX need to the right function, and reserve Studio for custom labels/rubrics.
 
-**Internal Context:**
+**Presenter Notes:**
 - If asked "why not just one AI_COMPLETE prompt for everything?": the purpose-built functions are cheaper, more accurate, and simpler to maintain; aggregates also bypass context-window limits.
 
 **References:**
@@ -231,7 +231,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - **Inside Cortex Analyst** — the UDF becomes a computed column in a semantic view, so a business user's natural-language question returns AI-derived labels transparently.
 - **Cortex Search enrichment** — `AI_EXTRACT` / `AI_EMBED` pre-process documents (structured fields + embeddings) before indexing, and expose filterable attributes.
 
-**Internal Context:**
+**Presenter Notes:**
 - This slide bridges the CX telemetry story to the broader Cortex stack; it sets up the extensions notebook (`cx-ai-functions-extensions.ipynb`).
 - The cost caveat matters: a view re-runs inference on every query — recommend materializing the column (task or Dynamic Table) for interactive Analyst/agent use so inference runs once per row.
 - Tool-use bills twice — the agent's orchestration tokens plus the UDF's inference tokens; tie this back to the estimator slide.
@@ -249,7 +249,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - One semantic view (`ANALYTICS.CX_ANALYTICS_SV`) defines churn, MRR, engagement, and the app-fed `thumbs_down_rate` once; `SEMANTIC_VIEW()` queries it with no JOINs.
 - The same definition powers Cortex Analyst NL→SQL, the agent, and BI tools like Sigma — change it once, it changes everywhere.
 
-**Internal Context:**
+**Presenter Notes:**
 - `churn_rate` and `thumbs_down_rate` are derived metrics (scalar expressions of other metrics) — defined once, reused everywhere.
 - This is the old Conversational-BI module folded in; the objects are created by setup.sql and queried live in the extensions notebook.
 
@@ -265,7 +265,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - One agent (`CX_INTELLIGENCE_AGENT`) combines Cortex Analyst (semantic view), Cortex Search (chat telemetry), and the escalation UDF tool.
 - Ask "which churn-risk customers had negative support chats?" or "what's our thumbs-down rate by plan?" — the agent routes to the right tool automatically.
 
-**Internal Context:**
+**Presenter Notes:**
 - Analyst answers metric questions from the governed view; Search answers "what did customers say"; the UDF returns escalation urgency. Extend with more custom tools or MCP.
 - Chat with it in Snowsight (AI & ML → Agents → "CX Intelligence"); the extensions notebook confirms it with SHOW AGENTS.
 
@@ -282,8 +282,8 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Walk the monitoring query: `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY` is the single source of truth for credits by function, model, user, and query (2-5 min latency).
 - Land the best-practices box: prototype on a sampled/`LIMIT` subset, pre-filter rows, pick the smallest model that passes eval, keep prompts tight, prefer aggregates at scale, and don't oversize the warehouse.
 
-**Internal Context:**
-- This is the slide that answers the #1 field objection: "customers burn money running functions on 1M+ rows without knowing." Say that out loud — it builds trust.
+**Presenter Notes:**
+- This is the slide that addresses the most common concern: teams can burn credits running functions on 1M+ rows without realizing it. Name it directly to set the right expectation.
 - The warehouse point is counter-intuitive and worth repeating: a bigger warehouse does NOT speed AI functions up; it only adds compute cost on top of token cost. MEDIUM is plenty.
 - `QUERY_TAG` is the cheap win for chargeback — encourage teams to tag AI workloads by project.
 - `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` requires access to the SNOWFLAKE database (IMPORTED PRIVILEGES / ACCOUNTADMIN). Flag that so the query doesn't stall in the demo.
@@ -303,8 +303,8 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Then reconcile against reality: back out the true credits-per-token from `CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY` (it records TOKENS and TOKEN_CREDITS per query) and apply it to the full-table estimate.
 - The lab's Section 9 has a reusable `estimate_cost()` helper — plug in any table/column/model.
 
-**Internal Context:**
-- This is the proactive companion to the cost slide: instead of monitoring spend after the fact, you forecast it. Lands well with FinOps-minded buyers.
+**Presenter Notes:**
+- This is the proactive companion to the cost slide: instead of monitoring spend after the fact, you forecast it. Useful for FinOps-minded stakeholders.
 - Emphasize the ~13x model cost swing on the same data — model selection is the biggest lever, and the estimator quantifies it before you commit.
 - `CORTEX_FUNCTIONS_QUERY_USAGE_HISTORY` lags (a few hours) and is empty on a fresh account — the notebook's estimator degrades gracefully and falls back to the rate table. Say this so a live run in a clean demo account doesn't look broken.
 
@@ -324,7 +324,7 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Show the manual escape hatch: `SELECT SYSTEM$CANCEL_QUERY('<query_id>')` kills a specific long-running query immediately.
 - Note access control: revoke `SNOWFLAKE.CORTEX_USER` from `PUBLIC` and grant it via a dedicated role so limits can't be bypassed.
 
-**Internal Context:**
+**Presenter Notes:**
 - Quotas are the headline — they're the newest, cleanest answer and they auto-block. The alert + cancel-task pattern from the cost-management doc is the belt-and-suspenders story for accounts that want custom logic.
 - Quota block enforcement covers AI domains only (AI functions, Cortex Agents, Snowflake CoWork, CoCo), not warehouse spend. Track warehouse spend in a separate quota.
 - Cancelling a query stops further cost but does NOT refund credits already consumed — say this so nobody thinks cancel = free.
@@ -343,10 +343,10 @@ same module — the second notebook and the Governed Metrics / CX Agent slides.
 - Four concrete actions: run the lab, point the same SQL at real chat/call data, trend the telemetry in BI, and feed at-risk signals to churn.
 - Close on the one-liner: CX telemetry is now a SQL query, not an ML project.
 
-**Internal Context:**
+**Presenter Notes:**
 - Before you leave, remind the room of the guardrails: quotas + alerts + cancel mean they can turn analysts loose without budget fear.
 - Natural bridge to the second notebook (extensions), where the semantic view + agent analyze this telemetry alongside churn/revenue — same module, runs live.
-- Leave-behind: this repo's deck + lab so champions can re-run it internally.
+- Leave-behind: this repo's deck + lab so the team can re-run it themselves.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql

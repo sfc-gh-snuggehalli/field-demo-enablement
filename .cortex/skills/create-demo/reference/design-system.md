@@ -42,7 +42,7 @@ sidebar `<nav>`. The active-nav script keys off these ids. Wrap content blocks i
 | Architecture diagram | `.arch-diagram` > stacked `.level` (each holding one or more `.node`), separated by `<div class="arrow">&darr;</div>` | Layered system architecture (which objects talk to which). Accent the entry point with `.node node-primary` and mid-tier objects with `.node node-accent`. Use this for the Architecture slide; use `.flow-diagram` for linear pipelines |
 | Comparison table | `<table>` with `<thead>`/`<tbody>` | Multi-dimension comparisons |
 | Status pill | `<span class="badge-green\|orange\|red\|blue\|purple">` | Inline ratings inside tables/cards |
-| Emphasis callouts | `.highlight-box` (blue), `.context-box` (purple), `.warning-box` (orange) | Key insight / internal framing / caveat |
+| Emphasis callouts | `.highlight-box` (blue), `.context-box` (purple), `.warning-box` (orange) | Key insight / presenter framing / caveat |
 | Code block | `<pre>` with span classes `.keyword` `.string` `.comment` `.function` | SQL/Python snippets with manual syntax highlighting |
 | Bulleted list | `.slide ul > li` | Short lists (auto blue-dot bullets) |
 

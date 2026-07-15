@@ -15,9 +15,9 @@ in a **Cortex Agent that calls the deployed model as a tool** plus a Streamlit c
 
 ## Audience
 
-Mixed **Sales Engineers + customer ML platform teams**. The narrative maps to two common
+**Data science and ML platform teams.** The narrative maps to two common
 initiatives: an ML Ops & Platform build (churn models, Registry, Serving, Observability)
-and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streamlit).
+and an executive chatbot (Cortex Analyst + Snowflake Intelligence + Streamlit).
 
 ## Topics Covered
 
@@ -39,7 +39,7 @@ and a GTM / executive chatbot (Cortex Analyst + Snowflake Intelligence + Streaml
 | File | Description |
 |------|-------------|
 | `presentations/donor-churn-ml.html` | Slide deck (17 slides) |
-| `presentations/donor-churn-ml-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
+| `presentations/donor-churn-ml-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
 | `lab/setup.sql` | Database, four schemas, warehouses, synthetic data, Cortex ML Functions, Analyst semantic view |
 | `lab/donor-churn-01-features.ipynb` | Lab notebook 1/3 — Feature Store (managed PIT views), Datasets, Cortex ML Functions |
 | `lab/donor-churn-02-model.ipynb` | Lab notebook 2/3 — Snowpark ML training + Experiment Tracking + HPO, ML Jobs, Registry, Explainability |

@@ -16,8 +16,8 @@ module absorbs what was previously a separate Conversational-BI module.)
 
 ## Audience
 
-Sales Engineers and field teams demonstrating Snowflake Cortex AI Functions to data and
-product teams evaluating customer-experience analytics.
+Data and analytics teams evaluating Snowflake Cortex AI Functions for
+customer-experience analytics.
 
 ## Topics Covered
 
@@ -39,7 +39,7 @@ product teams evaluating customer-experience analytics.
 | File | Description |
 |------|-------------|
 | `presentations/cx-ai-functions.html` | Slide deck (20 slides) |
-| `presentations/cx-ai-functions-speaker-notes.md` | Per-slide speaker notes with talking points, internal context, and references |
+| `presentations/cx-ai-functions-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
 | `lab/setup.sql` | One-step SQL setup — schemas `AI_FUNCTIONS` + `ANALYTICS`, warehouse, **all** structured + unstructured data, app-telemetry ingestion (stage → raw → curated), semantic view, Cortex Search, agent |
 | `lab/cleanup.sql` | Tear everything down to start fresh (drops the database + warehouse) |
 | `lab/cx-ai-functions-lab.ipynb` | Notebook 1 — run the AI-function pipeline (+ a read-only tour of the app-telemetry setup loaded) + AI Function Studio |

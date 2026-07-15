@@ -580,7 +580,7 @@
         <div class="card"><h4>Raw landing</h4><p><code>COPY INTO</code> a <code>VARIANT</code> column keeps the full app payload verbatim &mdash; capture everything the app sends and evolve the schema without breaking ingestion.</p></div>
         <div class="card"><h4>Curated tables</h4><p><code>LATERAL FLATTEN</code> unpacks the <code>messages</code> and <code>feedback</code> arrays into typed tables that feed the AI functions and the semantic view's <code>thumbs_down_rate</code>.</p></div>
       </div>
-      <div class="context-box anim-fade"><strong>SE framing:</strong> the customer points their own app at a stage (or a streaming channel) with this JSON shape &mdash; the rest of the pipeline is unchanged. Raw is the immutable landing zone; curated is what you serve.</div>
+      <div class="context-box anim-fade"><strong>Note:</strong> the customer points their own app at a stage (or a streaming channel) with this JSON shape &mdash; the rest of the pipeline is unchanged. Raw is the immutable landing zone; curated is what you serve.</div>
     </section>
 
     <!-- Slide 4: Sentiment -->
@@ -678,7 +678,7 @@
         <div class="card"><h4>Build</h4><p>Define a custom classification or scoring function on top of <code>AI_COMPLETE</code> for logic the built-ins don't cover (e.g. a custom escalation score).</p></div>
         <div class="card"><h4>Evaluate &amp; tune</h4><p>Compare prompts and models side by side on a labeled sample, review accuracy and cost, and iterate before you productionize.</p></div>
       </div>
-      <div class="context-box anim-fade"><strong>SE framing:</strong> built-in functions cover most CX telemetry out of the box. Reach for Studio when the customer needs a domain-specific label, a custom rubric, or an accuracy/cost trade-off they want to see measured.</div>
+      <div class="context-box anim-fade"><strong>Note:</strong> built-in functions cover most CX telemetry out of the box. Reach for Studio when the customer needs a domain-specific label, a custom rubric, or an accuracy/cost trade-off they want to see measured.</div>
     </section>
 
     <!-- Slide 11: Built-in vs Custom -->
@@ -707,7 +707,7 @@
         <div class="card"><h4>Cortex Search enrichment</h4><p><code>AI_EXTRACT</code> and <code>AI_EMBED</code> pre-process documents — structured fields + embeddings — before indexing into a Cortex Search service.</p></div>
         <div class="card"><h4>One answer, three tools</h4><p>An agent can combine Analyst (metrics), Search (relevant tickets), and your custom UDF (urgency) in a single response — all built on AI functions.</p></div>
       </div>
-      <div class="context-box anim-fade"><strong>SE framing:</strong> AI functions aren't a dead-end SQL feature — they are reusable building blocks. Build the label once as a UDF, then reuse it as an agent tool, an Analyst dimension, and a Search enrichment step. Materialize the column for interactive use so inference runs once per row, not once per question.</div>
+      <div class="context-box anim-fade"><strong>Note:</strong> AI functions aren't a dead-end SQL feature — they are reusable building blocks. Build the label once as a UDF, then reuse it as an agent tool, an Analyst dimension, and a Search enrichment step. Materialize the column for interactive use so inference runs once per row, not once per question.</div>
     </section>
 
     <!-- Slide 14: Governed metrics -->
@@ -804,7 +804,7 @@ $$;</pre>
 
 <span class="comment">-- Kill a runaway query right now</span>
 <span class="keyword">SELECT</span> <span class="function">SYSTEM$CANCEL_QUERY</span>(<span class="string">'&lt;query_id&gt;'</span>);</pre>
-      <div class="context-box anim-fade"><strong>SE framing:</strong> lead the cost conversation with quotas — they auto-block at the limit and even terminate in-progress AI calls, so a customer can't burn the budget on one bad query. Alerts and the cancel task are the belt-and-suspenders layer.</div>
+      <div class="context-box anim-fade"><strong>Note:</strong> lead the cost conversation with quotas — they auto-block at the limit and even terminate in-progress AI calls, so a customer can't burn the budget on one bad query. Alerts and the cancel task are the belt-and-suspenders layer.</div>
     </section>
 
     <!-- Slide 16: Next Steps -->

@@ -64,8 +64,8 @@ All presentations follow a consistent format:
 
 - **Dark-themed scrolling HTML** with sidebar navigation
 - **Snowflake-branded** styling and color palette
-- **Paired speaker notes** in Markdown with per-slide talking points, internal
-  context, common audience questions, and reference URLs
+- **Paired speaker notes** in Markdown with per-slide talking points, presenter
+  notes, common audience questions, and reference URLs
 
 Presentations are published via GitHub Pages at:
 `https://{{GITHUB_USER}}.github.io/{{REPO_NAME}}/<module>/presentations/<slug>.html`

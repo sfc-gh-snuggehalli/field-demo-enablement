@@ -1,6 +1,6 @@
-# Field Demo Enablement Kit
+# Snowflake AI/ML Demo Kit
 
-Snowflake AI/ML field demos and enablement modules
+Hands-on Snowflake AI/ML demo modules
 
 ---
 
@@ -23,8 +23,8 @@ hands-on lab with SQL setup and a notebook.
 <!-- MODULE_TABLE_START -->
 | Module | Audience | Format | Presentation |
 |--------|----------|--------|--------------|
-| AI Functions: Customer Experience Telemetry | Sales Engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
-| Donor Lapse/Churn Intelligence: Snowflake ML → Agent | SEs + Customer ML Teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
+| AI Functions: Customer Experience Telemetry | Data & Analytics teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
+| Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Data science & ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -125,8 +125,8 @@ All presentations follow a consistent format:
 
 - **Dark-themed scrolling HTML** with sidebar navigation
 - **Snowflake-branded** styling and color palette
-- **Paired speaker notes** in Markdown with per-slide talking points, internal
-  context, common audience questions, and reference URLs
+- **Paired speaker notes** in Markdown with per-slide talking points, presenter
+  notes, common audience questions, and reference URLs
 
 Presentations are published via GitHub Pages at:
 `https://sfc-gh-snuggehalli.github.io/field-demo-enablement/<module>/presentations/<slug>.html`

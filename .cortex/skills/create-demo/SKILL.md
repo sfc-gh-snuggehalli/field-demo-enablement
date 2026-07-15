@@ -31,7 +31,7 @@ Ask the user (question tool) for anything not already clear from their request:
   "Cortex AI Function Studio"). Also capture the narrative/business scenario.
 - **Slug** — kebab-case folder name (e.g. `ai-functions`). Propose one from the feature name.
 - **Deck title** — human title (e.g. "AI Functions on Snowflake").
-- **Audience** — who it's for (SEs, data engineers, etc.).
+- **Audience** — who it's for (data & analytics teams, data engineers, etc.).
 - **Include lab?** — default YES (deck + notes + setup.sql + notebook). If NO, skip the
   `lab/` artifacts and their README rows.
 - **Generate data?** — default YES when the lab needs unstructured free text (chats,
@@ -69,9 +69,9 @@ Before writing SQL or slides, ground the content in real Snowflake behavior:
 ### Step 4: Generate speaker notes
 
 Copy `templates/speaker-notes.md` to `<slug>/presentations/<slug>-speaker-notes.md`.
-Write one block per slide, in deck order, each with **Talking Points / Internal Context /
-References** (real doc URLs). Internal Context is SE-only framing: competitive angles,
-limits, common objections. The final block covers the Next Steps slide.
+Write one block per slide, in deck order, each with **Talking Points / Presenter Notes /
+References** (real doc URLs). Presenter Notes are facilitator guidance: prerequisites,
+limits, gotchas, common questions. The final block covers the Next Steps slide.
 
 ### Step 5: Generate the lab (skip if include-lab = NO)
 
