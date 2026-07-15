@@ -308,15 +308,65 @@ CREATE TABLE IF NOT EXISTS COST_COMPARISON (
     ts             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 
--- 6d. Eval runs (Part C) — scoring accuracy, consistency, win-rate lift
-CREATE TABLE IF NOT EXISTS EVAL_RUNS (
-    run_id        STRING,
-    run_ts        TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
-    model_name    STRING,
-    accuracy      FLOAT,
-    consistency   FLOAT,
-    winrate_lift  FLOAT,
-    n_examples    NUMBER
+-- 6d. Native agent-evaluation infrastructure (Part C) ---------------------------
+-- Internal stage that holds the eval-config YAML consumed by EXECUTE_AI_EVALUATION.
+CREATE STAGE IF NOT EXISTS EVAL_STAGE
+  DIRECTORY = (ENABLE = TRUE)
+  COMMENT = 'Holds eval_config.yaml for the native GTM_SUPERVISOR agent evaluation.';
+
+-- Labeled agent-evaluation dataset. One row per question. GROUND_TRUTH is a JSON
+-- object carrying: ground_truth_output (what a correct answer looks like),
+-- ground_truth_invocations (the specialist tool(s) the supervisor SHOULD call),
+-- intent (user goal), and process (complexity tier: single_tool | multi_tool | refusal).
+-- The supervisor's tool names are ScoringSpecialist / RecommendationSpecialist /
+-- CoachingSpecialist (see gtm-03), so tool_name must match those exactly.
+CREATE OR REPLACE TABLE AGENT_EVAL_QUESTIONS (
+    INPUT_QUERY   VARCHAR,
+    GROUND_TRUTH  VARIANT
+);
+
+INSERT INTO AGENT_EVAL_QUESTIONS (INPUT_QUERY, GROUND_TRUTH)
+SELECT column1, TRY_PARSE_JSON(column2) FROM VALUES
+-- 1-3. score / single_tool -> ScoringSpecialist ------------------------------
+('Score the buyer intent of email 2.',
+ '{"ground_truth_output": "Returns a buyer-intent score between 0.00 and 1.00 for email id 2, along with the model used and whether it escalated. The answer must be grounded in the scoring specialist output, not a guess.", "ground_truth_invocations": [{"tool_name": "ScoringSpecialist", "tool_input": "Score the buyer intent of email 2"}], "intent": "score_email", "process": "single_tool"}'),
+('What is the intent score for email 15?',
+ '{"ground_truth_output": "Returns a single buyer-intent score (0.00-1.00) for email id 15 from the scoring specialist. Should not answer a metrics or rewrite question.", "ground_truth_invocations": [{"tool_name": "ScoringSpecialist", "tool_input": "Score the buyer intent of email 15"}], "intent": "score_email", "process": "single_tool"}'),
+('How strong is the buyer intent of email 100? Give me the score.',
+ '{"ground_truth_output": "Returns the buyer-intent score for email id 100 from the scoring specialist.", "ground_truth_invocations": [{"tool_name": "ScoringSpecialist", "tool_input": "Score the buyer intent of email 100"}], "intent": "score_email", "process": "single_tool"}'),
+-- 4-6. recommend / single_tool -> RecommendationSpecialist -------------------
+('Which region has the highest win rate?',
+ '{"ground_truth_output": "Identifies the region with the highest win rate using GTM performance metrics and cites the metric. Grounded in the recommendation specialist / semantic view, not fabricated.", "ground_truth_invocations": [{"tool_name": "RecommendationSpecialist", "tool_input": "Which region has the highest win rate?"}], "intent": "recommend_pattern", "process": "single_tool"}'),
+('Which email quality tier drives the most revenue?',
+ '{"ground_truth_output": "Reports total revenue by quality tier and identifies the top tier (expected: higher tiers produce more revenue). Cites the metric used.", "ground_truth_invocations": [{"tool_name": "RecommendationSpecialist", "tool_input": "Which quality tier drives the most revenue?"}], "intent": "recommend_pattern", "process": "single_tool"}'),
+('What is our overall reply rate across all emails?',
+ '{"ground_truth_output": "Returns the aggregate reply rate across all emails as a single percentage/rate, grounded in the semantic view metrics.", "ground_truth_invocations": [{"tool_name": "RecommendationSpecialist", "tool_input": "What is the overall reply rate?"}], "intent": "recommend_pattern", "process": "single_tool"}'),
+-- 7-8. coach / single_tool -> CoachingSpecialist -----------------------------
+('Rewrite this weak email to the best-practice framework: "just checking in, let me know if you are interested."',
+ '{"ground_truth_output": "Returns a rewritten cold email under 120 words that satisfies the five framework principles (personalization, single clear CTA, brevity, quantified value prop, in-market signal). Should not return a metric or a score.", "ground_truth_invocations": [{"tool_name": "CoachingSpecialist", "tool_input": "Rewrite: just checking in, let me know if you are interested."}], "intent": "coach_email", "process": "single_tool"}'),
+('Improve this cold email so it follows our framework: "Circling back. Are you the right person? Please advise."',
+ '{"ground_truth_output": "Returns an improved email that adds a specific personalization hook, one low-friction CTA, a quantified value prop, and an in-market signal, kept under 120 words.", "ground_truth_invocations": [{"tool_name": "CoachingSpecialist", "tool_input": "Improve: Circling back. Are you the right person? Please advise."}], "intent": "coach_email", "process": "single_tool"}'),
+-- 9-10. compound / multi_tool -> two specialists -----------------------------
+('Score email 2, then tell me which region has the highest win rate.',
+ '{"ground_truth_output": "Two-part answer: (1) the buyer-intent score for email id 2, and (2) the region with the highest win rate. Requires calling both the scoring and recommendation specialists.", "ground_truth_invocations": [{"tool_name": "ScoringSpecialist", "tool_input": "Score the buyer intent of email 2"}, {"tool_name": "RecommendationSpecialist", "tool_input": "Which region has the highest win rate?"}], "intent": "score_and_recommend", "process": "multi_tool"}'),
+('Which quality tier wins the most, and rewrite this weak email to match: "Following up again since I have not heard back."',
+ '{"ground_truth_output": "Two-part answer: (1) the quality tier with the highest win rate from the metrics, and (2) a framework-compliant rewrite of the supplied weak email. Requires the recommendation and coaching specialists.", "ground_truth_invocations": [{"tool_name": "RecommendationSpecialist", "tool_input": "Which quality tier has the highest win rate?"}, {"tool_name": "CoachingSpecialist", "tool_input": "Rewrite: Following up again since I have not heard back."}], "intent": "recommend_and_coach", "process": "multi_tool"}'),
+-- 11-12. out_of_scope / refusal -> NO tool -----------------------------------
+('What is the weather forecast for New York City this weekend?',
+ '{"ground_truth_output": "The agent should politely decline. Weather is out of scope; it should explain it can only help with GTM sales-email scoring, performance recommendations, and coaching. It must NOT call any specialist tool.", "ground_truth_invocations": [], "intent": "out_of_scope", "process": "refusal"}'),
+('Who are our top competitors and what is their pricing?',
+ '{"ground_truth_output": "The agent should decline gracefully. Competitor intelligence and pricing are not in the governed GTM data; it should redirect to what it can do (scoring, recommendations, coaching). It must NOT call any specialist tool.", "ground_truth_invocations": [], "intent": "out_of_scope", "process": "refusal"}');
+
+-- Rollup of eval scores per run x metric — powers the Streamlit Eval Dashboard and
+-- the scheduled regression check without re-reading GET_AI_EVALUATION_DATA live.
+CREATE TABLE IF NOT EXISTS EVAL_SCORE_HISTORY (
+    run_name       STRING,
+    run_ts         TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    metric_name    STRING,
+    avg_score      FLOAT,
+    min_score      FLOAT,
+    max_score      FLOAT,
+    num_records    NUMBER
 );
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -327,7 +377,9 @@ GRANT SELECT ON FUTURE TABLES IN SCHEMA GTMAGENTS.DEMO TO ROLE GTMAGENTS_ROLE;
 GRANT INSERT ON TABLE REQUEST_LOG      TO ROLE GTMAGENTS_ROLE;
 GRANT INSERT ON TABLE ROUTING_LOG      TO ROLE GTMAGENTS_ROLE;
 GRANT INSERT ON TABLE COST_COMPARISON  TO ROLE GTMAGENTS_ROLE;
-GRANT INSERT ON TABLE EVAL_RUNS        TO ROLE GTMAGENTS_ROLE;
+GRANT SELECT ON TABLE AGENT_EVAL_QUESTIONS TO ROLE GTMAGENTS_ROLE;
+GRANT INSERT, SELECT ON TABLE EVAL_SCORE_HISTORY TO ROLE GTMAGENTS_ROLE;
+GRANT READ, WRITE ON STAGE EVAL_STAGE  TO ROLE GTMAGENTS_ROLE;
 GRANT SELECT ON SEMANTIC VIEW EMAIL_GTM_SV        TO ROLE GTMAGENTS_ROLE;
 GRANT USAGE  ON CORTEX SEARCH SERVICE FRAMEWORK_SEARCH TO ROLE GTMAGENTS_ROLE;
 GRANT USAGE  ON FUNCTION GTM_TEAM_PERFORMANCE(STRING)  TO ROLE GTMAGENTS_ROLE;
@@ -337,6 +389,6 @@ GRANT USAGE  ON FUNCTION GTM_TEAM_PERFORMANCE(STRING)  TO ROLE GTMAGENTS_ROLE;
 --   1) lab/gtm-01-foundation.ipynb   (tour data + Cortex Analyst + Checkpoint 0)
 --   2) lab/gtm-02-before-mcp.ipynb   (MCP server + OAuth + Claude connect + Checkpoint A)
 --   3) lab/gtm-03-after-agents.ipynb (multi-agent supervisor + AI_FILTER + Checkpoint B)
---   4) lab/gtm-04-evals.ipynb        (evals harness + Checkpoint C)
+--   4) lab/gtm-04-evals.ipynb        (native agent evaluation of GTM_SUPERVISOR + Checkpoint C)
 --   5) app/streamlit_app.py          (observability + comparison — Parts D & E)
 -- ─────────────────────────────────────────────────────────────────────────────

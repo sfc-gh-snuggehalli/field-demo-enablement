@@ -130,16 +130,18 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 ## Slide 8: Evals — measured, not assumed
 
 **Talking Points:**
-- Trust requires measurement. The harness computes scoring accuracy vs labels, run-to-run consistency, and predicted coached win-rate lift, persisting every run to `EVAL_RUNS`.
-- Honesty sells: the cheap model's standalone accuracy is modest — which is exactly why we escalate and why evals belong in the pipeline.
+- Trust requires measuring the **agent**, not a raw model call. We run Snowflake's native Cortex Agent Evaluation against `GTM_SUPERVISOR` over a 12-question labeled dataset, using the GPA framing: `answer_correctness` (Goal), `tool_selection_accuracy` + `logical_consistency` (Plan/Action), plus a custom `routing_quality` LLM judge.
+- The dataset deliberately includes high-stakes out-of-scope questions the agent must **decline without calling a tool** — routing correctly is as much about restraint as reach.
+- The loop is the point: run a baseline, slice scores by intent/process, make the orchestration rules explicit, re-run, compare, then promote the better version to a `production` alias — no app code changes.
 
 **Presenter Notes:**
-- Ground truth uses the unambiguous quality tiers (tier 3 = good, tier 1 = poor). Consistency is high because the model is deterministic at temperature 0.
-- For a fully managed loop, register the scorer as a Cortex AI Function and use `EVALUATE_AI_FUNCTION` / `OPTIMIZE_AI_FUNCTION` to find the cheapest model that holds accuracy on the Pareto frontier — long-running, so run it live, not inline.
+- Flow: `SYSTEM$CREATE_EVALUATION_DATASET` → eval-config YAML on `@EVAL_STAGE` → `EXECUTE_AI_EVALUATION('START'/'STATUS')` → `GET_AI_EVALUATION_DATA(...,'CORTEX AGENT', run_name)`. Runs take a few minutes (LLM judge) — start it, then talk while it completes.
+- Requires cross-region inference for the judges and `MONITOR` on the agent. Scores persist to `EVAL_SCORE_HISTORY`, which the Streamlit Eval Dashboard and the suspended `GTM_EVAL_REGRESSION_CHECK` task both read.
+- Iterate live: `ALTER AGENT ... MODIFY LIVE VERSION SET SPECIFICATION` to add explicit routing + refusal rules, `COMMIT`, re-run as `improved-v2`, and show the per-metric delta — especially on the refusal and multi-tool slices.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-evaluations
-- https://docs.snowflake.com/en/user-guide/snowflake-cortex/aisql
+- https://www.snowflake.com/en/blog/engineering/ai-agent-evaluation-gpa-framework/
 
 ---
 

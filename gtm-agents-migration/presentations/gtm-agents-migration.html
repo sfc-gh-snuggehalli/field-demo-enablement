@@ -603,15 +603,15 @@ $$;
     <!-- Slide 8: Evals -->
     <section class="slide" id="evals">
       <h2>Measured, not assumed</h2>
-      <p>A labeled good/bad set drives three metrics, persisted to <code>EVAL_RUNS</code> every run.</p>
+      <p>Native Cortex Agent Evaluation scores <code>GTM_SUPERVISOR</code> against a labeled dataset &mdash; the GPA framework: did it answer, did it route, did it reason?</p>
       <div class="card-grid anim-fade">
-        <div class="card"><h4>Scoring accuracy</h4><p>Does the model's intent score agree with the labels? Low cheap-model accuracy is exactly what justifies escalation and optimization.</p></div>
-        <div class="card"><h4>Run-to-run consistency</h4><p>How stable is the score across repeated runs? Stability is a prerequisite for trusting automation.</p></div>
-        <div class="card"><h4>Coached win-rate lift</h4><p>Predicted win-rate gain from rewriting weak emails to the framework &mdash; the business case for the Coaching agent.</p></div>
+        <div class="card"><h4>Answer correctness</h4><p>Does the supervisor's answer match the ground truth for each question? The <em>Goal</em> dimension.</p></div>
+        <div class="card"><h4>Tool-selection accuracy</h4><p>Did it route to the right specialist &mdash; and call <em>no</em> tool on out-of-scope questions? The <em>Plan/Action</em> dimension.</p></div>
+        <div class="card"><h4>Logical consistency</h4><p>Reference-free check that the plan and execution cohere &mdash; plus a custom routing-quality judge.</p></div>
       </div>
-      <div class="context-box anim-fade"><strong>Managed loop:</strong> register the scorer as a Cortex AI Function and use
-        <code>EVALUATE_AI_FUNCTION</code> / <code>OPTIMIZE_AI_FUNCTION</code> to find the cheapest model that holds
-        accuracy on the cost/quality Pareto frontier.</div>
+      <div class="context-box anim-fade"><strong>Iterate &rarr; promote:</strong> improve the orchestration, re-run, compare
+        baseline vs improved, then <code>SET ALIAS = production</code> on the better version &mdash; a scheduled Task
+        catches regressions from model or data drift.</div>
     </section>
 
     <!-- Slide 9: Observability -->
@@ -624,7 +624,7 @@ $$;
       <div class="card-grid anim-fade">
         <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side.</p></div>
         <div class="card"><h4>Cost & budget</h4><p>Credits per run, cost-per-email, projected spend, per-user quotas.</p></div>
-        <div class="card"><h4>Eval dashboard</h4><p>Accuracy, consistency, drift over runs.</p></div>
+        <div class="card"><h4>Eval dashboard</h4><p>Answer correctness, tool-selection accuracy, and drift across runs.</p></div>
         <div class="card"><h4>Recommendations</h4><p>Top converting patterns from the semantic model.</p></div>
       </div>
     </section>
@@ -663,7 +663,7 @@ $$;
       <div class="card-grid anim-fade">
         <div class="card"><h4>1. Run the foundation</h4><p>Execute <code>lab/setup.sql</code>, then <code>gtm-01-foundation</code> &mdash; confirm Checkpoint 0.</p></div>
         <div class="card"><h4>2. Stand up both paths</h4><p><code>gtm-02-before-mcp</code> (MCP + OAuth + Claude connect) and <code>gtm-03-after-agents</code> (multi-agent).</p></div>
-        <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> for accuracy/consistency/lift; deploy the Streamlit command center.</p></div>
+        <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> runs a native agent evaluation (answer correctness, tool-selection accuracy) and promotes the better version; deploy the Streamlit command center.</p></div>
         <div class="card"><h4>4. Demo the delta</h4><p>Ask the same question in Claude (before) and CoWork (after); show the latency, cost, and governance gap live.</p></div>
       </div>
       <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">

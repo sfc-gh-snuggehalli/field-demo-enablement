@@ -6,7 +6,7 @@ Claude Code + MCP -> Cortex Agents + CoWork migration:
 
   1. Live Traces      — agent spans (tool calls, tokens, model, latency) from AI Observability.
   2. Cost & Budget    — credits/$ per run, cost-per-email, projected monthly spend, per-user quota.
-  3. Eval Dashboard   — scoring accuracy, run-to-run consistency, coached win-rate lift.
+  3. Eval Dashboard   — native agent-eval scores (answer correctness, tool-selection accuracy, logical consistency).
   4. Recommendations  — top converting email patterns from the semantic model.
   5. Before vs After  — latency (MCP round-trip vs Agents-native), cost per 1k, governance matrix.
 
@@ -140,20 +140,46 @@ with tab_cost:
 # TAB 3 — Eval Dashboard (Part D)
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_evals:
-    st.subheader("Evaluation dashboard")
-    evals = q("SELECT run_id, run_ts, model_name, accuracy, consistency, winrate_lift, n_examples FROM EVAL_RUNS ORDER BY run_ts")
-    if not evals.empty:
-        latest = evals.iloc[-1]
-        cols = st.columns(4)
-        cols[0].metric("Scoring accuracy", f"{latest['ACCURACY']:.1%}")
-        cols[1].metric("Run-to-run consistency", f"{latest['CONSISTENCY']:.1%}")
-        cols[2].metric("Coached win-rate lift", f"{latest['WINRATE_LIFT']:.4f}")
-        cols[3].metric("Eval runs", len(evals))
-        st.markdown("**Accuracy & consistency across runs**")
-        st.line_chart(evals.set_index("RUN_ID")[["ACCURACY", "CONSISTENCY"]])
-        st.dataframe(evals, use_container_width=True, hide_index=True)
+    st.subheader("Native agent evaluation")
+    st.caption(
+        "Scores from Cortex Agent Evaluation of GTM_SUPERVISOR — answer correctness, tool-selection "
+        "accuracy, logical consistency, and a custom routing-quality judge. Persisted per run to EVAL_SCORE_HISTORY."
+    )
+    hist = q(
+        "SELECT run_name, run_ts, metric_name, avg_score, min_score, max_score, num_records "
+        "FROM EVAL_SCORE_HISTORY ORDER BY run_ts"
+    )
+    if not hist.empty:
+        runs = list(dict.fromkeys(hist["RUN_NAME"].tolist()))  # preserve chronological order
+        latest_run = runs[-1]
+        latest = hist[hist["RUN_NAME"] == latest_run]
+
+        st.markdown(f"**Latest run:** `{latest_run}`")
+        metric_scores = dict(zip(latest["METRIC_NAME"], latest["AVG_SCORE"]))
+        headline = ["answer_correctness", "tool_selection_accuracy", "logical_consistency", "routing_quality"]
+        shown = [m for m in headline if m in metric_scores] or list(metric_scores)
+        cols = st.columns(len(shown))
+        for col, m in zip(cols, shown):
+            col.metric(m.replace("_", " ").title(), f"{metric_scores[m]:.3f}")
+
+        # Baseline vs latest delta (first vs last run)
+        if len(runs) >= 2:
+            base = hist[hist["RUN_NAME"] == runs[0]][["METRIC_NAME", "AVG_SCORE"]]
+            curr = latest[["METRIC_NAME", "AVG_SCORE"]]
+            delta = base.merge(curr, on="METRIC_NAME", suffixes=(f" ({runs[0]})", f" ({latest_run})"))
+            delta["Δ"] = (delta.iloc[:, 2] - delta.iloc[:, 1]).round(3)
+            st.markdown(f"**{runs[0]} → {latest_run}**")
+            st.dataframe(delta, use_container_width=True, hide_index=True)
+
+        st.markdown("**Average score by metric across runs**")
+        pivot = hist.pivot_table(index="RUN_NAME", columns="METRIC_NAME", values="AVG_SCORE", sort=False)
+        st.line_chart(pivot)
+        st.dataframe(hist, use_container_width=True, hide_index=True)
     else:
-        st.info("EVAL_RUNS is empty — run notebook 04.")
+        st.info(
+            "EVAL_SCORE_HISTORY is empty — run notebook 04 (gtm-04-evals) to evaluate GTM_SUPERVISOR "
+            "and persist baseline + improved scores."
+        )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 4 — Recommendations (Part D)
