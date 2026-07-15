@@ -386,9 +386,12 @@ GRANT USAGE  ON FUNCTION GTM_TEAM_PERFORMANCE(STRING)  TO ROLE GTMAGENTS_ROLE;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Setup complete. Next:
---   1) lab/gtm-01-foundation.ipynb   (tour data + Cortex Analyst + Checkpoint 0)
---   2) lab/gtm-02-before-mcp.ipynb   (MCP server + OAuth + Claude connect + Checkpoint A)
---   3) lab/gtm-03-after-agents.ipynb (multi-agent supervisor + AI_FILTER + Checkpoint B)
---   4) lab/gtm-04-evals.ipynb        (native agent evaluation of GTM_SUPERVISOR + Checkpoint C)
+--   1) lab/gtm-01-foundation.ipynb   (tour data + Cortex Analyst)
+--   2) lab/gtm-02-before-mcp.ipynb   (MCP server + OAuth + Claude connect)
+--   3) lab/gtm-03-after-agents.ipynb (multi-agent supervisor + AI_FILTER)
+--   4) lab/gtm-04-evals.ipynb        (native agent evaluation of GTM_SUPERVISOR)
 --   5) app/streamlit_app.py          (observability + comparison — Parts D & E)
+--
+-- Internal QA (not client-facing): lab/tests/checkpoints.ipynb runs the PASS/FAIL
+-- checkpoints for all four notebooks after they've been executed.
 -- ─────────────────────────────────────────────────────────────────────────────

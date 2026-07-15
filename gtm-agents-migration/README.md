@@ -34,16 +34,18 @@ server — especially cost-sensitive orgs weighing an external LLM client agains
 | `presentations/gtm-agents-migration-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
 | `lab/setup.sql` | Part 0 foundation: DB/schema/warehouse/role, synthetic data, semantic view, Cortex Search, governed UDF, shared log tables |
 | `lab/cleanup.sql` | Tear the whole demo down (DB + warehouse + role + OAuth integration) to start fresh |
-| `lab/gtm-01-foundation.ipynb` | Part 0 tour + Cortex Analyst + Checkpoint 0 |
-| `lab/gtm-02-before-mcp.ipynb` | Part A — MCP server + OAuth + Claude connect stubs + Checkpoint A |
-| `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate + Checkpoint B |
-| `lab/gtm-04-evals.ipynb` | Part C — native agent evaluation of GTM_SUPERVISOR (dataset, metrics, baseline vs improved, promote, regression) + Checkpoint C |
+| `lab/gtm-01-foundation.ipynb` | Part 0 tour + Cortex Analyst |
+| `lab/gtm-02-before-mcp.ipynb` | Part A — MCP server + OAuth + Claude connect stubs |
+| `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate |
+| `lab/gtm-04-evals.ipynb` | Part C — native agent evaluation of GTM_SUPERVISOR (dataset, metrics, baseline vs improved, promote, regression) |
 | `app/streamlit_app.py` | Parts D & E — Streamlit-in-Snowflake observability + before/after comparison |
+| `lab/tests/checkpoints.ipynb` | **Internal QA (not client-facing)** — PASS/FAIL checkpoints for all four notebooks; run after executing them |
 
 ## Hands-On Lab
 
-Four lifecycle notebooks build the demo strictly in order; each ends with a PASS/FAIL checkpoint that gates the
-next part. The Streamlit app (Parts D & E) reads the tables the notebooks populate.
+Four lifecycle notebooks build the demo strictly in order. The Streamlit app (Parts D & E) reads the tables
+the notebooks populate. A separate internal-only `lab/tests/checkpoints.ipynb` holds the PASS/FAIL checks
+that validate each part is wired correctly — run it after the four notebooks; it is not part of the client walkthrough.
 
 ### Prerequisites
 
@@ -66,11 +68,13 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 
 ### Lab Sections
 
-1. **gtm-01-foundation** — tour the data, run a Cortex Analyst NL question, confirm the three tools (Checkpoint 0).
-2. **gtm-02-before-mcp** — create the MCP server + OAuth integration, print the endpoint URL + client id/secret, log the MCP latency/cost baseline, and follow the manual Claude connect step-list (Checkpoint A).
-3. **gtm-03-after-agents** — build the scoring/recommendation/coaching specialists, wrapper procedures, and supervisor; run the `AI_FILTER` cost gate; batch-score; run the supervisor end-to-end (Checkpoint B).
-4. **gtm-04-evals** — register the labeled dataset, run a native Cortex Agent Evaluation of `GTM_SUPERVISOR` (answer correctness, tool-selection accuracy, logical consistency, custom routing judge), improve the orchestration, re-run and compare, promote the better version to a `production` alias, and wire up regression + feedback (Checkpoint C).
-5. **app/streamlit_app.py** — deploy as a Streamlit-in-Snowflake app for Live Traces, Cost & Budget, Eval Dashboard, Recommendations, and the Before-vs-After comparison (Checkpoints D & E).
+1. **gtm-01-foundation** — tour the data, run a Cortex Analyst NL question, confirm the three tools.
+2. **gtm-02-before-mcp** — create the MCP server + OAuth integration, print the endpoint URL + client id/secret, log the MCP latency/cost baseline, and follow the manual Claude connect step-list.
+3. **gtm-03-after-agents** — build the scoring/recommendation/coaching specialists, wrapper procedures, and supervisor; run the `AI_FILTER` cost gate; batch-score; run the supervisor end-to-end.
+4. **gtm-04-evals** — register the labeled dataset, run a native Cortex Agent Evaluation of `GTM_SUPERVISOR` (answer correctness, tool-selection accuracy, logical consistency, custom routing judge), improve the orchestration, re-run and compare, promote the better version to a `production` alias, and wire up regression + feedback.
+5. **app/streamlit_app.py** — deploy as a Streamlit-in-Snowflake app for Live Traces, Cost & Budget, Eval Dashboard, Recommendations, and the Before-vs-After comparison (Parts D & E).
+
+> **Internal QA:** after running the four notebooks, run `lab/tests/checkpoints.ipynb` to verify every part is wired correctly. This test notebook is not part of the client-facing walkthrough.
 
 **Run order:** `setup.sql` → `gtm-01` → `gtm-02` → `gtm-03` → `gtm-04` → deploy `app/streamlit_app.py`.
 
@@ -84,7 +88,8 @@ Run everything inside Snowsight so `get_active_session()` handles auth (no local
 1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
 2. Open `gtm-agents-migration/lab/setup.sql` and run it.
-3. Open the four `lab/gtm-0*.ipynb` notebooks in order and walk the sections (do not skip checkpoints).
+3. Open the four `lab/gtm-0*.ipynb` notebooks in order and walk the sections.
+   (Optional internal QA: run `lab/tests/checkpoints.ipynb` afterward to validate the build.)
 4. Deploy `app/streamlit_app.py` as a Streamlit-in-Snowflake app.
 
 Running locally instead? Use `snow sql -f lab/setup.sql` with a connection whose **role can create the
