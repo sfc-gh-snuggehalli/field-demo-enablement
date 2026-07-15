@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migrating GTM AI: Claude Code + MCP to Cortex Agents + CoWork</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0F1B2D;
+      --sidebar-bg: #1B2A4A;
+      --primary: #29B5E8;
+      --accent: #7C3AED;
+      --text: #E2E8F0;
+      --text-muted: #94A3B8;
+      --card-bg: #162236;
+      --border: #2D4A6F;
+      --green: #10B981;
+      --orange: #F59E0B;
+      --red: #EF4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      z-index: 1000;
+      transition: width 0.1s;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      padding: 2rem 1.5rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar a {
+      display: block;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      color: var(--text);
+      background: rgba(41, 181, 232, 0.1);
+    }
+
+    .sidebar a.active {
+      border-left: 3px solid var(--primary);
+      padding-left: calc(0.75rem - 3px);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 0;
+    }
+
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .slide h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slide h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    .slide h3 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .slide p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      text-align: center;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--card-bg);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:hover td {
+      background: rgba(41, 181, 232, 0.05);
+    }
+
+    .highlight-box {
+      background: rgba(41, 181, 232, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .context-box {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--orange);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-orange { background: rgba(245, 158, 11, 0.15); color: var(--orange); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-blue { background: rgba(41, 181, 232, 0.15); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-purple { background: rgba(124, 58, 237, 0.15); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+
+    .slide ul {
+      list-style: none;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .slide ul li {
+      padding: 0.75rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .slide ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    code {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--primary);
+    }
+
+    pre {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      width: 100%;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text);
+    }
+
+    pre .keyword { color: var(--accent); font-weight: 500; }
+    pre .string { color: var(--green); }
+    pre .comment { color: var(--text-muted); font-style: italic; }
+    pre .function { color: var(--primary); }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .flow-step {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .flow-step.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(41, 181, 232, 0.2);
+    }
+
+    .flow-step .step-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .flow-step .step-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+
+    .flow-arrow {
+      color: var(--primary);
+      font-size: 1.5rem;
+      font-weight: 300;
+    }
+
+    .arch-diagram {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arch-diagram .level {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-diagram .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .arch-diagram .node-primary {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(41, 181, 232, 0.2);
+    }
+
+    .arch-diagram .node-accent {
+      border-color: var(--accent);
+    }
+
+    .arch-diagram .arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .anim-fade {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .anim-fade.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .slide { padding: 2rem 1.5rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .github-link {
+      position: fixed;
+      top: 1rem;
+      right: 1.5rem;
+      z-index: 1000;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      transition: all 0.2s;
+    }
+    .github-link:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+    .github-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <a href="https://github.com/sfc-gh-snuggehalli/field-demo-enablement/tree/main/gtm-agents-migration" class="github-link" target="_blank">
+    <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+  <div class="progress-bar"></div>
+
+  <nav class="sidebar">
+    <h2>GTM Agents Migration</h2>
+    <!-- NAV_LINKS_START -->
+    <a href="#hero">Overview</a>
+    <a href="#problem">The Problem</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#before">Before: MCP</a>
+    <a href="#after">After: Multi-Agent</a>
+    <a href="#targeted">Targeted Gate</a>
+    <a href="#cowork">CoWork</a>
+    <a href="#evals">Evals</a>
+    <a href="#observability">Observability</a>
+    <a href="#comparison">Comparison</a>
+    <a href="#decision">When to Use</a>
+    <a href="#closing">Next Steps</a>
+    <!-- NAV_LINKS_END -->
+  </nav>
+
+  <main class="main">
+    <!-- SLIDES_START -->
+
+    <!-- Slide 1: Hero -->
+    <section class="slide" id="hero">
+      <h1>Migrating GTM AI to Cortex Agents + CoWork</h1>
+      <p>From an external brain (Claude Code over the Snowflake-managed MCP server) to an in-data-plane
+         multi-agent architecture &mdash; lower latency, lower cost, stronger governance, built-in observability.</p>
+      <div class="stat-grid anim-fade" style="margin-top: 2rem;">
+        <div class="stat-card"><div class="value">~69%</div><div class="label">Lower per-request latency (in-plane vs MCP round-trip)</div></div>
+        <div class="stat-card"><div class="value">~26%</div><div class="label">Fewer emails fully treated via AI_FILTER gate</div></div>
+        <div class="stat-card"><div class="value">3 + 1</div><div class="label">Specialists orchestrated by one supervisor</div></div>
+        <div class="stat-card"><div class="value">100%</div><div class="label">In-plane, server-side execution traces</div></div>
+      </div>
+    </section>
+
+    <!-- Slide 2: The Problem -->
+    <section class="slide" id="problem">
+      <h2>The external-brain tax</h2>
+      <p>A high-volume sales org scores every rep email with AI and mines winning patterns &mdash; today via
+         Claude Code over the MCP server. It works, but four costs compound.</p>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Latency on every call</h4><p>Each tool call is a network round-trip to the external client plus client-side LLM planning &mdash; overhead paid on every request, at scale.</p></div>
+        <div class="card"><h4>Cost blindness</h4><p>Analyze-everything with a single strong model burns credits fast. No per-user budgets or chargeback when the brain lives outside Snowflake.</p></div>
+        <div class="card"><h4>Governance gap</h4><p>Budgets, quotas, tagging, and traces sit outside the data plane. The external client only sees tool outputs; you can't audit what it did.</p></div>
+        <div class="card"><h4>Connector reliability</h4><p>OAuth redirect mismatches, DEFAULT_ROLE/warehouse errors, network-policy allow-lists, PrivateLink limits &mdash; fragile plumbing to keep alive.</p></div>
+      </div>
+    </section>
+
+    <!-- Slide 3: Architecture -->
+    <section class="slide" id="architecture">
+      <h2>Architecture: two brains, one governed data plane</h2>
+      <h3>The same tools power both the external MCP path and the in-plane agents</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">Claude Code / Desktop<br><small>external brain</small></div>
+          <div class="node node-primary"><strong>Snowflake CoWork</strong><br><small>in-plane brain</small></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">GTMAGENTS_MCP<br><small>MCP server + OAuth</small></div>
+          <div class="node node-accent">GTM_SUPERVISOR<br><small>+ 3 specialist agents</small></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">Cortex Analyst<br><small>EMAIL_GTM_SV</small></div>
+          <div class="node">Cortex Search<br><small>FRAMEWORK_SEARCH</small></div>
+          <div class="node">Governed UDF<br><small>GTM_TEAM_PERFORMANCE</small></div>
+        </div>
+      </div>
+      <div class="context-box anim-fade">
+        <strong>Pattern:</strong> Part 0 builds the governed tools once. The MCP server (BEFORE) and the
+        supervisor + specialists (AFTER) both consume them &mdash; identical business definitions, two front doors.
+        Migration means moving the reasoning loop from outside Snowflake to inside it, not rebuilding the data layer.
+      </div>
+    </section>
+
+    <!-- Slide 4: Before -->
+    <section class="slide" id="before">
+      <h2>Before: Snowflake-managed MCP server</h2>
+      <p>Wrap existing Snowflake objects as MCP tools; Claude authenticates with built-in OAuth and drives them.</p>
+      <pre><span class="keyword">CREATE MCP SERVER</span> GTMAGENTS_MCP <span class="keyword">FROM SPECIFICATION</span> $$
+  tools:
+    - name: <span class="string">"gtm-analyst"</span>
+      type: <span class="string">"CORTEX_ANALYST_MESSAGE"</span>
+      identifier: <span class="string">"GTMAGENTS.DEMO.EMAIL_GTM_SV"</span>
+    - name: <span class="string">"framework-search"</span>
+      type: <span class="string">"CORTEX_SEARCH_SERVICE_QUERY"</span>
+      identifier: <span class="string">"GTMAGENTS.DEMO.FRAMEWORK_SEARCH"</span>
+$$;
+<span class="comment">-- OAuth: no dynamic client registration; redirect URI must match Claude's callback</span>
+<span class="keyword">CREATE SECURITY INTEGRATION</span> GTMAGENTS_MCP_OAUTH
+  TYPE=OAUTH OAUTH_CLIENT=CUSTOM ENABLED=TRUE OAUTH_CLIENT_TYPE=<span class="string">'CONFIDENTIAL'</span>;</pre>
+      <div class="warning-box anim-fade">
+        <strong>Connect gotchas:</strong> redirect-URI must match Claude's callback; the session uses the user's
+        <code>DEFAULT_ROLE</code> (set <code>DEFAULT_ROLE</code> + <code>DEFAULT_WAREHOUSE</code> or tool
+        discovery fails); avoid underscores in the account host / DB name in the URL; allow-list the client's
+        outbound IPs if a network policy is on; PrivateLink limits external reach; PAT is the fallback auth.
+      </div>
+    </section>
+
+    <!-- Slide 5: After -->
+    <section class="slide" id="after">
+      <h2>After: a supervisor over three specialists</h2>
+      <h3>Agent-to-agent orchestration, entirely in the data plane</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step active"><div class="step-label">Orchestrator</div><div class="step-title">Supervisor</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Cheap + escalate</div><div class="step-title">Scoring</div></div>
+        <div class="flow-step"><div class="step-label">Cortex Analyst</div><div class="step-title">Recommendation</div></div>
+        <div class="flow-step"><div class="step-label">Cortex Search</div><div class="step-title">Coaching</div></div>
+      </div>
+      <pre><span class="comment">-- Each specialist is wrapped in an owner's-rights proc that returns a single cell</span>
+<span class="keyword">CREATE PROCEDURE</span> RUN_RECOMMENDATION_AGENT(question STRING) <span class="keyword">RETURNS</span> STRING <span class="keyword">AS</span>
+  $$ ... <span class="function">DATA_AGENT_RUN</span>(<span class="string">'GTMAGENTS.DEMO.GTM_RECOMMENDATION_AGENT'</span>, :msg) ... $$;
+<span class="comment">-- The supervisor binds those procs as generic tools and routes each sub-task</span></pre>
+      <div class="context-box anim-fade">
+        <strong>Cost control built in:</strong> the Scoring agent runs a cheap model (<code>llama3.1-8b</code>)
+        and escalates to <code>mistral-large2</code> <em>only</em> on low confidence &mdash; every routing decision
+        logged. A hard <code>orchestration.budget</code> caps tokens/seconds per run.
+      </div>
+    </section>
+
+    <!-- Slide 6: Targeted gate -->
+    <section class="slide" id="targeted">
+      <h2>Targeted analysis: don't score everything</h2>
+      <p>An <code>AI_FILTER</code> gate treats only underperforming / below-threshold emails &mdash; the concrete
+         cost lever for a budget-sensitive team.</p>
+      <pre><span class="keyword">SELECT</span> <span class="function">COUNT_IF</span>(<span class="function">AI_FILTER</span>(<span class="function">PROMPT</span>(
+    <span class="string">'This cold sales email is generic, low-effort, or lacks a clear CTA: {0}'</span>, body)))
+<span class="keyword">FROM</span> emails;   <span class="comment">-- treat this subset, skip the rest</span></pre>
+      <div class="stat-grid anim-fade">
+        <div class="stat-card"><div class="value">3,000</div><div class="label">Emails scanned (analyze-all)</div></div>
+        <div class="stat-card"><div class="value">~2,220</div><div class="label">Emails treated (targeted)</div></div>
+        <div class="stat-card"><div class="value">~26%</div><div class="label">Volume cut vs analyze-all</div></div>
+        <div class="stat-card"><div class="value">= credits</div><div class="label">Proportional cost saved</div></div>
+      </div>
+    </section>
+
+    <!-- Slide 7: CoWork -->
+    <section class="slide" id="cowork">
+      <h2>Wrapped in Snowflake CoWork &mdash; no external connector</h2>
+      <p>The supervisor is a standard Cortex Agent, so it appears automatically in CoWork. Business users ask
+         NL questions against governed data with zero connector setup.</p>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>External MCP client (before)</h4><p>Add custom connector, paste URL + client id/secret, complete OAuth, keep redirect URIs and IP allow-lists in sync. Governance lives outside Snowflake.</p></div>
+        <div class="card" style="border-color: var(--green)"><h4>CoWork (after)</h4><p>Pick <code>GTM Supervisor</code> from the agent list and ask. No connector, no external auth, full in-plane governance and traceability &mdash; same agent, reachable via REST too.</p></div>
+      </div>
+      <div class="highlight-box anim-fade"><strong>Both worlds stay open:</strong> add the supervisor to the MCP server as a
+        <code>CORTEX_AGENT_RUN</code> tool and external clients can still reach it &mdash; now governed in-plane.</div>
+    </section>
+
+    <!-- Slide 8: Evals -->
+    <section class="slide" id="evals">
+      <h2>Measured, not assumed</h2>
+      <p>A labeled good/bad set drives three metrics, persisted to <code>EVAL_RUNS</code> every run.</p>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Scoring accuracy</h4><p>Does the model's intent score agree with the labels? Low cheap-model accuracy is exactly what justifies escalation and optimization.</p></div>
+        <div class="card"><h4>Run-to-run consistency</h4><p>How stable is the score across repeated runs? Stability is a prerequisite for trusting automation.</p></div>
+        <div class="card"><h4>Coached win-rate lift</h4><p>Predicted win-rate gain from rewriting weak emails to the framework &mdash; the business case for the Coaching agent.</p></div>
+      </div>
+      <div class="context-box anim-fade"><strong>Managed loop:</strong> register the scorer as a Cortex AI Function and use
+        <code>EVALUATE_AI_FUNCTION</code> / <code>OPTIMIZE_AI_FUNCTION</code> to find the cheapest model that holds
+        accuracy on the cost/quality Pareto frontier.</div>
+    </section>
+
+    <!-- Slide 9: Observability -->
+    <section class="slide" id="observability">
+      <h2>Observability that only the data plane can give</h2>
+      <p>Every agent run emits server-side spans into <code>SNOWFLAKE.LOCAL.AI_OBSERVABILITY_EVENTS</code>.</p>
+      <pre><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> <span class="keyword">TABLE</span>(<span class="function">SNOWFLAKE.LOCAL.GET_AI_OBSERVABILITY_EVENTS</span>(
+    <span class="string">'GTMAGENTS'</span>, <span class="string">'DEMO'</span>, <span class="string">'GTM_SUPERVISOR'</span>, <span class="string">'CORTEX AGENT'</span>));
+<span class="comment">-- spans: ToolCall-ScoringSpecialist, SqlExecution, ReasoningAgentStep... with tokens + latency</span></pre>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side.</p></div>
+        <div class="card"><h4>Cost & budget</h4><p>Credits per run, cost-per-email, projected spend, per-user quotas.</p></div>
+        <div class="card"><h4>Eval dashboard</h4><p>Accuracy, consistency, drift over runs.</p></div>
+        <div class="card"><h4>Recommendations</h4><p>Top converting patterns from the semantic model.</p></div>
+      </div>
+    </section>
+
+    <!-- Slide 10: Comparison -->
+    <section class="slide" id="comparison">
+      <h2>External brain vs in-data-plane brain</h2>
+      <table class="anim-fade">
+        <thead><tr><th>Dimension</th><th>Before: Claude + MCP</th><th>After: Cortex Agents + CoWork</th></tr></thead>
+        <tbody>
+          <tr><td>Per-request latency</td><td><span class="badge-orange">Round-trip + planning</span></td><td><span class="badge-green">In-plane (~69% lower)</span></td></tr>
+          <tr><td>Cost model</td><td><span class="badge-orange">Analyze-all, strong model</span></td><td><span class="badge-green">Cheap + escalate + AI_FILTER gate</span></td></tr>
+          <tr><td>Per-user budgets / quotas</td><td><span class="badge-red">Absent</span></td><td><span class="badge-green">Native</span></td></tr>
+          <tr><td>Chargeback / tagging</td><td><span class="badge-red">Outside Snowflake</span></td><td><span class="badge-green">Usage history + tags</span></td></tr>
+          <tr><td>Execution traces</td><td><span class="badge-red">Client-side only</span></td><td><span class="badge-green">Server-side spans</span></td></tr>
+          <tr><td>Data egress</td><td><span class="badge-orange">Leaves the perimeter</span></td><td><span class="badge-green">Stays in-plane</span></td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.9rem">Latency and cost figures are sourced live from <code>REQUEST_LOG</code> and
+         <code>COST_COMPARISON</code> in the observability app &mdash; not hardcoded.</p>
+    </section>
+
+    <!-- Slide 11: Decision -->
+    <section class="slide" id="decision">
+      <h2>When to use which</h2>
+      <div class="card-grid anim-fade">
+        <div class="card" style="border-color: var(--primary)"><h4>Use the MCP server when&hellip;</h4><p>You want your existing external client (Claude Code, ChatGPT, Cursor) to reach governed Snowflake tools with minimal setup, and the external brain is where your users already work.</p></div>
+        <div class="card" style="border-color: var(--green)"><h4>Use Cortex Agents + CoWork when&hellip;</h4><p>You need multi-step orchestration, cost control (cheap + escalate, targeted gating), per-user budgets, server-side traces, and business users asking NL questions with zero connector setup.</p></div>
+        <div class="card" style="border-color: var(--accent)"><h4>Use both when&hellip;</h4><p>Expose the supervisor agent through the MCP server too &mdash; one governed object, reachable by external clients and in-plane CoWork alike.</p></div>
+      </div>
+    </section>
+
+    <!-- Slide 12: Next Steps -->
+    <section class="slide" id="closing">
+      <h2>Next Steps</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>1. Run the foundation</h4><p>Execute <code>lab/setup.sql</code>, then <code>gtm-01-foundation</code> &mdash; confirm Checkpoint 0.</p></div>
+        <div class="card"><h4>2. Stand up both paths</h4><p><code>gtm-02-before-mcp</code> (MCP + OAuth + Claude connect) and <code>gtm-03-after-agents</code> (multi-agent).</p></div>
+        <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> for accuracy/consistency/lift; deploy the Streamlit command center.</p></div>
+        <div class="card"><h4>4. Demo the delta</h4><p>Ask the same question in Claude (before) and CoWork (after); show the latency, cost, and governance gap live.</p></div>
+      </div>
+      <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">
+        <strong>The migration isn't a rewrite &mdash; it's moving the reasoning loop into the data plane, where
+        cost, governance, and observability come for free.</strong>
+      </div>
+    </section>
+
+    <!-- SLIDES_END -->
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      document.querySelector('.progress-bar').style.width = progress + '%';
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.anim-fade').forEach(el => observer.observe(el));
+
+    const sections = document.querySelectorAll('.slide');
+    const navLinks = document.querySelectorAll('.sidebar a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 200;
+        if (window.scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

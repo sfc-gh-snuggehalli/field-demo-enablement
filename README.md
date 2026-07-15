@@ -25,6 +25,7 @@ hands-on lab with SQL setup and a notebook.
 |--------|----------|--------|--------------|
 | AI Functions: Customer Experience Telemetry | Data & Analytics teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
 | Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Data science & ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
+| Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork | Sales engineers & data/AI teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -69,6 +70,27 @@ tool, plus a Streamlit chat app. Client-agnostic and reusable across accounts.
 | `lab/donor-churn-02-model.ipynb` | Lab 2/3 — Snowpark ML + Experiment Tracking + HPO, ML Jobs, Registry, Explainability |
 | `lab/donor-churn-03-serve-agent.ipynb` | Lab 3/3 — Serving, Observability, tool functions, Cortex Agent |
 | `app/streamlit_app.py` | Streamlit-in-Snowflake chat UI over the agent |
+
+### Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork
+
+**Location:** `gtm-agents-migration/`
+
+Migrate an AI-over-sales-email workload from an external brain (Claude Code + the Snowflake-managed MCP
+server) to an in-data-plane multi-agent architecture (Cortex Agents + Snowflake CoWork), proving lower
+latency, lower cost, stronger governance, and built-in observability over the same governed tools.
+A supervisor orchestrates scoring / recommendation / coaching specialists via agent-to-agent `DATA_AGENT_RUN`,
+with a cheap-model-plus-escalation cost story and an `AI_FILTER` targeting gate. Client-agnostic and reusable.
+
+| File | Description |
+|------|-------------|
+| `presentations/gtm-agents-migration.html` | Slide deck (12 slides) |
+| `presentations/gtm-agents-migration-speaker-notes.md` | Speaker notes |
+| `lab/setup.sql` | Part 0 foundation — DB/schema/warehouse/role, synthetic data, semantic view, Cortex Search, governed UDF, log tables |
+| `lab/gtm-01-foundation.ipynb` | Part 0 — data tour + Cortex Analyst + Checkpoint 0 |
+| `lab/gtm-02-before-mcp.ipynb` | Part A — MCP server + OAuth + Claude connect stubs + Checkpoint A |
+| `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate + Checkpoint B |
+| `lab/gtm-04-evals.ipynb` | Part C — evals harness + Checkpoint C |
+| `app/streamlit_app.py` | Parts D & E — Streamlit observability + before/after comparison |
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -102,6 +124,20 @@ field-demo-enablement/
 │   │   ├── donor-churn-01-features.ipynb
 │   │   ├── donor-churn-02-model.ipynb
 │   │   └── donor-churn-03-serve-agent.ipynb
+│   └── app/
+│       └── streamlit_app.py
+├── gtm-agents-migration/       # Claude Code + MCP → Cortex Agents + CoWork migration
+│   ├── README.md
+│   ├── presentations/
+│   │   ├── gtm-agents-migration.html
+│   │   └── gtm-agents-migration-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   ├── gtm-01-foundation.ipynb
+│   │   ├── gtm-02-before-mcp.ipynb
+│   │   ├── gtm-03-after-agents.ipynb
+│   │   └── gtm-04-evals.ipynb
 │   └── app/
 │       └── streamlit_app.py
 <!-- REPO_TREE_END -->

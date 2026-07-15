@@ -19,6 +19,7 @@
 | `presentations/{{SLUG}}.html` | Slide deck ({{SLIDE_COUNT}} slides) |
 | `presentations/{{SLUG}}-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
 | `lab/setup.sql` | SQL setup script (database, warehouse, sample data, objects) |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
 | `lab/{{SLUG}}-lab.ipynb` | Hands-on lab notebook ({{LAB_DURATION}}) |
 
 ## Hands-On Lab

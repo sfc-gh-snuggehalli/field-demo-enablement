@@ -128,6 +128,24 @@ questions in the sidebar. Validate with `python3 -m py_compile`; do NOT run it h
 the module README that it deploys as a Streamlit-in-Snowflake app and needs USAGE on the
 agent and any custom-tool function.
 
+### Step 5d: Generate the cleanup script (skip if include-lab = NO)
+
+**cleanup.sql** — Copy `templates/cleanup.sql` to `<slug>/lab/cleanup.sql`. Substitute
+`{{DECK_TITLE}}`, `{{DB_NAME}}`, `{{WH_NAME}}`, and fill the two stubs so the teardown mirrors
+what setup.sql AND the notebook(s) actually create:
+- `{{CLEANUP_ACCOUNT_LEVEL_STUB}}` — the account-level objects `DROP DATABASE` does NOT cascade
+  that this module created: extra warehouses, dedicated roles, compute pools, **security
+  integrations**, and any `ALTER USER ... DEFAULT_ROLE/DEFAULT_WAREHOUSE` the lab set (add the
+  revert). These need ACCOUNTADMIN for roles/integrations.
+- `{{CLEANUP_OBJECT_BY_OBJECT_STUB}}` — the "keep the database" alternative: every schema-level
+  object in reverse-dependency order (agents → wrapper/tool procedures & functions → MCP servers →
+  semantic views → search services → views → tables). Objects created in the NOTEBOOK (models,
+  monitors, agents, tool functions) belong here too, not just setup.sql objects.
+Every statement uses `IF EXISTS` (safe to re-run). The fast path is `DROP DATABASE` + the
+account-level drops; the alternative is the object-by-object block. Validate the fast-path DDL
+compiles (`snowflake_sql_execute` with `only_compile: true` against dummy names) — do NOT run the
+real drops here (they would delete the user's demo).
+
 ### Step 6: Generate the module README
 
 Copy `templates/module-README.md` to `<slug>/README.md` and fill all placeholders
@@ -152,7 +170,8 @@ Preserve all marker comments so future runs can append again.
 
 List every file created, the local path to open the deck, and the published Pages URL.
 Remind the user of the run order (`setup.sql` → `python lab/data_gen.py` if present →
-notebook), and to `git add`/commit/push to publish via GitHub Pages.
+notebook), that `lab/cleanup.sql` tears the demo down to start fresh, and to `git add`/commit/push
+to publish via GitHub Pages.
 
 **Best demo path (recommend this to the user):** run the lab inside Snowsight via
 **Projects → Workspaces → Create Workspace from Git repository**. There `get_active_session()`
@@ -177,6 +196,7 @@ on that warehouse first.
 │   └── <slug>-speaker-notes.md
 ├── lab/                      (omitted if include-lab = NO)
 │   ├── setup.sql
+│   ├── cleanup.sql
 │   ├── data_gen.py           (omitted if generate-data = NO)
 │   └── <slug>-lab.ipynb
 └── app/                      (optional — agent/chat demos)
@@ -199,6 +219,12 @@ Plus updated root `README.md` (table row + section + tree node).
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
 - setup.sql DDL compiles; notebook is valid JSON and is NOT executed here.
+- **cleanup.sql is REQUIRED whenever include-lab = YES** — every module ships a `lab/cleanup.sql`
+  that tears down the full demo. It MUST cover objects created in the notebook(s), not just
+  setup.sql, and MUST drop the account-level objects `DROP DATABASE` does not cascade (extra
+  warehouses, dedicated roles, compute pools, security integrations) plus revert any `ALTER USER`
+  session defaults the lab set. Fast-path DDL compiles (only_compile against dummy names); real
+  drops are NOT run during the build.
 - data_gen.py compiles (`py_compile`) and uses `write_pandas`; NOT executed here.
 - Structured data via SQL GENERATOR; unstructured text via data_gen.py write_pandas.
 - Objects depending on unstructured tables are created after data_gen.py in the run order.
