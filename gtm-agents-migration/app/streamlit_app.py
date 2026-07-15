@@ -27,7 +27,45 @@ SCHEMA = "DEMO"
 SUPERVISOR = "GTM_SUPERVISOR"
 
 st.set_page_config(page_title="GTM Agents — Command Center", page_icon="📡", layout="wide")
-session = get_active_session()
+
+
+@st.cache_resource
+def _get_session():
+    """Use the in-Snowflake session when deployed; fall back to a local CLI connection."""
+    try:
+        return get_active_session()
+    except Exception:
+        import os
+
+        from snowflake.snowpark import Session
+
+        # Local run: authenticate with a Programmatic Access Token (PAT).
+        # Generate one in Snowsight (Profile > Programmatic access tokens) and export it:
+        #   export SNOWFLAKE_PAT="<token>"
+        pat = os.environ.get("SNOWFLAKE_PAT")
+        if not pat:
+            st.error(
+                "Local run needs a Programmatic Access Token. "
+                "Generate one in Snowsight (Profile > Programmatic access tokens), then run:\n\n"
+                "    export SNOWFLAKE_PAT=\"<your-token>\"\n\n"
+                "and restart the app."
+            )
+            st.stop()
+
+        cfg = {
+            "account": "SFSENORTHAMERICA-SNUGGEHALLI_AWS1",
+            "user": "snuggehalli",
+            "role": "SYSADMIN",
+            "authenticator": "PROGRAMMATIC_ACCESS_TOKEN",
+            "token": pat,
+        }
+        warehouse = os.environ.get("SNOWFLAKE_WAREHOUSE")
+        if warehouse:
+            cfg["warehouse"] = warehouse
+        return Session.builder.configs(cfg).create()
+
+
+session = _get_session()
 session.sql(f"USE SCHEMA {DATABASE}.{SCHEMA}").collect()
 
 
@@ -40,6 +78,26 @@ def q(sql: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def real_agent_latency() -> pd.DataFrame:
+    """Real, server-side end-to-end latency per agent request from AI Observability.
+
+    One row per completed GTM_SUPERVISOR request; duration is measured by Snowflake
+    (snow.ai.observability.agent.duration, ms) — not estimated or seeded.
+    """
+    return q(f"""
+        SELECT
+            RECORD_ATTRIBUTES:"ai.observability.record_id"::STRING AS request_id,
+            TIMESTAMP AS ts,
+            RECORD_ATTRIBUTES:"snow.ai.observability.agent.duration"::NUMBER AS duration_ms,
+            RECORD_ATTRIBUTES:"snow.ai.observability.agent.messages"::STRING AS question
+        FROM TABLE(SNOWFLAKE.LOCAL.GET_AI_OBSERVABILITY_EVENTS(
+            '{DATABASE}', '{SCHEMA}', '{SUPERVISOR}', 'CORTEX AGENT'))
+        WHERE RECORD:name::STRING = 'AgentV2RequestResponseInfo'
+          AND RECORD_ATTRIBUTES:"snow.ai.observability.agent.duration" IS NOT NULL
+        ORDER BY TIMESTAMP
+    """)
+
+
 st.title("GTM Agents — Observability & Migration Command Center")
 st.caption(
     "Claude Code + Snowflake MCP  →  multi-agent Cortex Agents + CoWork. "
@@ -47,7 +105,7 @@ st.caption(
 )
 
 tab_traces, tab_cost, tab_evals, tab_reco, tab_compare = st.tabs(
-    ["🛰️ Live Traces", "💰 Cost & Budget", "🎯 Eval Dashboard", "📈 Recommendations", "⚖️ Before vs After"]
+    ["🛰️ Live Traces", "⏱️ Latency & Efficiency", "🎯 Eval Dashboard", "📈 Recommendations", "⚖️ Before vs After"]
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -91,35 +149,47 @@ with tab_traces:
         st.info("No routing rows yet — run notebook 03.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TAB 2 — Cost & Budget (Part D)
+# TAB 2 — Latency & Efficiency (Part D) — measured, no estimated cost
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_cost:
-    st.subheader("Cost & budget")
-    req = q("SELECT source, scenario, latency_ms, tokens, est_credits, ts FROM REQUEST_LOG")
-    if not req.empty:
-        by_src = req.groupby("SOURCE").agg(
-            requests=("SCENARIO", "count"),
-            avg_latency_ms=("LATENCY_MS", "mean"),
-            credits=("EST_CREDITS", "sum"),
-        ).reset_index()
-        cols = st.columns(3)
-        total_emails = q("SELECT COUNT(*) AS n FROM EMAILS")
-        n_emails = int(total_emails["N"].iloc[0]) if not total_emails.empty else 3000
-        agents_credits = float(by_src.loc[by_src["SOURCE"] == "AGENTS", "credits"].sum() or 0)
-        cost_per_email = agents_credits / max(n_emails, 1)
-        cols[0].metric("Total logged credits", f"{req['EST_CREDITS'].sum():.4f}")
-        cols[1].metric("Cost per email (AGENTS)", f"{cost_per_email:.6f} cr")
-        cols[2].metric("Projected / 1M emails", f"{cost_per_email * 1_000_000:,.0f} cr")
+    st.subheader("Latency & efficiency (measured)")
+    st.caption(
+        "Every number here is measured server-side. End-to-end latency comes from AI Observability "
+        "(snow.ai.observability.agent.duration); the volume cut comes from the real AI_FILTER gate. "
+        "Per-request credit cost is intentionally not shown — see the note below."
+    )
 
-        st.markdown("**Credits by source**")
-        st.bar_chart(by_src.set_index("SOURCE")["credits"])
+    lat = real_agent_latency()
+    if not lat.empty:
+        d = lat["DURATION_MS"].astype(float)
+        cols = st.columns(4)
+        cols[0].metric("Agent requests (measured)", len(lat))
+        cols[1].metric("Avg latency", f"{d.mean() / 1000:.1f} s")
+        cols[2].metric("Median (p50)", f"{d.median() / 1000:.1f} s")
+        cols[3].metric("p95 latency", f"{d.quantile(0.95) / 1000:.1f} s")
 
-        st.markdown("**Cost-per-request trend**")
-        trend = req.sort_values("TS")[["TS", "SOURCE", "EST_CREDITS"]].copy()
-        trend_pivot = trend.pivot_table(index="TS", columns="SOURCE", values="EST_CREDITS", aggfunc="mean")
-        st.line_chart(trend_pivot)
+        st.markdown("**End-to-end latency per request over time** (seconds, measured)")
+        trend = lat[["TS", "DURATION_MS"]].copy()
+        trend["latency_s"] = trend["DURATION_MS"].astype(float) / 1000
+        st.line_chart(trend.set_index("TS")["latency_s"])
     else:
-        st.info("REQUEST_LOG is empty — run notebooks 02 and 03.")
+        st.info(
+            "No measured agent latency yet — run GTM_SUPERVISOR (notebook 03) and ensure the app role "
+            "has MONITOR on GTM_SUPERVISOR + CORTEX_USER so AI Observability spans are readable."
+        )
+
+    st.markdown("**Targeted analysis — the AI_FILTER volume cut** (fewer model calls = proportionally less spend)")
+    cc = q("SELECT approach, emails_scanned, emails_treated FROM COST_COMPARISON ORDER BY emails_treated DESC")
+    if not cc.empty:
+        st.bar_chart(cc.set_index("APPROACH")["EMAILS_TREATED"])
+        treated = cc.loc[cc["APPROACH"] == "targeted_filter", "EMAILS_TREATED"]
+        scanned = cc.loc[cc["APPROACH"] == "targeted_filter", "EMAILS_SCANNED"]
+        if not treated.empty and not scanned.empty and float(scanned.iloc[0]):
+            cut = 1 - float(treated.iloc[0]) / float(scanned.iloc[0])
+            st.metric("Fewer emails sent to the model (targeted vs analyze-all)", f"{cut:.0%}")
+        st.dataframe(cc, use_container_width=True, hide_index=True)
+    else:
+        st.info("COST_COMPARISON is empty — run notebook 03 (the AI_FILTER gate).")
 
     st.markdown("---")
     st.markdown("**Per-user budget guardrails** (available in-plane, absent for the external MCP brain)")
@@ -131,9 +201,12 @@ with tab_cost:
         "CALL q!SET_BLOCK_ENFORCEMENT_ENABLED(TRUE);",
         language="sql",
     )
-    st.caption(
-        "Account-wide AI cost also lands in SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY "
-        "(CREDITS, MODEL_NAME, USER_ID) for chargeback."
+    st.info(
+        "**Why no credit figures here:** per-request Cortex Agent credits are not currently exposed in "
+        "SNOWFLAKE.ACCOUNT_USAGE for this account, and the external Claude + MCP brain's LLM cost is billed "
+        "by Anthropic outside Snowflake — so we do not show a measured $/credit comparison. Account-wide AI "
+        "spend, when populated, lands in SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY "
+        "(TOKEN_CREDITS, MODEL_NAME) for chargeback."
     )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -217,26 +290,43 @@ with tab_reco:
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_compare:
     st.subheader("External brain (MCP) vs in-data-plane brain (Cortex Agents)")
-    req = q("SELECT source, scenario, latency_ms, tokens, est_credits FROM REQUEST_LOG")
-    if not req.empty:
-        lat = req.groupby("SOURCE")["LATENCY_MS"].mean().reset_index()
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**(a) Avg latency per request (ms)** — lower is better")
-            st.bar_chart(lat.set_index("SOURCE")["LATENCY_MS"])
-            mcp = float(lat.loc[lat["SOURCE"] == "MCP", "LATENCY_MS"].mean() or 0)
-            agents = float(lat.loc[lat["SOURCE"] == "AGENTS", "LATENCY_MS"].mean() or 0)
-            if mcp and agents:
-                st.metric("Latency reduction (Agents vs MCP)", f"{(1 - agents / mcp):.0%}")
-        with c2:
-            st.markdown("**(b) Cost per 1,000 emails (credits)**")
-            cc = q("SELECT approach, emails_treated, est_credits FROM COST_COMPARISON")
-            if not cc.empty:
-                cc["credits_per_1k"] = cc["EST_CREDITS"] / (cc["EMAILS_TREATED"].clip(lower=1) / 1000)
-                st.bar_chart(cc.set_index("APPROACH")["credits_per_1k"])
-                st.dataframe(cc, use_container_width=True, hide_index=True)
-    else:
-        st.info("REQUEST_LOG / COST_COMPARISON empty — run notebooks 02 and 03.")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**(a) In-plane agent latency (measured, seconds)**")
+        lat = real_agent_latency()
+        if not lat.empty:
+            d = lat["DURATION_MS"].astype(float) / 1000
+            st.bar_chart(
+                pd.DataFrame(
+                    {"seconds": [d.median(), d.mean(), d.quantile(0.95)]},
+                    index=["p50", "avg", "p95"],
+                )["seconds"]
+            )
+            st.caption(
+                f"{len(lat)} real GTM_SUPERVISOR requests. These are full multi-tool supervisor runs, "
+                "measured server-side by AI Observability."
+            )
+        else:
+            st.info("No measured agent latency yet — run notebook 03.")
+        st.warning(
+            "MCP round-trip latency is **not shown**: the external Claude brain runs on Anthropic's side, "
+            "so its latency and token cost are billed and measured outside Snowflake. We do not fabricate "
+            "a number for it. The architectural point stands — every MCP tool call is a network hop plus "
+            "client-side LLM planning — but it is presented qualitatively, not as a measured figure."
+        )
+    with c2:
+        st.markdown("**(b) Targeted analysis — real volume cut**")
+        cc = q("SELECT approach, emails_scanned, emails_treated FROM COST_COMPARISON ORDER BY emails_treated DESC")
+        if not cc.empty:
+            st.bar_chart(cc.set_index("APPROACH")["EMAILS_TREATED"])
+            st.dataframe(cc, use_container_width=True, hide_index=True)
+            st.caption(
+                "Emails actually sent to the model — analyze-everything vs the AI_FILTER gate. Row counts "
+                "are real query results; fewer calls means proportionally less spend (shown as volume, not credits)."
+            )
+        else:
+            st.info("COST_COMPARISON empty — run notebook 03.")
 
     st.markdown("**(c) Governance matrix**")
     gov = pd.DataFrame(

@@ -278,7 +278,10 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE FRAMEWORK_SEARCH
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 6. SHARED LOGGING / METRICS TABLES  (used by Parts A, B, C, D, E)
 -- ─────────────────────────────────────────────────────────────────────────────
--- 6a. Per-request latency & cost — one row per BEFORE (MCP) or AFTER (Agents) call
+-- 6a. Per-request latency & cost. NOTE: this table holds only REAL, measured values (no synthetic
+--     external-round-trip overhead or estimated credits). Per-request agent latency for the dashboard is
+--     read from AI Observability (GET_AI_OBSERVABILITY_EVENTS), and per-request Cortex Agent credits are
+--     not exposed for this account — so the app does not read est_credits/latency from here today.
 CREATE TABLE IF NOT EXISTS REQUEST_LOG (
     request_id   STRING,
     source       STRING,          -- 'MCP' (before) | 'AGENTS' (after)
@@ -299,12 +302,14 @@ CREATE TABLE IF NOT EXISTS ROUTING_LOG (
     ts           TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 
--- 6c. Targeted-analysis cost comparison (AI_FILTER gate vs analyze-everything)
+-- 6c. Targeted-analysis volume comparison (AI_FILTER gate vs analyze-everything). The honest cost metric
+--     is VOLUME (emails_scanned vs emails_treated) — real query results. est_credits is intentionally left
+--     NULL: a per-email credit rate would be an assumption, so we do not populate or chart it.
 CREATE TABLE IF NOT EXISTS COST_COMPARISON (
     approach       STRING,        -- 'analyze_all' | 'targeted_filter'
     emails_scanned NUMBER,
     emails_treated NUMBER,
-    est_credits    FLOAT,
+    est_credits    FLOAT,         -- intentionally NULL (see note above)
     ts             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
 );
 

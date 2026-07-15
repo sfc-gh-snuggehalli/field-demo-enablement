@@ -19,10 +19,10 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 
 **Talking Points:**
 - Frame the arc in one sentence: we are moving the AI "brain" from outside Snowflake (Claude Code + MCP) to inside the data plane (Cortex Agents + CoWork) over the exact same governed data and tools.
-- The four stats are the promises we will substantiate live: ~69% lower per-request latency, ~26% less volume treated via a targeting gate, a 3-specialist + 1-supervisor architecture, and 100% server-side traces.
+- The promises we substantiate live: a real ~26% cut in volume treated via the AI_FILTER targeting gate, a 3-specialist + 1-supervisor architecture, 100% server-side execution traces, and per-request agent latency measured server-side by AI Observability.
 
 **Presenter Notes:**
-- These numbers are produced by the lab, not slideware: latency comes from `REQUEST_LOG` (MCP ~1150ms vs Agents ~360ms), the volume cut from `COST_COMPARISON`. If you re-run with different data they will shift slightly — that is expected and a strength.
+- Be precise about what is measured. The volume cut comes from a real `AI_FILTER` run (`COST_COMPARISON`, emails scanned vs treated). Per-request agent latency comes from AI Observability (`GET_AI_OBSERVABILITY_EVENTS`, `snow.ai.observability.agent.duration`) — real, server-side. Do **not** claim an "X% faster/cheaper than MCP" number: the external Claude brain runs on Anthropic's side, so its latency and token cost are billed and measured outside Snowflake. We present the MCP comparison qualitatively (network round-trip + client-side planning on every call), never with a fabricated figure. No dollar/credit comparison is shown — per-request Cortex Agent credits are not exposed in ACCOUNT_USAGE for this account.
 - Prerequisite for the live demo: run `lab/setup.sql` and the four notebooks first; the Streamlit app reads their output.
 
 **References:**
@@ -165,7 +165,7 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 
 **Talking Points:**
 - Put the two brains side by side across the dimensions the customer cares about: latency, cost model, budgets/quotas, chargeback/tagging, traces, and data egress.
-- The latency and cost cells are sourced live from `REQUEST_LOG` and `COST_COMPARISON` — call that out so the room knows the badges are backed by data.
+- Be clear on sourcing: the in-plane agent latency is measured live from AI Observability and the volume cut from `COST_COMPARISON` (real AI_FILTER run). The MCP column is qualitative — its latency/cost is external (Anthropic) and not measured in Snowflake, so it carries no fabricated number.
 
 **Presenter Notes:**
 - If asked "why is the external path slower?" — it pays a network hop to the client provider plus client-side LLM planning on every call; the in-plane path runs the same tools next to the data.
@@ -197,7 +197,7 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 
 **Talking Points:**
 - Give the audience the exact runway: setup.sql → gtm-01 → gtm-02 → gtm-03 → gtm-04 → deploy the Streamlit app.
-- The strongest close is the live A/B: ask the same question in Claude (before) and CoWork (after) and let the latency, cost, and governance gap speak.
+- The strongest close is the live A/B: ask the same question in Claude (before) and CoWork (after) and let the governance and observability gap speak — plus the real in-plane latency and volume cut on the dashboard. If timing both paths on a stopwatch, present it as an anecdotal in-room observation, not a benchmarked figure.
 
 **Presenter Notes:**
 - Best demo path: Snowsight → Projects → Workspaces → Create Workspace from Git repo, so `get_active_session()` works with no local auth. Deploy the app via Snowsight → Projects → Streamlit.

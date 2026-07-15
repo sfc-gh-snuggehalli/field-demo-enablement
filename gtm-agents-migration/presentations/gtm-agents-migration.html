@@ -477,7 +477,7 @@
       <p>From an external brain (Claude Code over the Snowflake-managed MCP server) to an in-data-plane
          multi-agent architecture &mdash; lower latency, lower cost, stronger governance, built-in observability.</p>
       <div class="stat-grid anim-fade" style="margin-top: 2rem;">
-        <div class="stat-card"><div class="value">~69%</div><div class="label">Lower per-request latency (in-plane vs MCP round-trip)</div></div>
+        <div class="stat-card"><div class="value">Measured</div><div class="label">Per-request agent latency, server-side (AI Observability)</div></div>
         <div class="stat-card"><div class="value">~26%</div><div class="label">Fewer emails fully treated via AI_FILTER gate</div></div>
         <div class="stat-card"><div class="value">3 + 1</div><div class="label">Specialists orchestrated by one supervisor</div></div>
         <div class="stat-card"><div class="value">100%</div><div class="label">In-plane, server-side execution traces</div></div>
@@ -583,7 +583,7 @@ $$;
         <div class="stat-card"><div class="value">3,000</div><div class="label">Emails scanned (analyze-all)</div></div>
         <div class="stat-card"><div class="value">~2,220</div><div class="label">Emails treated (targeted)</div></div>
         <div class="stat-card"><div class="value">~26%</div><div class="label">Volume cut vs analyze-all</div></div>
-        <div class="stat-card"><div class="value">= credits</div><div class="label">Proportional cost saved</div></div>
+        <div class="stat-card"><div class="value">Fewer calls</div><div class="label">Proportionally fewer model calls (volume, not an estimated credit figure)</div></div>
       </div>
     </section>
 
@@ -623,7 +623,7 @@ $$;
 <span class="comment">-- spans: ToolCall-ScoringSpecialist, SqlExecution, ReasoningAgentStep... with tokens + latency</span></pre>
       <div class="card-grid anim-fade">
         <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side.</p></div>
-        <div class="card"><h4>Cost & budget</h4><p>Credits per run, cost-per-email, projected spend, per-user quotas.</p></div>
+        <div class="card"><h4>Latency & efficiency</h4><p>Measured per-request agent latency (server-side) and the real AI_FILTER volume cut. No fabricated credit figures.</p></div>
         <div class="card"><h4>Eval dashboard</h4><p>Answer correctness, tool-selection accuracy, and drift across runs.</p></div>
         <div class="card"><h4>Recommendations</h4><p>Top converting patterns from the semantic model.</p></div>
       </div>
@@ -635,7 +635,7 @@ $$;
       <table class="anim-fade">
         <thead><tr><th>Dimension</th><th>Before: Claude + MCP</th><th>After: Cortex Agents + CoWork</th></tr></thead>
         <tbody>
-          <tr><td>Per-request latency</td><td><span class="badge-orange">Round-trip + planning</span></td><td><span class="badge-green">In-plane (~69% lower)</span></td></tr>
+          <tr><td>Per-request latency</td><td><span class="badge-orange">Round-trip + client-side planning</span></td><td><span class="badge-green">In-plane; measured server-side</span></td></tr>
           <tr><td>Cost model</td><td><span class="badge-orange">Analyze-all, strong model</span></td><td><span class="badge-green">Cheap + escalate + AI_FILTER gate</span></td></tr>
           <tr><td>Per-user budgets / quotas</td><td><span class="badge-red">Absent</span></td><td><span class="badge-green">Native</span></td></tr>
           <tr><td>Chargeback / tagging</td><td><span class="badge-red">Outside Snowflake</span></td><td><span class="badge-green">Usage history + tags</span></td></tr>
@@ -643,8 +643,7 @@ $$;
           <tr><td>Data egress</td><td><span class="badge-orange">Leaves the perimeter</span></td><td><span class="badge-green">Stays in-plane</span></td></tr>
         </tbody>
       </table>
-      <p style="font-size:0.9rem">Latency and cost figures are sourced live from <code>REQUEST_LOG</code> and
-         <code>COST_COMPARISON</code> in the observability app &mdash; not hardcoded.</p>
+      <p style="font-size:0.9rem">In-plane agent latency is measured live from <code>AI Observability</code> and the volume cut from <code>COST_COMPARISON</code> (real AI_FILTER run). The MCP column is qualitative: external-brain latency and cost are billed by Anthropic and not measured in Snowflake &mdash; no fabricated figure is shown.</p>
     </section>
 
     <!-- Slide 11: Decision -->
