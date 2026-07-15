@@ -2,13 +2,14 @@
 GTM Agents — Observability & Migration Command Center (Streamlit-in-Snowflake).
 
 Five tabs turn the shared logging tables and in-plane agent traces into a live view of the
-Claude Code + MCP -> Cortex Agents + CoWork migration:
+Claude Code + MCP -> Cortex Agents + CoWork migration, organized around the four pillars the
+migration is proven on — Governance, Cost, Observability, and Data Locality:
 
-  1. Live Traces      — agent spans (tool calls, tokens, model, latency) from AI Observability.
-  2. Cost & Budget    — credits/$ per run, cost-per-email, projected monthly spend, per-user quota.
-  3. Eval Dashboard   — native agent-eval scores (answer correctness, tool-selection accuracy, logical consistency).
+  1. Live Traces      — Observability: agent spans (tool calls, tokens, model, latency) from AI Observability.
+  2. Cost & Efficiency — Cost: the AI_FILTER volume cut + budget/quota guardrails (measured, no fabricated credits).
+  3. Eval Dashboard   — Observability: native agent-eval scores (answer correctness, tool-selection, consistency).
   4. Recommendations  — top converting email patterns from the semantic model.
-  5. Before vs After  — latency (MCP round-trip vs Agents-native), cost per 1k, governance matrix.
+  5. Before vs After  — Governance/Locality matrix + observable in-plane latency (MCP stays qualitative).
 
 Deploy as a Streamlit-in-Snowflake app (Snowsight -> Projects -> Streamlit) in a role that has
 USAGE on GTMAGENTS + SELECT on its tables, and MONITOR on GTM_SUPERVISOR + the SNOWFLAKE.CORTEX_USER
@@ -100,12 +101,14 @@ def real_agent_latency() -> pd.DataFrame:
 
 st.title("GTM Agents — Observability & Migration Command Center")
 st.caption(
-    "Claude Code + Snowflake MCP  →  multi-agent Cortex Agents + CoWork. "
-    "Every panel reads live from the lab's logging tables and in-plane agent traces."
+    "Claude Code + Snowflake MCP  →  multi-agent Cortex Agents + CoWork, proven on four pillars: "
+    "**Governance**, **Cost**, **Observability**, **Data Locality**. Every panel reads live from the "
+    "lab's logging tables and in-plane agent traces; the Claude + MCP side is a qualitative contrast, since "
+    "its latency and cost are billed outside Snowflake."
 )
 
 tab_traces, tab_cost, tab_evals, tab_reco, tab_compare = st.tabs(
-    ["🛰️ Live Traces", "⏱️ Latency & Efficiency", "🎯 Eval Dashboard", "📈 Recommendations", "⚖️ Before vs After"]
+    ["🛰️ Live Traces", "⏱️ Cost & Efficiency", "🎯 Eval Dashboard", "📈 Recommendations", "⚖️ Before vs After"]
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -156,7 +159,7 @@ with tab_cost:
     st.caption(
         "Every number here is measured server-side. End-to-end latency comes from AI Observability "
         "(snow.ai.observability.agent.duration); the volume cut comes from the real AI_FILTER gate. "
-        "Per-request credit cost is intentionally not shown — see the note below."
+        "Per-request credit cost is not shown here — see the note below for why."
     )
 
     lat = real_agent_latency()
@@ -204,7 +207,7 @@ with tab_cost:
     st.info(
         "**Why no credit figures here:** per-request Cortex Agent credits are not currently exposed in "
         "SNOWFLAKE.ACCOUNT_USAGE for this account, and the external Claude + MCP brain's LLM cost is billed "
-        "by Anthropic outside Snowflake — so we do not show a measured $/credit comparison. Account-wide AI "
+        "by Anthropic outside Snowflake — so no measured $/credit comparison is available. Account-wide AI "
         "spend, when populated, lands in SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FUNCTIONS_USAGE_HISTORY "
         "(TOKEN_CREDITS, MODEL_NAME) for chargeback."
     )
@@ -310,10 +313,10 @@ with tab_compare:
         else:
             st.info("No measured agent latency yet — run notebook 03.")
         st.warning(
-            "MCP round-trip latency is **not shown**: the external Claude brain runs on Anthropic's side, "
-            "so its latency and token cost are billed and measured outside Snowflake. We do not fabricate "
-            "a number for it. The architectural point stands — every MCP tool call is a network hop plus "
-            "client-side LLM planning — but it is presented qualitatively, not as a measured figure."
+            "MCP round-trip latency isn't shown here: the external Claude brain runs on Anthropic's side, "
+            "so its latency and token cost live outside Snowflake. The architectural point still holds — "
+            "every MCP tool call is a network hop plus client-side LLM planning — but it's a qualitative "
+            "contrast, not a measured figure."
         )
     with c2:
         st.markdown("**(b) Targeted analysis — real volume cut**")
@@ -328,10 +331,11 @@ with tab_compare:
         else:
             st.info("COST_COMPARISON empty — run notebook 03.")
 
-    st.markdown("**(c) Governance matrix**")
+    st.markdown("**(c) Governance & locality matrix**")
     gov = pd.DataFrame(
         {
             "Capability": [
+                "Reasoning-loop budget cap (tokens/seconds)",
                 "Per-user budgets / quotas",
                 "Cost chargeback (usage history)",
                 "Object tagging & classification",
@@ -339,12 +343,13 @@ with tab_compare:
                 "Row/column governance on tools",
                 "No external data egress",
             ],
-            "BEFORE (Claude + MCP)": ["Partial", "No", "Partial", "No", "Yes", "No"],
-            "AFTER (Cortex Agents)": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes"],
+            "BEFORE (Claude + MCP)": ["No", "Partial", "No", "Partial", "No", "Yes", "No"],
+            "AFTER (Cortex Agents)": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"],
         }
     )
     st.dataframe(gov, use_container_width=True, hide_index=True)
     st.caption(
-        "The external brain only sees tool outputs; budgets, quotas, tagging, and traces live outside "
-        "Snowflake. Moving the brain in-plane makes every one of these native and enforced."
+        "The external brain only sees tool outputs; the budget cap, quotas, tagging, and traces live "
+        "outside Snowflake (or cannot bind to it at all). Moving the brain in-plane makes every one of "
+        "these a native, enforced, inspectable object — e.g. the supervisor's orchestration.budget."
     )

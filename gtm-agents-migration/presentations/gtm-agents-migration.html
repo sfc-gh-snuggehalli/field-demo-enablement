@@ -475,25 +475,27 @@
     <section class="slide" id="hero">
       <h1>Migrating GTM AI to Cortex Agents + CoWork</h1>
       <p>From an external brain (Claude Code over the Snowflake-managed MCP server) to an in-data-plane
-         multi-agent architecture &mdash; lower latency, lower cost, stronger governance, built-in observability.</p>
+         multi-agent architecture &mdash; proven on four pillars Snowflake can measure: governance, cost,
+         observability, and data locality.</p>
       <div class="stat-grid anim-fade" style="margin-top: 2rem;">
-        <div class="stat-card"><div class="value">Measured</div><div class="label">Per-request agent latency, server-side (AI Observability)</div></div>
+        <div class="stat-card"><div class="value">Governed</div><div class="label">Per-tool grants, owner's-rights procs, in-spec routing rules</div></div>
         <div class="stat-card"><div class="value">~26%</div><div class="label">Fewer emails fully treated via AI_FILTER gate</div></div>
-        <div class="stat-card"><div class="value">3 + 1</div><div class="label">Specialists orchestrated by one supervisor</div></div>
-        <div class="stat-card"><div class="value">100%</div><div class="label">In-plane, server-side execution traces</div></div>
+        <div class="stat-card"><div class="value">Observable</div><div class="label">Server-side spans + native evals for every agent run</div></div>
+        <div class="stat-card"><div class="value">In-plane</div><div class="label">Reasoning loop + tool results stay inside the perimeter</div></div>
       </div>
     </section>
 
     <!-- Slide 2: The Problem -->
     <section class="slide" id="problem">
-      <h2>The external-brain tax</h2>
+      <h2>The control gap when the brain is external</h2>
       <p>A high-volume sales org scores every rep email with AI and mines winning patterns &mdash; today via
-         Claude Code over the MCP server. It works, but four costs compound.</p>
+         Claude Code over the MCP server. It works, but when the reasoning loop runs outside the data plane you
+         lose control over the things that matter at scale.</p>
       <div class="card-grid anim-fade">
-        <div class="card"><h4>Latency on every call</h4><p>Each tool call is a network round-trip to the external client plus client-side LLM planning &mdash; overhead paid on every request, at scale.</p></div>
-        <div class="card"><h4>Cost blindness</h4><p>Analyze-everything with a single strong model burns credits fast. No per-user budgets or chargeback when the brain lives outside Snowflake.</p></div>
-        <div class="card"><h4>Governance gap</h4><p>Budgets, quotas, tagging, and traces sit outside the data plane. The external client only sees tool outputs; you can't audit what it did.</p></div>
-        <div class="card"><h4>Connector reliability</h4><p>OAuth redirect mismatches, DEFAULT_ROLE/warehouse errors, network-policy allow-lists, PrivateLink limits &mdash; fragile plumbing to keep alive.</p></div>
+        <div class="card"><h4>Governance gap</h4><p>The OAuth session runs as one <code>DEFAULT_ROLE</code>; the agent's behavior is defined in the external client. No per-request RBAC, no in-plane audit of what it did.</p></div>
+        <div class="card"><h4>No cost control</h4><p>No budget object binds to the external brain; its tokens are billed by Anthropic. You can't cap, quota, tag, or chargeback the reasoning loop natively.</p></div>
+        <div class="card"><h4>Blind to the reasoning</h4><p>Snowflake sees only the tool call it's handed. The planning that chose it emits no server-side span &mdash; you cannot trace or evaluate the agent.</p></div>
+        <div class="card"><h4>Egress + connector reliability</h4><p>Tool results leave the perimeter on every call, and OAuth redirects, DEFAULT_ROLE/warehouse errors, IP allow-lists, and PrivateLink limits are fragile plumbing to keep alive.</p></div>
       </div>
     </section>
 
@@ -623,7 +625,7 @@ $$;
 <span class="comment">-- spans: ToolCall-ScoringSpecialist, SqlExecution, ReasoningAgentStep... with tokens + latency</span></pre>
       <div class="card-grid anim-fade">
         <div class="card"><h4>Live traces</h4><p>Tool calls, model, tokens, latency &mdash; per span, server-side.</p></div>
-        <div class="card"><h4>Latency & efficiency</h4><p>Measured per-request agent latency (server-side) and the real AI_FILTER volume cut. No fabricated credit figures.</p></div>
+        <div class="card"><h4>Latency & efficiency</h4><p>Measured per-request agent latency (server-side) and the real AI_FILTER volume cut, sourced from live query results.</p></div>
         <div class="card"><h4>Eval dashboard</h4><p>Answer correctness, tool-selection accuracy, and drift across runs.</p></div>
         <div class="card"><h4>Recommendations</h4><p>Top converting patterns from the semantic model.</p></div>
       </div>
@@ -635,15 +637,16 @@ $$;
       <table class="anim-fade">
         <thead><tr><th>Dimension</th><th>Before: Claude + MCP</th><th>After: Cortex Agents + CoWork</th></tr></thead>
         <tbody>
-          <tr><td>Per-request latency</td><td><span class="badge-orange">Round-trip + client-side planning</span></td><td><span class="badge-green">In-plane; measured server-side</span></td></tr>
+          <tr><td>Per-request budgets / quotas</td><td><span class="badge-red">Absent</span></td><td><span class="badge-green">Native <code>orchestration.budget</code></span></td></tr>
+          <tr><td>Least-privilege / RBAC</td><td><span class="badge-orange">Single DEFAULT_ROLE session</span></td><td><span class="badge-green">Per-tool grants + owner's-rights</span></td></tr>
+          <tr><td>Execution traces + evals</td><td><span class="badge-red">Client-side only</span></td><td><span class="badge-green">Server-side spans + native evals</span></td></tr>
           <tr><td>Cost model</td><td><span class="badge-orange">Analyze-all, strong model</span></td><td><span class="badge-green">Cheap + escalate + AI_FILTER gate</span></td></tr>
-          <tr><td>Per-user budgets / quotas</td><td><span class="badge-red">Absent</span></td><td><span class="badge-green">Native</span></td></tr>
           <tr><td>Chargeback / tagging</td><td><span class="badge-red">Outside Snowflake</span></td><td><span class="badge-green">Usage history + tags</span></td></tr>
-          <tr><td>Execution traces</td><td><span class="badge-red">Client-side only</span></td><td><span class="badge-green">Server-side spans</span></td></tr>
           <tr><td>Data egress</td><td><span class="badge-orange">Leaves the perimeter</span></td><td><span class="badge-green">Stays in-plane</span></td></tr>
+          <tr><td>Latency</td><td><span class="badge-orange">Not measurable in Snowflake</span></td><td><span class="badge-green">Observable, server-side</span></td></tr>
         </tbody>
       </table>
-      <p style="font-size:0.9rem">In-plane agent latency is measured live from <code>AI Observability</code> and the volume cut from <code>COST_COMPARISON</code> (real AI_FILTER run). The MCP column is qualitative: external-brain latency and cost are billed by Anthropic and not measured in Snowflake &mdash; no fabricated figure is shown.</p>
+      <p style="font-size:0.9rem">In-plane agent latency comes live from <code>AI Observability</code> and the volume cut from <code>COST_COMPARISON</code> (a real AI_FILTER run). The MCP column is qualitative because external-brain latency and cost are billed by Anthropic, outside Snowflake.</p>
     </section>
 
     <!-- Slide 11: Decision -->
@@ -663,7 +666,7 @@ $$;
         <div class="card"><h4>1. Run the foundation</h4><p>Execute <code>lab/setup.sql</code>, then <code>gtm-01-foundation</code> &mdash; tour the data and confirm the three tools.</p></div>
         <div class="card"><h4>2. Stand up both paths</h4><p><code>gtm-02-before-mcp</code> (MCP + OAuth + Claude connect) and <code>gtm-03-after-agents</code> (multi-agent).</p></div>
         <div class="card"><h4>3. Measure it</h4><p><code>gtm-04-evals</code> runs a native agent evaluation (answer correctness, tool-selection accuracy) and promotes the better version; deploy the Streamlit command center.</p></div>
-        <div class="card"><h4>4. Demo the delta</h4><p>Ask the same question in Claude (before) and CoWork (after); show the latency, cost, and governance gap live.</p></div>
+        <div class="card"><h4>4. Demo the delta</h4><p>Ask the same question in Claude (before) and CoWork (after); show the governance, cost-control, and observability gap live &mdash; and the budget cap and per-tool grants that only exist in-plane.</p></div>
       </div>
       <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">
         <strong>The migration isn't a rewrite &mdash; it's moving the reasoning loop into the data plane, where

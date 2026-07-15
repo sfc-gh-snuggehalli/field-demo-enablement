@@ -4,8 +4,9 @@
 
 A sales demo that migrates an AI-over-sales-email workload from an **external brain**
 (Claude Code + the Snowflake-managed MCP server) to an **in-data-plane multi-agent architecture** (Cortex
-Agents + Snowflake CoWork). It proves lower latency, lower cost, stronger governance, and built-in
-observability over the same governed data and tools.
+Agents + Snowflake CoWork). It proves the gains on four pillars Snowflake can measure — **governance/security,
+cost control, observability, and data locality** — over the same governed data and tools. The Claude + MCP
+comparison is presented qualitatively (its latency and cost are billed outside Snowflake).
 
 Scenario: a B2B sales-intelligence / go-to-market (GTM) SaaS company scores every rep email for buyer intent
 and mines winning email patterns. All objects live in database `GTMAGENTS`, schema `DEMO`.

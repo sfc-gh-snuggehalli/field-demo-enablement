@@ -6,8 +6,10 @@ Scenario: a B2B sales-intelligence / go-to-market (GTM) SaaS company whose sales
 high email volume. Today they score every rep email with AI and mine winning patterns using Claude Code over
 the Snowflake-managed MCP server (the "external brain"). Their top sensitivities are cost/budget, governance,
 and connector reliability. This demo migrates that workload to an in-data-plane multi-agent Cortex Agents +
-CoWork architecture and proves lower latency, lower cost, stronger governance, and built-in observability.
-All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH`, role `GTMAGENTS_ROLE`.
+CoWork architecture and proves the gains on four Snowflake-provable pillars: governance/security, cost
+control, observability, and data locality. The Claude + MCP comparison stays qualitative (its latency and
+cost are billed outside Snowflake). All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse
+`GTMAGENTS_WH`, role `GTMAGENTS_ROLE`.
 
 > Model note: the plan named `claude-3-5-haiku` as the cheap scorer, but it is not available in this region,
 > so the lab uses `llama3.1-8b` (cheap) escalating to `mistral-large2` on low confidence. Swap in your
@@ -19,7 +21,7 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 
 **Talking Points:**
 - Frame the arc in one sentence: we are moving the AI "brain" from outside Snowflake (Claude Code + MCP) to inside the data plane (Cortex Agents + CoWork) over the exact same governed data and tools.
-- The promises we substantiate live: a real ~26% cut in volume treated via the AI_FILTER targeting gate, a 3-specialist + 1-supervisor architecture, 100% server-side execution traces, and per-request agent latency measured server-side by AI Observability.
+- Anchor the whole deck on four pillars we can prove on the Snowflake side: **Governance & Security** (per-tool grants, owner's-rights procs, in-spec routing/refusal rules), **Cost Control** (a hard `orchestration.budget` + the ~26% AI_FILTER volume cut), **Observability** (server-side spans + native evals), and **Data Locality** (reasoning loop and results stay in the perimeter). Latency is presented as something we can *observe* in-plane, never as a "faster than MCP" claim.
 
 **Presenter Notes:**
 - Be precise about what is measured. The volume cut comes from a real `AI_FILTER` run (`COST_COMPARISON`, emails scanned vs treated). Per-request agent latency comes from AI Observability (`GET_AI_OBSERVABILITY_EVENTS`, `snow.ai.observability.agent.duration`) — real, server-side. Do **not** claim an "X% faster/cheaper than MCP" number: the external Claude brain runs on Anthropic's side, so its latency and token cost are billed and measured outside Snowflake. We present the MCP comparison qualitatively (network round-trip + client-side planning on every call), never with a fabricated figure. No dollar/credit comparison is shown — per-request Cortex Agent credits are not exposed in ACCOUNT_USAGE for this account.
@@ -34,11 +36,12 @@ All objects live in database `GTMAGENTS`, schema `DEMO`, warehouse `GTMAGENTS_WH
 ## Slide 2: The Problem
 
 **Talking Points:**
-- The BEFORE state works — that is important to acknowledge. The issue is the compounding "external-brain tax": latency on every call, cost blindness, a governance gap, and fragile connector plumbing.
-- Anchor each card to the customer's stated sensitivities: cost/budget (card 2), governance (card 3), connector reliability (card 4).
+- The BEFORE state works — that is important to acknowledge. The issue is the **control gap** that opens when the reasoning loop lives outside the data plane: no per-request RBAC, no budget you can bind to the brain, no server-side trace of its planning, and tool results that egress on every call.
+- Anchor each card to the customer's stated sensitivities: cost/budget, governance, and connector reliability. Note that these are losses of *control*, not speed — that is the honest, provable framing.
 
 **Presenter Notes:**
-- Common question: "Isn't MCP the modern way to do this?" — Yes, MCP is valuable and we keep it; the point is where the *reasoning loop* runs. When the brain is external, budgets/quotas/traces can't be native.
+- Common question: "Isn't MCP the modern way to do this?" — Yes, MCP is valuable and we keep it; the point is where the *reasoning loop* runs. When the brain is external, budgets/quotas/traces/RBAC can't be native.
+- Do not pitch latency here. The external brain's latency and token cost are billed on Anthropic's side and are not measurable in Snowflake — so the problem is control, and the proof lives in gtm-03's inspectable budget/grants/spans.
 - The connector-reliability card previews the real gotchas we hit on Slide 4 — foreshadow them here.
 
 **References:**
