@@ -7,7 +7,7 @@
 -- time training base, the Cortex ML Function objects (Forecast / Anomaly /
 -- Classification), and the Cortex Analyst semantic view.
 --
--- Scenario (generic, client-agnostic): a nonprofit fundraising CRM platform
+-- Scenario: a nonprofit fundraising CRM platform
 -- wants to predict which donors are likely to LAPSE (stop giving) so fundraising
 -- teams can intervene. All data is synthetic.
 --

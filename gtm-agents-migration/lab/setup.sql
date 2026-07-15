@@ -8,7 +8,7 @@
 -- it fully creates and populates all data + tools before any consumer touches
 -- them, in strict dependency order.
 --
--- Scenario (client-agnostic): a B2B sales-intelligence / go-to-market (GTM) SaaS
+-- Scenario: a B2B sales-intelligence / go-to-market (GTM) SaaS
 -- company whose sales org sends high email volume. Today they score every rep
 -- email with an AI function and mine winning email patterns. This demo migrates
 -- that workload from an external "brain" (Claude Code over the Snowflake MCP

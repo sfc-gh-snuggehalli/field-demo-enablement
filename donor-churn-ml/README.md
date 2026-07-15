@@ -10,9 +10,6 @@ Datasets, Cortex ML Functions, Snowpark ML modeling + HPO, ML Jobs on Container 
 Model Registry, Model Explainability, Model Serving, and ML Observability, then culminates
 in a **Cortex Agent that calls the deployed model as a tool** plus a Streamlit chat app.
 
-> Client-agnostic by design. Swap the entity (donor → customer / patient / subscriber) and
-> the same lifecycle demonstrates churn, propensity, or risk for any account.
-
 ## Audience
 
 **Data science and ML platform teams.** The narrative maps to two common

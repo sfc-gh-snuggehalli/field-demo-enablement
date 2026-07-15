@@ -2,7 +2,7 @@
 
 ## Account Context Summary
 
-Generic, client-agnostic demo for a **nonprofit fundraising CRM** scenario. Two personas
+A demo for a **nonprofit fundraising CRM** scenario. Two personas
 in the room: an **ML Ops / platform team** (owns churn models, Registry, Serving,
 Observability) and an **executive** audience (wants a natural-language chatbot over
 the data). The narrative deliberately maps to those two initiatives so it is reusable
@@ -270,7 +270,7 @@ the depth.
 
 **Presenter Notes:**
 - Use this slide to connect the demo to whatever initiative the audience has already described — pick the row that matches and go deeper there.
-- No client names in this asset by design, so it is reusable across any scenario.
+- The same lifecycle applies to churn, propensity, or risk in any domain — swap the entity (donor → customer / patient / subscriber) if the audience's use case differs.
 - The hands-on lab is three notebooks — `donor-churn-01-features`, `-02-model`, `-03-serve-agent` — each standalone with a rehydrate cell, so you can demo one lifecycle stage without running the others end-to-end.
 
 **References:**

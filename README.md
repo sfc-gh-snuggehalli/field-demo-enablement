@@ -59,7 +59,7 @@ The complete Snowflake ML lifecycle for a generic nonprofit fundraising CRM: pre
 lapse, explain every score, and act on it in natural language. Feature Store → Datasets →
 Cortex ML Functions → Snowpark ML + HPO → ML Jobs → Model Registry → Explainability →
 Serving → Observability, culminating in a Cortex Agent that calls the deployed model as a
-tool, plus a Streamlit chat app. Client-agnostic and reusable across accounts.
+tool, plus a Streamlit chat app.
 
 | File | Description |
 |------|-------------|
@@ -79,7 +79,7 @@ Migrate an AI-over-sales-email workload from an external brain (Claude Code + th
 server) to an in-data-plane multi-agent architecture (Cortex Agents + Snowflake CoWork), proving lower
 latency, lower cost, stronger governance, and built-in observability over the same governed tools.
 A supervisor orchestrates scoring / recommendation / coaching specialists via agent-to-agent `DATA_AGENT_RUN`,
-with a cheap-model-plus-escalation cost story and an `AI_FILTER` targeting gate. Client-agnostic and reusable.
+with a cheap-model-plus-escalation cost story and an `AI_FILTER` targeting gate.
 
 | File | Description |
 |------|-------------|

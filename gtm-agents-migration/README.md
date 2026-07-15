@@ -2,7 +2,7 @@
 
 [View Presentation](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html)
 
-A reusable, client-agnostic sales demo that migrates an AI-over-sales-email workload from an **external brain**
+A sales demo that migrates an AI-over-sales-email workload from an **external brain**
 (Claude Code + the Snowflake-managed MCP server) to an **in-data-plane multi-agent architecture** (Cortex
 Agents + Snowflake CoWork). It proves lower latency, lower cost, stronger governance, and built-in
 observability over the same governed data and tools.

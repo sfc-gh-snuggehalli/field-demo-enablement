@@ -2,7 +2,7 @@
 
 ## Account Context Summary
 
-Client-agnostic scenario: a B2B sales-intelligence / go-to-market (GTM) SaaS company whose sales org sends
+Scenario: a B2B sales-intelligence / go-to-market (GTM) SaaS company whose sales org sends
 high email volume. Today they score every rep email with AI and mine winning patterns using Claude Code over
 the Snowflake-managed MCP server (the "external brain"). Their top sensitivities are cost/budget, governance,
 and connector reliability. This demo migrates that workload to an in-data-plane multi-agent Cortex Agents +

@@ -211,10 +211,16 @@ Plus updated root `README.md` (table row + section + tree node).
 
 ## Quality Bar
 
-- **Client-agnostic content** — demos are reusable across customers, so NEVER put a customer
-  or company name anywhere (deck, speaker notes, README, SQL/Python comments, agent config).
-  Use a generic scenario + personas (e.g. "a nonprofit fundraising CRM", "an ML platform team").
-  Verify with a name scan before finishing (e.g. `grep -ri "<customer>" <slug>/` returns nothing).
+- **No customer names, and no meta-framing in shipped content** — every artifact (deck, speaker
+  notes, README, SQL/Python comments, notebook cells, agent config) is sent directly to clients, so:
+  (a) NEVER put a real customer or company name anywhere — use a generic scenario + personas
+  (e.g. "a nonprofit fundraising CRM", "an ML platform team"); and
+  (b) NEVER describe the demo to the reader as "client-agnostic", "reusable across accounts/customers",
+  "generic demo", or otherwise reveal that it is a reusable template — that framing reads wrong to a
+  client. Just present the scenario directly (e.g. "Scenario: a B2B GTM SaaS company…"). Keeping content
+  customer-neutral is an authoring constraint, not something to state in the artifact.
+  Verify before finishing with two scans: `grep -ri "<customer>" <slug>/` returns nothing, and
+  `grep -rin "client-agnostic\|reusable across" <slug>/` returns nothing.
 - Real function names/signatures only — verify via docs (Step 2). No fabricated SQL.
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
