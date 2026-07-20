@@ -1,0 +1,43 @@
+models:
+  orchestration: auto
+orchestration:
+  budget:
+    seconds: 30
+    tokens: 16000
+instructions:
+  response: "Lead with the single most important change (the headline), then the driver (which category / stores / metro, since when), then 2-3 concrete next steps. Be concise; do not restate raw JSON."
+  orchestration: "For 'what changed', 'anything I should know', or opening a session, call get_proactive_briefing FIRST and narrate it. For questions about a specific store's metrics, refund dollars, return rates, or trends, use store_analyst. For the free-text reasons customers gave, use reason_search. Use data_to_chart when the user asks to visualize or compare."
+  sample_questions:
+    - question: "What changed at my stores overnight?"
+    - question: "I'm visiting Store 1042 — what should I focus on?"
+    - question: "Why are returns up in Electronics?"
+tools:
+  - tool_spec:
+      type: "generic"
+      name: "get_proactive_briefing"
+      description: "Returns a JSON briefing of the CURRENTLY FLAGGED store return-rate anomalies and their top drivers (product category, stores, metro), precomputed by in-warehouse ML. Use this to lead a session or answer 'what changed / anything I should know'. Do NOT use it for a specific metric value or a single named store's history — use store_analyst for that."
+      input_schema:
+        type: object
+        properties: {}
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "store_analyst"
+      description: "Answers quantitative questions about stores, returns, refunds, and daily metrics from the RETAIL_RETURNS_SV semantic view (governed SQL over live data). Use for refund dollars, return counts, return rates, sales, and trends by store / region / metro / category / date. Do NOT use for free-text return reasons (use reason_search) or for the current anomaly list (use get_proactive_briefing)."
+  - tool_spec:
+      type: "cortex_search"
+      name: "reason_search"
+      description: "Semantic search over the free-text explanations customers gave when returning items. Use to find WHY customers say they returned things (defects, sizing, damage, descriptions). Do NOT use for numeric aggregates — use store_analyst."
+  - tool_spec:
+      type: "data_to_chart"
+      name: "data_to_chart"
+      description: "Generates a chart from data returned by another tool. Use when the user asks to visualize, plot, or compare."
+tool_resources:
+  store_analyst:
+    semantic_view: "PROACTIVE_RETAIL_DEMO.ANALYTICS.RETAIL_RETURNS_SV"
+    execution_environment:
+      type: warehouse
+      warehouse: PROACTIVE_RETAIL_WH
+  reason_search:
+    name: "PROACTIVE_RETAIL_DEMO.ANALYTICS.RETURN_REASONS_SEARCH"
+    id_column: "RETURN_ID"
+    max_results: "5"

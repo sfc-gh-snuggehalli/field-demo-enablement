@@ -27,6 +27,7 @@ hands-on lab with SQL setup and a notebook.
 | Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Engineering leadership (VP-level) & data science / ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 | Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork | Sales engineers & data/AI teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html) |
 | Semantic Views & the AI-BI Stack on Snowflake | Field SEs, marketing/analytics teams & data engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/sms-marketing-ai/presentations/sms-marketing-ai.html) |
+| Proactive Retail Intelligence with Snowflake Cortex | Data & analytics engineers, ML/platform teams & product leaders | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/proactive-retail-intelligence/presentations/proactive-retail-intelligence.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -113,6 +114,26 @@ wizard), then layers Cortex Analyst, Cortex Search, and a Cortex Agent on the si
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `lab/sms-marketing-ai-lab.ipynb` | Hands-on lab — semantic view, Analyst, Search, Agent |
 | `app/streamlit_app.py` | Optional Streamlit-in-Snowflake chat app over the agent |
+
+### Proactive Retail Intelligence with Snowflake Cortex
+
+**Location:** `proactive-retail-intelligence/`
+
+Turn an embedded, reactive analytics assistant into a proactive one — it leads with
+unprompted, explained observations and still answers ad-hoc questions on live data — without
+paying a language model to scan the whole data estate. Cheap in-warehouse ML
+(`ANOMALY_DETECTION`, `TOP_INSIGHTS`) detects and explains; a semantic view + Cortex Analyst
+handles ad-hoc questions; and an optimized Cortex Agent narrates only the small flagged slice,
+surfaced in Snowflake CoWork / Snowflake Intelligence and via REST `agent:run`.
+
+| File | Description |
+|------|-------------|
+| `presentations/proactive-retail-intelligence.html` | Slide deck (12 slides) |
+| `presentations/proactive-retail-intelligence-speaker-notes.md` | Speaker notes |
+| `lab/setup.sql` | One-step setup — data + ML models + findings/drivers + semantic view + Cortex Search + task |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/proactive-retail-intelligence-lab.ipynb` | Hands-on lab — detect, explain, query, build + optimize the agent, CoWork climax |
+| `agent_optimization/` | Baseline vs. optimized agent specs and a diff summary |
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -177,6 +198,20 @@ field-demo-enablement/
 │   └── agent_optimization/
 │       ├── optimization_log.md
 │       ├── eval_questions.md
+│       └── versions/
+│           ├── baseline/agent_spec.yaml
+│           └── optimized/agent_spec.yaml
+├── proactive-retail-intelligence/  # Proactive Retail Intelligence with Snowflake Cortex
+│   ├── README.md
+│   ├── presentations/
+│   │   ├── proactive-retail-intelligence.html
+│   │   └── proactive-retail-intelligence-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   └── proactive-retail-intelligence-lab.ipynb
+│   └── agent_optimization/
+│       ├── README.md
 │       └── versions/
 │           ├── baseline/agent_spec.yaml
 │           └── optimized/agent_spec.yaml

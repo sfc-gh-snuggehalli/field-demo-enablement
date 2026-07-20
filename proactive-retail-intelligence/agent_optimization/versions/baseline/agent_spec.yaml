@@ -1,0 +1,30 @@
+models:
+  orchestration: auto
+instructions:
+  response: "Answer questions about retail returns."
+tools:
+  - tool_spec:
+      type: "generic"
+      name: "get_proactive_briefing"
+      description: "Returns a briefing."
+      input_schema:
+        type: object
+        properties: {}
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "store_analyst"
+      description: "Store data."
+  - tool_spec:
+      type: "cortex_search"
+      name: "reason_search"
+      description: "Return reasons."
+tool_resources:
+  store_analyst:
+    semantic_view: "PROACTIVE_RETAIL_DEMO.ANALYTICS.RETAIL_RETURNS_SV"
+    execution_environment:
+      type: warehouse
+      warehouse: PROACTIVE_RETAIL_WH
+  reason_search:
+    name: "PROACTIVE_RETAIL_DEMO.ANALYTICS.RETURN_REASONS_SEARCH"
+    id_column: "RETURN_ID"
+    max_results: "5"
