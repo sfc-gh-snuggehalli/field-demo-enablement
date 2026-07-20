@@ -1,0 +1,24 @@
+models:
+  orchestration: auto
+instructions:
+  response: "Answer the question."
+tools:
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "analyst"
+      description: "Marketing data."
+  - tool_spec:
+      type: "cortex_search"
+      name: "search"
+      description: "Documents."
+tool_resources:
+  analyst:
+    semantic_view: "SMS_MARKETING_DEMO.CORE.SMS_MARKETING_SV"
+    execution_environment:
+      type: warehouse
+      warehouse: "SMS_MARKETING_WH"
+  search:
+    name: "SMS_MARKETING_DEMO.CORE.SMS_DOCS_SEARCH"
+    max_results: "5"
+    title_column: "title"
+    id_column: "doc_id"

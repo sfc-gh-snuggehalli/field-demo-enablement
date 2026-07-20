@@ -26,6 +26,7 @@ hands-on lab with SQL setup and a notebook.
 | AI Functions: Customer Experience Telemetry | Data & Analytics teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
 | Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Engineering leadership (VP-level) & data science / ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 | Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork | Sales engineers & data/AI teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html) |
+| Semantic Views & the AI-BI Stack on Snowflake | Field SEs, marketing/analytics teams & data engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/sms-marketing-ai/presentations/sms-marketing-ai.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -92,6 +93,26 @@ approach and an `AI_FILTER` targeting gate.
 | `lab/gtm-03-after-agents.ipynb` | Part B — multi-agent supervisor + AI_FILTER gate |
 | `lab/gtm-04-evals.ipynb` | Part C — evals harness + four-pillar observability/before-after recap |
 | `lab/tests/checkpoints.ipynb` | Internal QA (not client-facing) — PASS/FAIL checkpoints for the four notebooks |
+
+### Semantic Views & the AI-BI Stack on Snowflake
+
+**Location:** `sms-marketing-ai/`
+
+Define a business metric once, as a native governed semantic view, then reuse it identically
+across Cortex Analyst, Cortex Agents, Cortex Search grounding, SQL, and BI. Grounded in an SMS/MMS
+marketing platform for e-commerce brands (opt-in keywords, broadcast vs automated flows, orders
+attributed to sends). Shows all three ways to create a semantic view (DDL, YAML/dbt, no-code
+wizard), then layers Cortex Analyst, Cortex Search, and a Cortex Agent on the single source of truth.
+
+| File | Description |
+|------|-------------|
+| `presentations/sms-marketing-ai.html` | Slide deck (12 slides) |
+| `presentations/sms-marketing-ai-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Run-of-show live talk track mapped to the positioning |
+| `lab/setup.sql` | Idempotent setup — data + semantic view + Cortex Search + Cortex Agent |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/sms-marketing-ai-lab.ipynb` | Hands-on lab — semantic view, Analyst, Search, Agent |
+| `app/streamlit_app.py` | Optional Streamlit-in-Snowflake chat app over the agent |
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -141,6 +162,24 @@ field-demo-enablement/
 │       ├── gtm-04-evals.ipynb
 │       └── tests/
 │           └── checkpoints.ipynb
+├── sms-marketing-ai/        # Semantic Views & the AI-BI Stack (Analyst + Search + Agent)
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── presentations/
+│   │   ├── sms-marketing-ai.html
+│   │   └── sms-marketing-ai-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   └── sms-marketing-ai-lab.ipynb
+│   ├── app/
+│   │   └── streamlit_app.py
+│   └── agent_optimization/
+│       ├── optimization_log.md
+│       ├── eval_questions.md
+│       └── versions/
+│           ├── baseline/agent_spec.yaml
+│           └── optimized/agent_spec.yaml
 <!-- REPO_TREE_END -->
 ```
 
