@@ -26,6 +26,11 @@
 --   - Cortex Analyst, Cortex Search, and Cortex Agents available in your region
 --     (enable cross-region inference if a model is not local:
 --      ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';).
+--   - The document corpus PDFs (shipped in lab/docs/) uploaded to the @SMS_DOCS
+--     stage. Section 3 creates the stage; upload the PDFs with the PUT command
+--     shown there (SnowSQL / `snow sql`) BEFORE the SMS_DOC_CHUNKS build, or use
+--     the Snowsight stage file-upload button. The parse step reads whatever PDFs
+--     are on the stage.
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -54,8 +59,8 @@ USE WAREHOUSE SMS_MARKETING_WH;
 --   FACT_MESSAGE    one row per message sent to a subscriber for a campaign
 --   FACT_ORDER      one row per store order, attributed to the campaign that
 --                   drove it (Shopify-style last-touch attribution)
--- Window: last 18 months. Region codes NE/SE/MW/SW/W are referenced by the
--- agent demo (e.g. "the SW region").
+-- Window: last 18 months. Region codes NE/SE/MW/SW/W slice the subscriber base
+-- in the semantic view (e.g. opt-in growth or consent rate by region).
 
 -- ---- DIM_BRAND ---------------------------------------------------------------
 CREATE OR REPLACE TABLE DIM_BRAND AS
@@ -148,78 +153,57 @@ FROM base;
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 3. GOVERNED DOCUMENT CORPUS (for Cortex Search grounding)
 -- ─────────────────────────────────────────────────────────────────────────────
--- The Search service is grounded on a corpus of operational marketing documents:
--- campaign briefs, the SMS/MMS copy library, TCPA / consent guidelines,
--- deliverability best practices, and support macros.
+-- The Search service is grounded on a corpus of REAL operational marketing PDFs
+-- (brand "Juniper & Coast" on the RelayFox SMS platform): campaign briefs, the
+-- SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices,
+-- a segmentation playbook, support macros, a quarterly performance review, an
+-- attribution-methodology whitepaper, and an incident postmortem.
 --
--- REAL PDFs (recommended for a customer's own docs): land PDFs on an internal
--- stage and parse them with SNOWFLAKE.CORTEX.PARSE_DOCUMENT, then index the
--- parsed text. That path is included below (commented) so it's ready when you
--- have real files. For a script that runs end-to-end with NO external files, we
--- also generate a representative SMS_DOC_CHUNKS table inline, and the Search
--- service is built over it. Point Search at whichever table you populate.
+-- The PDFs ship with this demo in lab/docs/. We land them on an internal stage
+-- and parse them with SNOWFLAKE.CORTEX.PARSE_DOCUMENT, then index the parsed
+-- text with Cortex Search. doc_type is inferred from the filename so the Search
+-- service (and the agent) can filter by document type.
 
--- Internal stage for real PDFs (kept so the PARSE_DOCUMENT path is ready to go).
+-- Internal stage for the PDFs.
 CREATE STAGE IF NOT EXISTS SMS_DOCS
   DIRECTORY = (ENABLE = TRUE)
   ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
 
--- >>> REAL-PDF PATH (uncomment once PDFs are on @SMS_DOCS) <<<
--- SnowSQL / local:  PUT file:///path/to/*.pdf @SMS_MARKETING_DEMO.CORE.SMS_DOCS AUTO_COMPRESS=FALSE;
--- ALTER STAGE SMS_DOCS REFRESH;
--- CREATE OR REPLACE TABLE SMS_DOC_CHUNKS AS
--- SELECT
---     RELATIVE_PATH                                                        AS title,
---     'campaign_brief'                                                     AS doc_type,   -- classify per file as needed
---     'ALL'                                                                AS region,
---     TO_VARCHAR(
---       SNOWFLAKE.CORTEX.PARSE_DOCUMENT(@SMS_DOCS, RELATIVE_PATH, {'mode':'LAYOUT'}):content
---     )                                                                    AS text
--- FROM DIRECTORY(@SMS_DOCS);
--- >>> END REAL-PDF PATH <<<
+-- Upload the shipped PDFs, then make them visible to DIRECTORY().
+-- Run this PUT from SnowSQL or the Snowflake CLI (`snow sql`) — PUT is a
+-- client-side command and needs local file access. Adjust the path to wherever
+-- you cloned the repo. The Snowsight worksheet UI cannot run PUT; use its file
+-- upload button on the SMS_DOCS stage instead, then run the ALTER STAGE REFRESH.
+--   PUT 'file://<repo>/sms-marketing-ai/lab/docs/*.pdf'
+--       @SMS_MARKETING_DEMO.CORE.SMS_DOCS AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+ALTER STAGE SMS_DOCS REFRESH;
 
--- Runnable corpus (represents the parsed content of the PDFs above).
-CREATE OR REPLACE TABLE SMS_DOC_CHUNKS (
-    doc_id   NUMBER,
-    title    STRING,
-    doc_type STRING,   -- campaign_brief | copy_library | tcpa_consent | deliverability | support_macro
-    region   STRING,   -- NE | SE | MW | SW | W | ALL
-    text     STRING
-);
-
-INSERT INTO SMS_DOC_CHUNKS (doc_id, title, doc_type, region, text) VALUES
-(1,  'Winback Flow Brief — SW Region Q2', 'campaign_brief', 'SW',
-     'Objective: re-engage SW-region subscribers who have not purchased in 60+ days with a two-message winback flow. Message 1 leads with a 15% returning-customer offer; Message 2 (sent 48h later to non-openers) adds urgency with a 72-hour expiry. Target segment: opted_in subscribers, SW region, last order > 60 days. Success metric: attributed revenue per send and reactivation rate. Prior runs of this brief were the single highest revenue-per-send flow in the SW region.'),
-(2,  'Abandoned Cart Flow Brief', 'campaign_brief', 'ALL',
-     'Objective: recover carts abandoned within 24 hours. Three-message automated flow: Message 1 at +1h (reminder, no discount), Message 2 at +12h (social proof / reviews), Message 3 at +23h (10% incentive). Flows consistently deliver the highest revenue per send of any campaign type because they are triggered at high purchase intent. Keep discounts on the final message only to protect margin.'),
-(3,  'Seasonal Sale Broadcast Brief', 'campaign_brief', 'ALL',
-     'Objective: drive volume during the seasonal sale with a one-time broadcast to the full opted_in list. Broadcasts reach the most people but convert at a lower revenue-per-send rate than flows because they are not intent-triggered. Segment out subscribers who opted out or are pending double opt-in. Send in the local late-morning window for best click-through.'),
-(4,  'Product Launch Broadcast Brief — MMS', 'campaign_brief', 'ALL',
-     'Objective: announce a new product with an MMS broadcast (image + copy). MMS raises engagement versus SMS but costs more per send, so reserve it for launches and hero moments. Include one clear CTA and a link. Measure click-through rate and attributed revenue against the higher MMS send cost.'),
-(5,  'Welcome Flow Copy — SMS', 'copy_library', 'ALL',
-     'Welcome message 1: "Welcome to the fam! Here''s 10% off your first order: {link}. Reply STOP to opt out." Welcome message 2 (+3 days): "Still thinking it over? Your 10% is waiting: {link}." Always include opt-out language in the first message. Keep the first SMS under 160 characters to avoid segmentation.'),
-(6,  'Abandoned Cart Copy Library', 'copy_library', 'ALL',
-     'Cart reminder: "You left something behind! Complete your order here: {link}." Social proof: "Over 2,000 5-star reviews — grab yours before it''s gone: {link}." Incentive: "Here''s 10% to seal the deal — expires tonight: {link}. Reply STOP to unsubscribe." Rotate copy quarterly to avoid fatigue.'),
-(7,  'Winback Copy Library', 'copy_library', 'ALL',
-     'Winback opener: "We miss you! Here''s 15% to come back: {link}." Urgency follow-up: "Last chance — your 15% expires in 72 hours: {link}." Winback flows perform best when the offer is slightly richer than the welcome offer and the expiry is explicit.'),
-(8,  'TCPA & Consent Requirements', 'tcpa_consent', 'ALL',
-     'Under the U.S. TCPA, marketing SMS/MMS requires prior express written consent. Every subscriber must opt in explicitly (keyword, checkbox, or web form) and consent must be logged with timestamp and source. The first message must identify the brand and include clear opt-out instructions ("Reply STOP to unsubscribe"). Honor STOP immediately and suppress the number. Do not message subscribers whose consent_status is pending or opted_out. Maintain records of consent for at least four years.'),
-(9,  'Quiet Hours & Frequency Policy', 'tcpa_consent', 'ALL',
-     'Do not send marketing messages before 8am or after 9pm in the recipient''s local time zone (quiet hours). Cap marketing frequency to avoid opt-outs; a common guardrail is no more than 4-6 broadcast messages per subscriber per month, excluding transactional and triggered flow messages. Rising opt-out (list churn) rates are the leading indicator of over-messaging.'),
-(10, 'Consent Status Definitions', 'tcpa_consent', 'ALL',
-     'opted_in: subscriber has given express written consent and may receive marketing. opted_out: subscriber texted STOP or unsubscribed; must be suppressed from all marketing. pending: subscriber started double opt-in but has not confirmed; do not send marketing until confirmed. Consent rate = opted_in / total subscribers. List churn rate = opted_out / total subscribers.'),
-(11, 'Deliverability Best Practices', 'deliverability', 'ALL',
-     'Protect deliverability by warming new sending numbers gradually, keeping opt-out rates low, and avoiding spam-trigger words and excessive links. Carriers filter high-volume sends with poor engagement. Use a branded shortcode or 10DLC number registered with The Campaign Registry. Monitor delivered rate; a sudden drop signals carrier filtering.'),
-(12, 'Link Shortening & Attribution', 'deliverability', 'ALL',
-     'Use a branded link domain rather than a generic shortener to improve trust and click-through. Every campaign link carries a tracking parameter so store orders can be attributed back to the send (last-touch). Attributed revenue is only as good as the link tagging — audit tags before every major broadcast.'),
-(13, 'MMS vs SMS Deliverability', 'deliverability', 'ALL',
-     'MMS supports images and longer copy and typically lifts engagement, but costs more per send and can be down-rendered by some devices. Use SMS for high-frequency flows where cost per send matters, and MMS for launches and visual hero moments. Always include a text fallback.'),
-(14, 'Support Macro — Opt-Out Request', 'support_macro', 'ALL',
-     'When a subscriber asks to stop messages: confirm the number, mark consent_status as opted_out, and reply: "You''re all set — you''ve been unsubscribed and won''t receive further marketing messages. Text JOIN anytime to opt back in." Never re-add an opted_out number without a fresh opt-in.'),
-(15, 'Support Macro — Did Not Receive Offer', 'support_macro', 'ALL',
-     'When a subscriber reports not receiving an offer: check consent_status (pending subscribers are not messaged), verify the number is not suppressed, and confirm the campaign send window. If delivered = false, the carrier may have filtered the send; advise the subscriber and re-send via a registered number.'),
-(16, 'Support Macro — How Did You Get My Number', 'support_macro', 'ALL',
-     'When a subscriber questions how they were added: look up their opt_in_date, opt_in_keyword, and source. Explain the opt-in event ("You joined on {date} by texting {keyword}"). If no consent record exists, immediately suppress the number and escalate — messaging without consent is a TCPA violation.');
+-- Parse every PDF and classify it by filename. Titles are prettified from the
+-- filename for clean citations. region is 'ALL' (none of these docs are
+-- region-specific); tag per file here if you have region-scoped documents.
+CREATE OR REPLACE TABLE SMS_DOC_CHUNKS AS
+SELECT
+    ROW_NUMBER() OVER (ORDER BY RELATIVE_PATH)                            AS doc_id,
+    INITCAP(REPLACE(REGEXP_REPLACE(RELATIVE_PATH, '^[0-9]+_|\\.pdf$', ''), '_', ' ')) AS title,
+    CASE
+      WHEN RELATIVE_PATH ILIKE '%campaign_brief%'     THEN 'campaign_brief'
+      WHEN RELATIVE_PATH ILIKE '%copy_library%'       THEN 'copy_library'
+      WHEN RELATIVE_PATH ILIKE '%tcpa%'               THEN 'tcpa_consent'
+      WHEN RELATIVE_PATH ILIKE '%deliverability%'     THEN 'deliverability'
+      WHEN RELATIVE_PATH ILIKE '%segmentation%'       THEN 'segmentation'
+      WHEN RELATIVE_PATH ILIKE '%support_macro%'      THEN 'support_macro'
+      WHEN RELATIVE_PATH ILIKE '%performance_review%' THEN 'performance_review'
+      WHEN RELATIVE_PATH ILIKE '%attribution%'        THEN 'attribution'
+      WHEN RELATIVE_PATH ILIKE '%postmortem%'         THEN 'postmortem'
+      ELSE 'other'
+    END                                                                  AS doc_type,
+    'ALL'                                                                AS region,
+    TO_VARCHAR(
+      SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
+        @SMS_DOCS, RELATIVE_PATH, {'mode':'LAYOUT'}
+      ):content
+    )                                                                    AS text
+FROM DIRECTORY(@SMS_DOCS);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 4. SEMANTIC VIEW — the centerpiece: define every KPI ONCE
@@ -495,7 +479,7 @@ instructions:
     - Revenue is last-touch attributed from store orders back to the send that drove them. Regions are NE, SE, MW, SW, W.
     Tool selection:
     - Use Marketing_KPI_Analyst for any question about numbers, rates, trends, rankings, or comparisons of metrics (attributed revenue, revenue per send, CTR, opt-in growth, subscriber LTV, list churn, consent rate) sliced by region, channel, campaign type, theme, plan tier, industry, or month.
-    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (briefs, copy library, TCPA/consent, deliverability, support macros).
+    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
     - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst and the explanation or supporting brief from Marketing_Playbook_Search, then combine them.
     Business rules:
     - Do not conflate historical aggregates (semantic view) with predictions — this agent does not forecast.
@@ -504,7 +488,7 @@ instructions:
   sample_questions:
     - question: "What is attributed revenue by campaign type, and how does revenue per send compare between flows and broadcasts?"
     - question: "Which region has the fastest opt-in growth, and what is its consent rate and list churn?"
-    - question: "Why did attributed revenue differ across regions last month, and which campaign brief drove the best-performing send in the SW region?"
+    - question: "Attributed revenue for the Q3 flash sale came in below plan — what does the incident postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"
     - question: "What does our playbook say about TCPA consent and quiet hours before a broadcast?"
 
 tools:
@@ -523,10 +507,10 @@ tools:
       type: "cortex_search"
       name: "Marketing_Playbook_Search"
       description: |
-        Semantic search over the marketing playbook and policy corpus: campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, and support macros.
-        When to use: "how", "why", "what's the policy", "what should the copy say", or "which brief" questions; explanations that live in documents.
+        Semantic search over the marketing playbook and policy corpus (real PDFs for brand "Juniper & Coast"): campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, a segmentation playbook, support macros, a quarterly performance review, an attribution-methodology whitepaper, and an incident postmortem.
+        When to use: "how", "why", "what's the policy", "what should the copy say", "which brief", "what happened in the incident/postmortem", or "what did the quarterly review say" questions; explanations that live in documents.
         When NOT to use: numeric/metric questions (use Marketing_KPI_Analyst).
-        Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, support_macro) and region (NE/SE/MW/SW/W/ALL). Cite results by their title.
+        Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, segmentation, support_macro, performance_review, attribution, postmortem) and region (currently ALL for every document). Cite results by their title.
   - tool_spec:
       type: "data_to_chart"
       name: "data_to_chart"
@@ -555,18 +539,18 @@ SELECT * FROM SEMANTIC_VIEW(
     METRICS orders.attributed_revenue, revenue_per_send
 ) ORDER BY attributed_revenue DESC;
 
--- Consent + churn by region (SW is a region the agent demo asks about):
+-- Consent + churn by region (subscriber regions NE/SE/MW/SW/W in the star schema):
 SELECT * FROM SEMANTIC_VIEW(
     SMS_MARKETING_SV
     DIMENSIONS subscribers.region
     METRICS consent_rate, list_churn_rate, subscriber_count
 ) ORDER BY region;
 
--- Smoke-test the Search service:
+-- Smoke-test the Search service against the real PDF corpus:
 SELECT PARSE_JSON(
   SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
     'SMS_MARKETING_DEMO.CORE.SMS_DOCS_SEARCH',
-    '{ "query": "why do flows outperform broadcasts", "columns": ["title","doc_type"], "limit": 3 }'
+    '{ "query": "what caused the PNW flash sale throughput incident", "columns": ["title","doc_type"], "limit": 3 }'
   )
 )['results'] AS results;
 

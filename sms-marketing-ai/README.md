@@ -21,7 +21,7 @@ metric layer and AI-BI stack on Snowflake.
 - Three ways to create a semantic view: programmatic DDL/YAML, CoCo-assisted / dbt-generated, and
   the no-code Snowsight wizard
 - Cortex Analyst over the semantic view (governed text-to-SQL)
-- Cortex Search over a document corpus (grounded, cited retrieval; PARSE_DOCUMENT path included)
+- Cortex Search over a document corpus of 10 real PDFs (grounded, cited retrieval via PARSE_DOCUMENT)
 - A Cortex Agent blending the semantic view (via Analyst) and Cortex Search as tools
 - Positioning: define once, layered-not-versus (dbt / semantic view / BI), governed by default,
   open & portable, AI-native
@@ -60,8 +60,9 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 - Database `SMS_MARKETING_DEMO`, schema `CORE`, warehouse `SMS_MARKETING_WH` (MEDIUM)
 - Star-schema data via SQL GENERATOR (~18 months): `DIM_BRAND`, `DIM_SUBSCRIBER`,
   `DIM_CAMPAIGN`, `FACT_MESSAGE` (~70k sends), `FACT_ORDER` (~20k attributed orders)
-- A governed document corpus `SMS_DOC_CHUNKS` (briefs, copy library, TCPA/consent, deliverability,
-  support macros) + an internal stage `SMS_DOCS` for real PDFs
+- A governed document corpus `SMS_DOC_CHUNKS` built from 10 real PDFs (campaign briefs, copy
+  library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly
+  performance review, attribution whitepaper, incident postmortem) parsed from the `SMS_DOCS` stage
 - Semantic view `SMS_MARKETING_SV` — 7 KPIs defined once, with synonyms, sample values, and
   verified queries
 - Cortex Search service `SMS_DOCS_SEARCH` over the document corpus
@@ -102,13 +103,23 @@ setup needed):
 
 1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
-2. Open `sms-marketing-ai/lab/setup.sql` and run it.
+2. Open `sms-marketing-ai/lab/setup.sql` and run it through Section 3 (this creates the `@SMS_DOCS`
+   stage). Then upload the 10 PDFs from `sms-marketing-ai/lab/docs/` to the stage:
+   **Data → Databases → SMS_MARKETING_DEMO → CORE → Stages → SMS_DOCS → + Files**. Run the rest of
+   `setup.sql` (the `PARSE_DOCUMENT` step reads whatever PDFs are on the stage).
 3. Open `lab/sms-marketing-ai-lab.ipynb` and walk the sections.
 4. Finish by chatting with `SMS_MARKETING_AGENT` in **AI & ML → Agents**.
 
-Running locally instead? Use `snow sql -f lab/setup.sql` with a connection whose **role can create
-the objects** and use a warehouse. If `SMS_MARKETING_WH` already exists under a different owner,
-grant your role `USAGE, OPERATE` on it first.
+Running locally instead? First upload the corpus, then run the script:
+
+```bash
+snow sql -q "CREATE DATABASE IF NOT EXISTS SMS_MARKETING_DEMO; CREATE SCHEMA IF NOT EXISTS SMS_MARKETING_DEMO.CORE; CREATE STAGE IF NOT EXISTS SMS_MARKETING_DEMO.CORE.SMS_DOCS DIRECTORY=(ENABLE=TRUE) ENCRYPTION=(TYPE='SNOWFLAKE_SSE');"
+snow sql -q "PUT 'file://$(pwd)/sms-marketing-ai/lab/docs/*.pdf' @SMS_MARKETING_DEMO.CORE.SMS_DOCS AUTO_COMPRESS=FALSE OVERWRITE=TRUE;"
+snow sql -f sms-marketing-ai/lab/setup.sql
+```
+
+Use a connection whose **role can create the objects** and use a warehouse. If `SMS_MARKETING_WH`
+already exists under a different owner, grant your role `USAGE, OPERATE` on it first.
 
 To deploy the optional chat app: create a Streamlit-in-Snowflake app from `app/streamlit_app.py`
 in `SMS_MARKETING_DEMO.CORE`. Grant its owner role `USAGE` on the agent, semantic view, and Search

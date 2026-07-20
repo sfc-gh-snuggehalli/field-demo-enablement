@@ -637,7 +637,7 @@
         <div class="flow-step active"><div class="step-label">Retrieve</div><div class="step-title">Cited answers</div></div>
       </div>
       <div class="card-grid anim-fade">
-        <div class="card"><h4>The corpus</h4><p>Campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, and support macros.</p></div>
+        <div class="card"><h4>The corpus</h4><p>10 real PDFs: campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, a segmentation playbook, support macros, a quarterly performance review, an attribution whitepaper, and an incident postmortem.</p></div>
         <div class="card"><h4>Grounded &amp; filterable</h4><p>Semantic search returns the actual document text with its title, and filters on attributes like <code>doc_type</code> and <code>region</code> &mdash; no hallucinated policy.</p></div>
       </div>
     </section>
@@ -647,11 +647,11 @@
       <h2>Cortex Agent: structured + unstructured, blended</h2>
       <h3>Semantic view (via Analyst) AND Cortex Search as tools; model = auto</h3>
       <div class="highlight-box anim-fade">
-        <strong>"Why did attributed revenue differ across regions last month, and which campaign brief drove the best-performing send in the SW region?"</strong>
+        <strong>"Attributed revenue for the Q3 flash sale came in below plan &mdash; what does the incident postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"</strong>
       </div>
       <div class="two-col anim-fade">
-        <div class="card"><h4>Routes the metric to Analyst</h4><p>Attributed revenue by region &rarr; governed SQL against <code>SMS_MARKETING_SV</code>. Same number as the BI dashboard.</p></div>
-        <div class="card"><h4>Routes the "why" to Search</h4><p>Retrieves the SW-region winback brief and quotes it by title &mdash; grounded, cited explanation alongside the number.</p></div>
+        <div class="card"><h4>Routes the metric to Analyst</h4><p>Attributed revenue &rarr; governed SQL against <code>SMS_MARKETING_SV</code>. Same number as the BI dashboard.</p></div>
+        <div class="card"><h4>Routes the "why" to Search</h4><p>Retrieves the PNW throughput postmortem and the Q3 flash-sale brief and quotes them by title &mdash; grounded, cited explanation alongside the number.</p></div>
       </div>
       <div class="context-box anim-fade"><strong>One assistant, two data shapes.</strong> The agent decides which tool answers which part &mdash; and both are governed by the objects you already defined.</div>
     </section>

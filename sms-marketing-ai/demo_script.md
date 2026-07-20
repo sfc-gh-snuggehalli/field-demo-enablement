@@ -94,9 +94,10 @@ SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
 ))['results'];
 ```
 
-> "Not everything is a number. Briefs, copy, TCPA/consent rules, and deliverability live in
-> documents. Cortex Search retrieves the actual text and cites it — no hallucinated policy. For
-> real PDFs, land them on a stage and parse with `PARSE_DOCUMENT`; the path is in `setup.sql`."
+> "Not everything is a number. Briefs, copy, TCPA/consent rules, deliverability, segmentation, a
+> quarterly performance review, an attribution whitepaper, and an incident postmortem live in
+> documents. These are real PDFs — landed on a stage and parsed with `PARSE_DOCUMENT` in
+> `setup.sql`. Cortex Search retrieves the actual text and cites it — no hallucinated policy."
 
 ---
 
@@ -106,12 +107,12 @@ SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
 
 Chat with `SMS_MARKETING_AGENT` in Snowsight → AI & ML → Agents:
 
-> **"Why did attributed revenue differ across regions last month, and which campaign brief drove
-> the best-performing send in the SW region?"**
+> **"Attributed revenue for the Q3 flash sale came in below plan — what does the incident
+> postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"**
 
 > "The agent routes the number to Analyst — governed SQL against the view — and the *why* to
-> Search, quoting the SW-region winback brief by title. Same number as the BI dashboard, because
-> both read the same view."
+> Search, quoting the PNW throughput postmortem and the Q3 Trailhead Flash Sale brief by title.
+> Same number as the BI dashboard, because both read the same view."
 
 Then the layering close:
 

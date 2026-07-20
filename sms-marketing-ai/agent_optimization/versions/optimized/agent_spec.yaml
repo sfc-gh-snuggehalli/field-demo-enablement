@@ -16,7 +16,7 @@ instructions:
     - Revenue is last-touch attributed from store orders back to the send that drove them. Regions are NE, SE, MW, SW, W.
     Tool selection:
     - Use Marketing_KPI_Analyst for any question about numbers, rates, trends, rankings, or comparisons of metrics (attributed revenue, revenue per send, CTR, opt-in growth, subscriber LTV, list churn, consent rate) sliced by region, channel, campaign type, theme, plan tier, industry, or month.
-    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (briefs, copy library, TCPA/consent, deliverability, support macros).
+    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
     - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst and the explanation or supporting brief from Marketing_Playbook_Search, then combine them.
     Business rules:
     - Do not conflate historical aggregates (semantic view) with predictions — this agent does not forecast.
@@ -25,7 +25,7 @@ instructions:
   sample_questions:
     - question: "What is attributed revenue by campaign type, and how does revenue per send compare between flows and broadcasts?"
     - question: "Which region has the fastest opt-in growth, and what is its consent rate and list churn?"
-    - question: "Why did attributed revenue differ across regions last month, and which campaign brief drove the best-performing send in the SW region?"
+    - question: "Attributed revenue for the Q3 flash sale came in below plan — what does the incident postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"
     - question: "What does our playbook say about TCPA consent and quiet hours before a broadcast?"
 
 tools:
@@ -44,10 +44,10 @@ tools:
       type: "cortex_search"
       name: "Marketing_Playbook_Search"
       description: |
-        Semantic search over the marketing playbook and policy corpus: campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, and support macros.
-        When to use: "how", "why", "what's the policy", "what should the copy say", or "which brief" questions; explanations that live in documents.
+        Semantic search over the marketing playbook and policy corpus (real PDFs for brand "Juniper & Coast"): campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, a segmentation playbook, support macros, a quarterly performance review, an attribution-methodology whitepaper, and an incident postmortem.
+        When to use: "how", "why", "what's the policy", "what should the copy say", "which brief", "what happened in the incident/postmortem", or "what did the quarterly review say" questions; explanations that live in documents.
         When NOT to use: numeric/metric questions (use Marketing_KPI_Analyst).
-        Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, support_macro) and region (NE/SE/MW/SW/W/ALL). Cite results by their title.
+        Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, segmentation, support_macro, performance_review, attribution, postmortem) and region (currently ALL for every document). Cite results by their title.
   - tool_spec:
       type: "data_to_chart"
       name: "data_to_chart"

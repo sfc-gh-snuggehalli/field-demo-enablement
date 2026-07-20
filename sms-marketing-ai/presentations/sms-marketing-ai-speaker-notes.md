@@ -159,8 +159,8 @@ consent rate ≈ **81–84%** per region; list churn ≈ **9–12%** per region;
 ## Slide 9: Cortex Search
 
 **Talking Points:**
-- Not everything is a number. Briefs, copy, TCPA/consent rules, deliverability, and support macros live in documents.
-- Walk the flow: land PDFs on a stage → `PARSE_DOCUMENT` → build the search service → grounded, cited retrieval. The lab ships a runnable text corpus so it works with no files; the PDF path is included and commented for real docs.
+- Not everything is a number. Campaign briefs, copy, TCPA/consent rules, deliverability, a segmentation playbook, support macros, a quarterly performance review, an attribution whitepaper, and an incident postmortem live in documents.
+- Walk the flow: land real PDFs on a stage → `PARSE_DOCUMENT` → build the search service → grounded, cited retrieval. The lab ships 10 real PDFs in `lab/docs/`; `setup.sql` PUTs them to the `@SMS_DOCS` stage and parses them.
 - Filterable attributes (`doc_type`, `region`) let the agent scope retrieval.
 
 **Presenter Notes:**
@@ -179,7 +179,7 @@ consent rate ≈ **81–84%** per region; list churn ≈ **9–12%** per region;
 
 **Talking Points:**
 - The agent has two tools: the semantic view via Analyst (structured KPIs) and Cortex Search (documents). Model = auto.
-- Read the blended question. The agent routes the *number* (revenue by region) to Analyst and the *why* (the SW-region winback brief) to Search — and cites the brief by title.
+- Read the blended question. The agent routes the *number* (attributed revenue for the Q3 flash sale) to Analyst and the *why* (the PNW throughput postmortem plus the Q3 Trailhead Flash Sale brief) to Search — and cites the documents by title.
 - This is where "define once" pays off: the agent's number is the same as the BI dashboard's, because both read the same view.
 
 **Presenter Notes:**

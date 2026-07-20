@@ -1,0 +1,52 @@
+[
+  {
+    "file": "01_campaign_brief_q3_trailhead_flash_sale.pdf",
+    "pages": 2,
+    "bytes": 50403
+  },
+  {
+    "file": "02_campaign_brief_automated_welcome_flow.pdf",
+    "pages": 2,
+    "bytes": 49666
+  },
+  {
+    "file": "03_sms_mms_copy_library_approved_templates.pdf",
+    "pages": 3,
+    "bytes": 50783
+  },
+  {
+    "file": "04_tcpa_consent_compliance_guidelines.pdf",
+    "pages": 2,
+    "bytes": 50697
+  },
+  {
+    "file": "05_deliverability_carrier_best_practices.pdf",
+    "pages": 2,
+    "bytes": 49888
+  },
+  {
+    "file": "06_segmentation_audience_playbook.pdf",
+    "pages": 2,
+    "bytes": 50410
+  },
+  {
+    "file": "07_support_macros_help_center_common_questions.pdf",
+    "pages": 2,
+    "bytes": 50319
+  },
+  {
+    "file": "08_quarterly_performance_review_q3_2025.pdf",
+    "pages": 2,
+    "bytes": 50512
+  },
+  {
+    "file": "09_attribution_methodology_whitepaper.pdf",
+    "pages": 2,
+    "bytes": 50494
+  },
+  {
+    "file": "10_incident_postmortem_pnw_flash_sale_throughput.pdf",
+    "pages": 2,
+    "bytes": 50506
+  }
+]
