@@ -360,5 +360,5 @@ AS
 --   1) You just ran this script (data + ML models + findings + semantic view + search).
 --   2) Open lab/proactive-retail-intelligence-lab.ipynb — it tours the layer and
 --      creates the custom "briefing" tool + the optimized Cortex Agent.
---   3) Finish in Snowflake CoWork / Snowflake Intelligence (AI & ML -> Agents).
+--   3) Finish in Snowflake CoWork (AI & ML -> Agents).
 -- ─────────────────────────────────────────────────────────────────────────────

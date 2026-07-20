@@ -157,10 +157,10 @@ The demo objects live in `PROACTIVE_RETAIL_DEMO` (schemas `RAW` and `ANALYTICS`)
 
 ---
 
-## Slide 9: CoWork & Snowflake Intelligence
+## Slide 9: Snowflake CoWork
 
 **Talking Points:**
-- The same agent object surfaces in Snowflake CoWork / Snowflake Intelligence for interactive chat (Snowsight → AI & ML → Agents) — no separate UI to build for internal exploration.
+- The same agent object surfaces in Snowflake CoWork for interactive chat (Snowsight → AI & ML → Agents) — no separate UI to build for internal exploration.
 - For the embedded product, call the identical agent over the REST `agent:run` endpoint and stream the answer into the app's own chat surface.
 - One agent definition, two delivery surfaces.
 

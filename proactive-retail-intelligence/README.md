@@ -21,7 +21,7 @@ trade-offs of an "always-watching" assistant.
 - Semantic views + Cortex Analyst for governed, ad-hoc questions
 - Cortex Search over free-text return reasons
 - A custom "briefing" tool and an **optimized** Cortex Agent orchestrating every layer
-- Snowflake CoWork / Snowflake Intelligence and the REST `agent:run` embed path
+- Snowflake CoWork and the REST `agent:run` embed path
 - The cost pattern: ML scans in-warehouse, the LLM only narrates
 
 ## Contents
@@ -38,8 +38,7 @@ trade-offs of an "always-watching" assistant.
 ## Hands-On Lab
 
 The notebook tours the proactive layer built by `setup.sql`, then builds the custom briefing
-tool and the optimized Cortex Agent, and finishes in Snowflake CoWork / Snowflake
-Intelligence. ML detection and driver analysis run in-warehouse; the language model only ever
+tool and the optimized Cortex Agent, and finishes in Snowflake CoWork. ML detection and driver analysis run in-warehouse; the language model only ever
 reads the flagged slice.
 
 ### Prerequisites
@@ -71,7 +70,7 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 4. **Ad-Hoc on Live Data** — query the semantic view the way Cortex Analyst does.
 5. **Build the Briefing Tool** — a single-cell JSON function over findings + drivers.
 6. **Create the Cortex Agent** — baseline spec, then the optimized spec (Section 6b).
-7. **Deliver the Agent** — chat with the agent in CoWork / Snowflake Intelligence and via REST.
+7. **Deliver the Agent** — chat with the agent in Snowflake CoWork and via REST.
 
 ### Run in Snowflake (Workspaces / Git) — recommended for demos
 
@@ -95,7 +94,7 @@ the warehouse as missing).
   what's *interesting*, not what's *stored*.
 - **Precompute findings** — a scheduled task keeps a small findings table fresh so the
   assistant is always current.
-- **One agent, two surfaces** — the same agent object serves CoWork / Intelligence and the
+- **One agent, two surfaces** — the same agent object serves Snowflake CoWork and the
   embedded product via REST `agent:run`.
 - **Tool descriptions are load-bearing** — "when NOT to use it" is the highest-leverage
   optimization for correct tool selection.

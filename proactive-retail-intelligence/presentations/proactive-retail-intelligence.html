@@ -461,7 +461,7 @@
     <a href="#adhoc">Ad-Hoc on Live Data</a>
     <a href="#orchestration">Tool Orchestration</a>
     <a href="#two-flows">Two Assistant Flows</a>
-    <a href="#cowork">CoWork &amp; Intelligence</a>
+    <a href="#cowork">Snowflake CoWork</a>
     <a href="#cost">Cost Control</a>
     <a href="#comparison">Reactive vs Proactive</a>
     <a href="#closing">Next Steps</a>
@@ -521,7 +521,7 @@
         </div>
         <div class="arrow">&darr;</div>
         <div class="level">
-          <div class="node node-primary"><strong>Cortex Agent</strong><br><small>Snowflake CoWork / Intelligence</small></div>
+          <div class="node node-primary"><strong>Cortex Agent</strong><br><small>Snowflake CoWork</small></div>
         </div>
       </div>
       <div class="context-box anim-fade">
@@ -642,13 +642,13 @@ $$;</pre>
       </div>
     </section>
 
-    <!-- Slide 9: Snowflake CoWork & Snowflake Intelligence -->
+    <!-- Slide 9: Snowflake CoWork -->
     <section class="slide" id="cowork">
-      <h2>Deliver the agent: Snowflake CoWork &amp; Snowflake Intelligence</h2>
-      <p>The same agent object surfaces in Snowflake CoWork / Snowflake Intelligence for interactive use, and is callable from the embedded app over one REST endpoint.</p>
+      <h2>Deliver the agent: Snowflake CoWork</h2>
+      <p>The same agent object surfaces in Snowflake CoWork for interactive use, and is callable from the embedded app over one REST endpoint.</p>
       <div class="two-col anim-fade">
         <div class="card">
-          <h4>Interactive (CoWork / Intelligence)</h4>
+          <h4>Interactive (Snowflake CoWork)</h4>
           <p>Business users chat with <code>PROACTIVE_RETAIL_AGENT</code> in Snowsight &rarr; AI &amp; ML &rarr; Agents. The agent auto-surfaces its tools; no separate UI to build for internal exploration.</p>
         </div>
         <div class="card">
@@ -712,7 +712,7 @@ $$;</pre>
         <div class="card"><h4>1. Run the lab</h4><p>Execute <code>setup.sql</code>, then walk the notebook: detect anomalies, explain drivers, query the semantic view, and build the optimized agent.</p></div>
         <div class="card"><h4>2. Point it at your data</h4><p>Swap the sample tables for a real returns / store-metrics feed. The ML functions and semantic view are the only objects that change.</p></div>
         <div class="card"><h4>3. Schedule the scan</h4><p>Resume the monitoring task (or add a Cortex Alert) so findings stay fresh and the briefing is always current.</p></div>
-        <div class="card"><h4>4. Embed the agent</h4><p>Wire the product's assistant to the <code>agent:run</code> endpoint, and use CoWork / Intelligence for internal exploration.</p></div>
+        <div class="card"><h4>4. Embed the agent</h4><p>Wire the product's assistant to the <code>agent:run</code> endpoint, and use Snowflake CoWork for internal exploration.</p></div>
       </div>
       <div class="highlight-box anim-fade" style="margin-top: 1.5rem;">
         <strong>The takeaway: detect and explain cheaply in the warehouse; let the language model do what it's best at &mdash; narrate and converse &mdash; over the small slice that already matters.</strong>
