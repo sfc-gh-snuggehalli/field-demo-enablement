@@ -2,14 +2,16 @@
 
 ## Account Context Summary
 
-A demo for a **nonprofit fundraising CRM** scenario. Two personas
-in the room: an **ML Ops / platform team** (owns churn models, Registry, Serving,
-Observability) and an **executive** audience (wants a natural-language chatbot over
-the data). The narrative deliberately maps to those two initiatives so it is reusable
-across accounts — swap the entity (donor → customer / patient / subscriber) and the same
-lifecycle demonstrates churn, propensity, or risk. All data is synthetic (~50K donors,
-~600K gifts, ~950K engagements). Keep the live flow to ~15 minutes; the notebook carries
-the depth.
+A demo for a **nonprofit fundraising CRM** scenario. The room can include three
+perspectives: a **VP of Engineering / platform leader** (cares about TCO, time to value,
+governance, and consolidation), an **ML Ops / platform team** (owns churn models, Registry,
+Serving, Observability), and an **executive** audience (wants a natural-language chatbot over
+the data). The deck opens with a short executive layer — summary, where ML time goes, the
+blocked-vs-unified TCO case, and enterprise proof points — before the full technical lifecycle.
+All data is synthetic (~50K donors, ~600K gifts, ~950K engagements), so keep any business value
+**qualitative** for the demo scenario itself; the hard numbers come from the **attributed
+Snowflake platform and named-customer benchmarks** on the proof slide. Keep the live flow to
+~15 minutes; the notebook carries the depth.
 
 ---
 
@@ -18,10 +20,10 @@ the depth.
 **Talking Points:**
 - Frame the whole session in one sentence: predict which donors will lapse, explain every score, and let a fundraiser act on it in natural language — all inside one governed Snowflake account.
 - The four stats are the spine of the demo: 50K donors modeled end-to-end, a 31% baseline lapse rate we're attacking, a 0.96 F1 model trained in-Snowflake, and 10+ distinct Snowflake ML capabilities exercised.
-- Set expectations: we walk the full lifecycle, then finish by talking to a Cortex Agent that calls the deployed model as a tool.
+- Set expectations: we open with a brief executive framing, walk the full lifecycle, then finish by talking to a Cortex Agent that calls the deployed model as a tool.
 
 **Presenter Notes:**
-- This deck is intentionally comprehensive (17 slides, incl. one optional orchestration slide) because it doubles as an ML platform enablement asset. For a 15-minute flow, land slides 2, 3, 6, 9, 14, 15 and skim the rest.
+- This deck is intentionally comprehensive (21 slides — a 4-slide executive layer, the full lifecycle, and one optional orchestration slide) because it doubles as an ML platform enablement asset. For an executive flow, land the exec layer (slides 2–5), architecture (7), the agent + wow moment (18–19), and the recommendation (21). For a 15-minute technical flow, land slides 6, 7, 10, 13, 18, 19 and skim the rest.
 - Versus running a separate ML stack, the advantage to say early is "no data movement + one governance perimeter."
 
 **References:**
@@ -29,7 +31,73 @@ the depth.
 
 ---
 
-## Slide 2: The Problem
+## Slide 2: Executive Summary
+
+**Talking Points:**
+- Put the decision on the table: where should the ML lifecycle for churn/propensity/risk run — one platform, or a stitched-together warehouse + separate ML stack + BI layer?
+- Four beats: the outcome (a governed, end-to-end churn capability), the TCO angle (no separate ML platform to license/secure/integrate, no data movement, one perimeter/bill/governance model), time to value (a SQL baseline in an afternoon, custom models on the same data, and an ML agent that accelerates the build itself), and the decision (consolidate on Snowflake).
+- Set the roadmap: a short business framing, then the full technical lifecycle to a Cortex Agent that calls the deployed model as a tool.
+
+**Presenter Notes:**
+- This is the slide for the VP of Engineering. Keep it business-first; resist diving into architecture until slide 7.
+- All demo outcomes are qualitative because the data is synthetic — do NOT invent ROI dollars or percentages for the donor scenario. Hard numbers come later from attributed Snowflake platform and named-customer benchmarks (slide 5).
+
+**References:**
+- https://docs.snowflake.com/en/developer-guide/snowflake-ml/overview
+
+---
+
+## Slide 3: Where ML Time Goes
+
+**Talking Points:**
+- Today, the bulk of ML effort goes to data wrangling and prep (~60%) and management/config (~30%), leaving only ~10% for judgment and strategy.
+- The agentic future state flips that: ~60% steering & strategy, ~30% workflow oversight, ~10% approve — when the platform handles prep, orchestration, and config, and an ML agent drafts the code.
+- The point for a VP: consolidation plus agents move engineering time from plumbing to the judgment calls that actually differentiate — leverage on the same headcount.
+
+**Presenter Notes:**
+- The 60/30/10 split is illustrative and directional — say so out loud; don't present it as a measured figure for this account.
+- Land it as "same team, more time on high-value work," not "cut the team."
+
+**References:**
+- https://docs.snowflake.com/en/developer-guide/snowflake-ml/overview
+
+---
+
+## Slide 4: Blocked → Unified
+
+**Talking Points:**
+- The blocked pattern: disparate data across a warehouse, a separate ML platform, and BI tools; silos across systems and teams, each with its own compute and copies; complex governance where multiple data copies create disjointed identities and RBAC and a larger risk surface.
+- The unified pattern: a single platform; integrated workflows from raw data to deployed model to conversational agent with no export; built-in governance within one security perimeter — one identity model, one RBAC, one audit trail.
+- Why a VP cares: fewer systems to license and secure, no brittle data-movement pipelines to maintain, and one governance model — lower TCO and a smaller attack surface, without giving up best-in-class ML.
+
+**Presenter Notes:**
+- This is the TCO/consolidation slide. Anchor it to whatever stitched-together stack the customer runs today.
+- Governance is the wedge for regulated or PII-sensitive organizations — one perimeter beats three.
+
+**References:**
+- https://docs.snowflake.com/en/developer-guide/snowflake-ml/overview
+
+---
+
+## Slide 5: Proven at Enterprise Scale
+
+**Talking Points:**
+- Scale: 6K+ monthly active accounts, millions of models trained, trillions of predictions per month, and ~10ms p50 online feature serving.
+- Named proof: FNBO reports 10x developer productivity; PayPal scores 14M+ transactions at 97–99% accuracy; Attentive cut cost 30% and sped feature workloads 68% versus a legacy standalone feature-store platform; ECOLAB saw 71x faster training (~4 weeks saved on a 10 GB workload); Lessmore reduced CLV-forecasting cost by a factor of 10 using the Model Registry.
+- Competitive performance: up to 8x XGBoost price-performance vs. Databricks; 2–5x faster and up to 3x cheaper inference.
+- Trusted by Coinbase, LendingTree, Zscaler, Cloudbeds, S&P Global, and Swire Coca-Cola.
+
+**Presenter Notes:**
+- These are real, published, attributed Snowflake and customer references — distinct from the synthetic demo. Cite them as social proof about the platform, not as demo results.
+- The performance multipliers (8x, 2–5x, 3x, ~10ms) are published, illustrative benchmarks — attribute them and don't overstate.
+- Pick the one or two proof points closest to the customer's industry or workload; don't read the whole wall of logos.
+
+**References:**
+- https://www.snowflake.com/en/data-cloud/workloads/ai-ml/
+
+---
+
+## Slide 6: The Problem
 
 **Talking Points:**
 - Nonprofits today flag at-risk donors with hand-tuned RFM rules in a BI tool — brittle, drifting, and unable to rank a whole file by risk.
@@ -45,12 +113,12 @@ the depth.
 
 ---
 
-## Slide 3: Architecture
+## Slide 7: Architecture
 
 **Talking Points:**
 - Walk the layers top to bottom: source tables → Feature Store + versioned Dataset → Snowpark ML + ML Jobs → Registry, Serving, Observability → the Cortex Agent.
 - Emphasize the entry point (bottom node): the agent's two tools are Cortex Analyst (retrieval over a governed semantic view) and a custom tool that calls the *deployed lapse model* to score and explain donors.
-- Everything in one account: no data leaves, one RBAC model, one lineage graph.
+- Everything in one account: no data leaves, one RBAC model, one lineage graph. The business translation is one platform, one security perimeter, no data movement — the consolidation that lowers TCO.
 
 **Presenter Notes:**
 - The four schemas (RAW / FEATURES / MODELS / ANALYTICS) mirror a real MLOps separation — call this out for the platform team; it's how they'd actually organize it.
@@ -62,7 +130,7 @@ the depth.
 
 ---
 
-## Slide 4: Feature Store
+## Slide 8: Feature Store
 
 **Talking Points:**
 - Register a `donor` entity once, then define **managed** Feature Views that compute RFM, engagement, and wealth signals **directly from the raw `DONATIONS`, `ENGAGEMENTS`, and `DONORS` tables** — the store is the real source of truth, not a copy of a precomputed table.
@@ -78,7 +146,7 @@ the depth.
 
 ---
 
-## Slide 5: Datasets
+## Slide 9: Datasets
 
 **Talking Points:**
 - `generate_dataset` materializes an immutable, versioned training snapshot from the Feature Store using point-in-time joins on a spine (donor_id + as_of_date + label).
@@ -94,7 +162,7 @@ the depth.
 
 ---
 
-## Slide 6: Cortex ML Functions
+## Slide 10: Cortex ML Functions
 
 **Talking Points:**
 - This is the "heuristics → ML" bridge, all in SQL: Forecasting (next-quarter donation volume), Anomaly Detection (giving drop-off), and Classification (baseline lapse model).
@@ -112,7 +180,7 @@ the depth.
 
 ---
 
-## Slide 7: Snowpark ML Modeling + Experiment Tracking + HPO
+## Slide 11: Snowpark ML Modeling + Experiment Tracking + HPO
 
 **Talking Points:**
 - Train an XGBoost lapse classifier with the `snowflake.ml.modeling` API — the fit runs in Snowflake, no data export.
@@ -123,13 +191,14 @@ the depth.
 - Evaluate AUC on `predict_proba` output, not the hard class — a common mistake that makes AUC look degenerate.
 - The modeling API mirrors scikit-learn (`input_cols`/`label_cols`/`output_cols`) — familiar to any data scientist, which lowers adoption friction.
 - If they ask about class imbalance (31% lapse), mention `scale_pos_weight` and threshold tuning; don't rabbit-hole live.
+- Performance callout on the slide (up to 8x XGBoost price-performance vs. Databricks) is a published, illustrative benchmark — attribute it, don't overstate.
 
 **References:**
 - https://docs.snowflake.com/en/developer-guide/snowflake-ml/modeling
 
 ---
 
-## Slide 8: ML Jobs on Container Runtime
+## Slide 12: ML Jobs on Container Runtime
 
 **Talking Points:**
 - The `@remote` decorator ships a Python function to a Snowflake compute pool running the Container Runtime — a pre-built ML image.
@@ -145,7 +214,7 @@ the depth.
 
 ---
 
-## Slide 9: Model Registry
+## Slide 13: Model Registry
 
 **Talking Points:**
 - `log_model` records the model with metrics, signature, sample input, and metadata as a first-class Snowflake object.
@@ -161,7 +230,7 @@ the depth.
 
 ---
 
-## Slide 10: Model Explainability
+## Slide 14: Model Explainability
 
 **Talking Points:**
 - Shapley attributions turn a probability into a reason a fundraiser trusts: "last gift 410 days ago, engagement down 63%."
@@ -177,7 +246,7 @@ the depth.
 
 ---
 
-## Slide 11: Model Serving
+## Slide 15: Model Serving
 
 **Talking Points:**
 - Two modes from one model: batch-score all 50K donors, or real-time score a single donor when a gift officer opens a record.
@@ -187,13 +256,14 @@ the depth.
 **Presenter Notes:**
 - Warehouse serving is the simplest path; SPCS serving is for high-throughput or GPU. Let the customer's latency/volume needs drive the choice.
 - Batch inference writes to a stage and can run inside a Task DAG for scheduled scoring — good segue to their orchestration story.
+- Performance callout on the slide (2–5x faster, up to 3x cheaper inference, ~10ms p50 feature serving) is a published, illustrative benchmark — attribute it.
 
 **References:**
 - https://docs.snowflake.com/en/developer-guide/snowflake-ml/inference/batch-inference-jobs
 
 ---
 
-## Slide 12: ML Observability
+## Slide 16: ML Observability
 
 **Talking Points:**
 - `CREATE MODEL MONITOR` tracks prediction drift, data drift, and accuracy over time against a baseline snapshot.
@@ -203,6 +273,7 @@ the depth.
 **Presenter Notes:**
 - Constraints to know: timestamps must be TIMESTAMP_NTZ, prediction/actual columns must be NUMBER, monitor lives in the same schema as the model, and source data can't contain NULLs/NaNs.
 - This directly answers the "how do we know the model still works?" governance question — usually the missing piece in home-grown MLOps.
+- Reinforce with production proof: the same monitoring backbone runs under enterprise workloads (e.g., PayPal at 14M+ transactions, 97–99% accuracy; FNBO 10x developer productivity) — attributed platform references.
 
 **References:**
 - https://docs.snowflake.com/en/developer-guide/snowflake-ml/model-registry/model-observability
@@ -210,7 +281,7 @@ the depth.
 
 ---
 
-## Slide 13 (Optional): Orchestrate the Pipeline as a Task Graph
+## Slide 17 (Optional): Orchestrate the Pipeline as a Task Graph
 
 **Talking Points:**
 - Everything so far ran interactively; to productionize, wrap the same steps in a task graph (DAG) so retraining runs on a schedule or trigger, with automatic retries and full run history.
@@ -229,7 +300,7 @@ the depth.
 
 ---
 
-## Slide 14: Cortex Agent — Model as a Tool
+## Slide 18: Cortex Agent — Model as a Tool
 
 **Talking Points:**
 - The agent has two tools: Cortex Analyst (text-to-SQL over the governed semantic view) and a custom tool that calls the deployed lapse model.
@@ -246,7 +317,7 @@ the depth.
 
 ---
 
-## Slide 15: The "Wow" Moment
+## Slide 19: The "Wow" Moment
 
 **Talking Points:**
 - Ask the agent live: "Which of our major-gift donors in the West region are most at risk of lapsing this quarter, why, and what should we do?"
@@ -262,15 +333,15 @@ the depth.
 
 ---
 
-## Slide 16: Mapping to Live Use Cases
+## Slide 20: Mapping to Live Use Cases
 
 **Talking Points:**
-- Two common nonprofit-CRM initiatives map cleanly onto this demo: an ML Ops & Platform build (churn models, Registry, Serving, Observability, plus the optional Task-Graph orchestration — slides 1–9 + 13) and an executive chatbot (Analyst + Snowflake Intelligence + Streamlit — slides 14–15).
-- The scenario is deliberately generic: swap donor → customer / patient / subscriber and the exact same lifecycle demonstrates churn, propensity, or risk.
+- Two common nonprofit-CRM initiatives map cleanly onto this demo: an ML Ops & Platform build (churn models, Registry, Serving, Observability, plus the optional Task-Graph orchestration — the lifecycle slides 8–17) and an executive chatbot (Analyst + Snowflake Intelligence + Streamlit — the agent and wow slides 18–19).
+- The same governed lifecycle powers churn, propensity, and risk programs across industries.
 
 **Presenter Notes:**
 - Use this slide to connect the demo to whatever initiative the audience has already described — pick the row that matches and go deeper there.
-- The same lifecycle applies to churn, propensity, or risk in any domain — swap the entity (donor → customer / patient / subscriber) if the audience's use case differs.
+- Anchor the discussion in the customer's own priority churn/propensity/risk use case.
 - The hands-on lab is three notebooks — `donor-churn-01-features`, `-02-model`, `-03-serve-agent` — each standalone with a rehydrate cell, so you can demo one lifecycle stage without running the others end-to-end.
 
 **References:**
@@ -278,12 +349,12 @@ the depth.
 
 ---
 
-## Slide 17: Next Steps
+## Slide 21: Recommendation & Next Steps
 
 **Talking Points:**
+- Lead with the recommendation: run the ML lifecycle for churn, propensity, and risk on Snowflake — consolidating data, models, and the agent onto one governed platform — and scope a focused proof of concept on a priority use case.
 - Concrete path: run `setup.sql`, walk the notebook sections 2–13 (optional Section 14 orchestrates it as a Task Graph), then chat with the agent (Streamlit app or Snowsight AI & ML → Agents).
-- Reframe the entity/features for the customer's domain — the lifecycle is unchanged.
-- Offer to scope their MLOps program: map Registry, Serving, and Observability to their governance and retraining requirements.
+- Offer to scope the MLOps program: map Registry, Serving, and Observability to the customer's governance and retraining requirements.
 
 **Presenter Notes:**
 - Best live path is Snowsight → Workspaces → Create Workspace from Git repo, so `get_active_session()` handles auth with no local setup.

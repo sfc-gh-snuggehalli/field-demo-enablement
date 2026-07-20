@@ -455,6 +455,10 @@
     <h2>Donor Churn ML</h2>
     <!-- NAV_LINKS_START -->
     <a href="#hero">Overview</a>
+    <a href="#exec-summary">Executive Summary</a>
+    <a href="#time-to-value">Where ML Time Goes</a>
+    <a href="#business-value">Blocked &rarr; Unified</a>
+    <a href="#proof">Proven at Scale</a>
     <a href="#problem">The Problem</a>
     <a href="#architecture">Architecture</a>
     <a href="#feature-store">1. Feature Store</a>
@@ -488,6 +492,92 @@
         <div class="stat-card"><div class="value">0.96</div><div class="label">Lapse-model F1 (in-Snowflake)</div></div>
         <div class="stat-card"><div class="value">10+</div><div class="label">Snowflake ML capabilities shown</div></div>
       </div>
+    </section>
+
+    <!-- Exec Slide A: Executive Summary -->
+    <section class="slide" id="exec-summary">
+      <h2>Executive Summary</h2>
+      <h3>For the engineering leader deciding where ML runs</h3>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>The outcome</h4><p>A governed, end-to-end churn-prediction capability &mdash; from raw data to a deployed model to a natural-language agent &mdash; delivered on the platform where the data already lives.</p></div>
+        <div class="card"><h4>The TCO angle</h4><p>No separate ML platform to license, secure, or integrate. No data movement between systems. One security perimeter, one bill, and one governance model instead of three.</p></div>
+        <div class="card"><h4>Time to value</h4><p>Analysts get a baseline model in an afternoon with SQL; data scientists graduate to custom models on the same data &mdash; and an ML agent accelerates the build itself.</p></div>
+        <div class="card"><h4>The decision</h4><p>Consolidate the ML lifecycle onto Snowflake instead of stitching together a warehouse, a separate ML stack, and a BI layer. This deck shows what that looks like end to end.</p></div>
+      </div>
+      <div class="highlight-box anim-fade"><strong>What follows:</strong> a short business framing, then the full technical lifecycle &mdash; Feature Store through Model Serving to a Cortex Agent that calls the deployed model as a tool.</div>
+    </section>
+
+    <!-- Exec Slide B: Where ML Time Goes -->
+    <section class="slide" id="time-to-value">
+      <h2>Where ML Time Goes &mdash; and Where It Could Go</h2>
+      <h3>Shifting effort from wrangling and config to judgment and strategy</h3>
+      <div class="two-col anim-fade">
+        <div class="card">
+          <h4>Today</h4>
+          <div style="margin:0.75rem 0 0;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Data wrangling &amp; prep</span><span>60%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--orange); width:60%; margin:0.3rem 0 0.9rem;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Management &amp; config</span><span>30%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--orange); opacity:0.65; width:30%; margin:0.3rem 0 0.9rem;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Judgment &amp; strategy</span><span>10%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--primary); width:10%; margin:0.3rem 0 0;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h4>Agentic future state</h4>
+          <div style="margin:0.75rem 0 0;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Steering &amp; strategy</span><span>60%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--primary); width:60%; margin:0.3rem 0 0.9rem;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Workflow oversight</span><span>30%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--primary); opacity:0.65; width:30%; margin:0.3rem 0 0.9rem;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-muted);"><span>Approve</span><span>10%</span></div>
+            <div style="height:10px; border-radius:6px; background:var(--accent); width:10%; margin:0.3rem 0 0;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="context-box anim-fade"><strong>The shift:</strong> when the platform handles data prep, orchestration, and configuration &mdash; and an ML agent drafts the code &mdash; engineering time moves from plumbing to the judgment calls that differentiate. <em>Illustrative split, for directional purposes only.</em></div>
+    </section>
+
+    <!-- Exec Slide C: Blocked to Unified -->
+    <section class="slide" id="business-value">
+      <h2>Why ML Programs Stall &mdash; and What Unifies Them</h2>
+      <h3>The TCO case for one platform instead of three</h3>
+      <div class="two-col anim-fade">
+        <div class="card" style="border-color:var(--orange);">
+          <h4>Blocked: stitched-together stacks</h4>
+          <p><strong>Disparate data</strong> spread across a warehouse, a separate ML platform, and BI tools.</p>
+          <p><strong>Silos</strong> across systems and teams, each with its own compute and its own copies.</p>
+          <p><strong>Complex governance</strong> &mdash; multiple data copies produce disjointed identities and RBAC, and every copy is a new risk surface.</p>
+        </div>
+        <div class="card" style="border-color:var(--green);">
+          <h4>Unified: one Snowflake platform</h4>
+          <p><strong>Single platform</strong> &mdash; data, features, models, and the agent in one account.</p>
+          <p><strong>Integrated workflows</strong> from raw data to deployed model to conversational agent, with no export.</p>
+          <p><strong>Built-in governance</strong> within one security perimeter &mdash; one identity model, one RBAC, one audit trail.</p>
+        </div>
+      </div>
+      <div class="highlight-box anim-fade"><strong>Why a VP of Engineering cares:</strong> fewer systems to license and secure, no brittle data-movement pipelines to maintain, and one governance model &mdash; lower total cost of ownership and a smaller attack surface, without giving up best-in-class ML.</div>
+    </section>
+
+    <!-- Exec Slide D: Proven at Scale -->
+    <section class="slide" id="proof">
+      <h2>Proven at Enterprise Scale</h2>
+      <h3>Snowflake ML in production across thousands of accounts</h3>
+      <div class="stat-grid anim-fade">
+        <div class="stat-card"><div class="value">6K+</div><div class="label">Monthly active accounts using Snowflake ML</div></div>
+        <div class="stat-card"><div class="value">Trillions</div><div class="label">Predictions served per month</div></div>
+        <div class="stat-card"><div class="value">Millions</div><div class="label">Models trained on the platform</div></div>
+        <div class="stat-card"><div class="value">~10ms</div><div class="label">p50 online feature-serving latency</div></div>
+      </div>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>FNBO &mdash; 10x developer productivity</h4><p>First National Bank of Omaha reports a 10x lift in data-science developer productivity on Snowflake ML.</p></div>
+        <div class="card"><h4>PayPal &mdash; 14M+ transactions, 97&ndash;99% accuracy</h4><p>Real-time risk scoring across tens of millions of transactions at production-grade accuracy.</p></div>
+        <div class="card"><h4>Attentive &mdash; 30% cost savings, 68% faster</h4><p>Cut cost 30% and sped feature workloads 68% versus a legacy standalone feature-store platform.</p></div>
+        <div class="card"><h4>ECOLAB &mdash; 71x faster training</h4><p>71x speedup on ML training, saving roughly four weeks of development time on a 10&nbsp;GB workload.</p></div>
+        <div class="card"><h4>Lessmore &mdash; 10x lower cost</h4><p>Reduced customer-lifetime-value forecasting cost by a factor of 10 using the Model Registry.</p></div>
+        <div class="card"><h4>Competitive performance</h4><p>Up to 8x XGBoost price-performance vs. Databricks; 2&ndash;5x faster and up to 3x cheaper inference. <em>Published, illustrative benchmarks.</em></p></div>
+      </div>
+      <p style="margin-top:1rem; font-size:0.9rem;">Trusted by Coinbase, LendingTree, Zscaler, Cloudbeds, S&amp;P Global, and Swire Coca-Cola.</p>
     </section>
 
     <!-- Slide 2: The Problem -->
@@ -534,6 +624,7 @@
         </div>
       </div>
       <div class="context-box anim-fade"><strong>Pattern:</strong> data, features, models, and the agent all live in one governed account. The agent's two tools are Cortex Analyst (retrieval over a semantic view) and a custom tool that calls the <em>deployed lapse model</em> to score and explain donors.</div>
+      <div class="highlight-box anim-fade"><strong>Business translation:</strong> one platform, one security perimeter, no data movement &mdash; the consolidation that lowers TCO and shrinks the governance surface.</div>
     </section>
 
     <!-- Slide 4: Feature Store -->
@@ -599,6 +690,7 @@ model.<span class="function">fit</span>(train_df)              <span class="comm
         <div class="card"><h4>Experiment Tracking</h4><p>Each candidate config is logged as a run (params + AUC/F1 from <code>predict_proba</code>) under one experiment &mdash; compare side-by-side in AI &amp; ML &rarr; Experiments.</p></div>
         <div class="card"><h4>Distributed HPO</h4><p>Sweep hyperparameters across the warehouse with <code>GridSearchCV</code>; the best config is refit and logged as the registered model.</p></div>
       </div>
+      <div class="highlight-box anim-fade"><strong>Performance:</strong> training runs on Snowflake compute &mdash; up to 8x XGBoost price-performance versus Databricks in published, illustrative benchmarks.</div>
     </section>
 
     <!-- Slide 8: ML Jobs / Container Runtime -->
@@ -666,6 +758,7 @@ scored = mv.<span class="function">run</span>(donor_features, function_name=<spa
 mv.<span class="function">run_batch</span>(X=session.<span class="function">table</span>(<span class="string">"DONOR_FEATURES"</span>),
              compute_pool=<span class="string">"DONOR_CHURN_ML_POOL"</span>,
              output_spec=<span class="function">OutputSpec</span>(stage_location=<span class="string">"@scores/"</span>))</pre>
+      <div class="highlight-box anim-fade"><strong>Performance:</strong> 2&ndash;5x faster and up to 3x cheaper inference, with online feature serving around 10ms p50 &mdash; published, illustrative benchmarks.</div>
     </section>
 
     <!-- Slide 12: ML Observability -->
@@ -680,6 +773,7 @@ mv.<span class="function">run_batch</span>(X=session.<span class="function">tabl
   PREDICTION_SCORE_COLUMNS=(<span class="string">'PRED_LAPSE'</span>) ACTUAL_CLASS_COLUMNS=(<span class="string">'IS_LAPSED'</span>)
   SEGMENT_COLUMNS=(<span class="string">'REGION'</span>);</pre>
       <div class="context-box anim-fade"><strong>Governance goal met:</strong> track prediction drift, data drift, and accuracy over time &mdash; segmented by region &mdash; and fire an alert when performance degrades. Query metrics with <code>MODEL_MONITOR_DRIFT_METRIC</code> / <code>_PERFORMANCE_METRIC</code>.</div>
+      <div class="highlight-box anim-fade"><strong>In production:</strong> the same monitoring backbone runs under enterprise workloads &mdash; e.g., PayPal scoring 14M+ transactions at 97&ndash;99% accuracy and FNBO reporting 10x developer productivity on Snowflake ML.</div>
     </section>
 
     <!-- Slide 12.5 (optional): Orchestration as a Task Graph -->
@@ -748,21 +842,22 @@ DAGOperation(schema).<span class="function">deploy</span>(dag)             <span
       <table class="anim-fade">
         <thead><tr><th>Initiative</th><th>What they build</th><th>Demo coverage</th></tr></thead>
         <tbody>
-          <tr><td>ML Ops &amp; Platform</td><td>Lapse/churn risk models, Model Registry, Serving, ML Observability, optional Task-Graph orchestration</td><td><span class="badge-green">Slides 1&ndash;9 + Optional</span></td></tr>
-          <tr><td>Executive Chatbot</td><td>Cortex Analyst + Snowflake Intelligence + a Streamlit chat surface</td><td><span class="badge-green">Slides 10&ndash;14</span></td></tr>
+          <tr><td>ML Ops &amp; Platform</td><td>Lapse/churn risk models, Model Registry, Serving, ML Observability, optional Task-Graph orchestration</td><td><span class="badge-green">Slides 8&ndash;17</span></td></tr>
+          <tr><td>Executive Chatbot</td><td>Cortex Analyst + Snowflake Intelligence + a Streamlit chat surface</td><td><span class="badge-green">Slides 18&ndash;19</span></td></tr>
         </tbody>
       </table>
-      <div class="context-box anim-fade"><strong>Beyond fundraising:</strong> the same lifecycle applies to churn, propensity, or risk in any domain &mdash; swap the entity (donor &rarr; customer, patient, subscriber) and the pattern holds. The hands-on lab ships as <strong>three notebooks</strong> &mdash; 01 Features, 02 Model, 03 Serve &amp; Agent.</div>
+      <div class="context-box anim-fade"><strong>Beyond fundraising:</strong> the same governed lifecycle powers churn, propensity, and risk programs across industries. The hands-on lab ships as <strong>three notebooks</strong> &mdash; 01 Features, 02 Model, 03 Serve &amp; Agent.</div>
     </section>
 
-    <!-- Slide 16: Next Steps -->
+    <!-- Slide 16: Recommendation & Next Steps -->
     <section class="slide" id="closing">
-      <h2>Next Steps</h2>
+      <h2>Recommendation &amp; Next Steps</h2>
+      <div class="highlight-box anim-fade"><strong>Recommendation:</strong> run the ML lifecycle for churn, propensity, and risk on Snowflake &mdash; consolidating data, models, and the agent onto one governed platform &mdash; and scope a focused proof of concept on a priority use case.</div>
       <div class="card-grid anim-fade">
         <div class="card"><h4>1. Run the lab</h4><p>Execute <code>setup.sql</code>, then walk the notebook sections 2&ndash;13 to build the full pipeline live in a Snowflake account. Optional Section 14 orchestrates it as a scheduled Task Graph.</p></div>
         <div class="card"><h4>2. Chat with the agent</h4><p>Launch the Streamlit app or open Snowsight AI &amp; ML &rarr; Agents and ask the "wow" question.</p></div>
-        <div class="card"><h4>3. Reframe for the account</h4><p>Rename the entity and features to the customer's domain; the lifecycle stays identical.</p></div>
-        <div class="card"><h4>4. Scope the MLOps program</h4><p>Map Registry, Serving, and Observability to their governance and retraining requirements.</p></div>
+        <div class="card"><h4>3. Scope a proof of concept</h4><p>Pick one priority churn, propensity, or risk use case and stand up the same lifecycle on your own governed data.</p></div>
+        <div class="card"><h4>4. Scope the MLOps program</h4><p>Map Registry, Serving, and Observability to your governance and retraining requirements.</p></div>
       </div>
       <div class="highlight-box anim-fade" style="margin-top: 1.5rem;"><strong>The one-liner: predict donor lapse, explain every score, and let fundraisers act on it in natural language &mdash; all inside one governed Snowflake account.</strong></div>
     </section>

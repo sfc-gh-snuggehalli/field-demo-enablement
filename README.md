@@ -24,7 +24,7 @@ hands-on lab with SQL setup and a notebook.
 | Module | Audience | Format | Presentation |
 |--------|----------|--------|--------------|
 | AI Functions: Customer Experience Telemetry | Data & Analytics teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cx-ai-functions/presentations/cx-ai-functions.html) |
-| Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Data science & ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
+| Donor Lapse/Churn Intelligence: Snowflake ML → Agent | Engineering leadership (VP-level) & data science / ML platform teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/donor-churn-ml/presentations/donor-churn-ml.html) |
 | Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork | Sales engineers & data/AI teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html) |
 <!-- MODULE_TABLE_END -->
 
@@ -63,7 +63,7 @@ tool, plus a Streamlit chat app.
 
 | File | Description |
 |------|-------------|
-| `presentations/donor-churn-ml.html` | Slide deck (16 slides) |
+| `presentations/donor-churn-ml.html` | Slide deck (21 slides — 4-slide executive layer + full lifecycle) |
 | `presentations/donor-churn-ml-speaker-notes.md` | Speaker notes |
 | `lab/setup.sql` | DB, four schemas, warehouses, synthetic data, Cortex ML Functions, semantic view |
 | `lab/donor-churn-01-features.ipynb` | Lab 1/3 — Feature Store, Datasets, Cortex ML Functions |
