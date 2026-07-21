@@ -19,6 +19,12 @@ tools:
       name: "reason_search"
       description: "Return reasons."
 tool_resources:
+  get_proactive_briefing:
+    identifier: "PROACTIVE_RETAIL_DEMO.ANALYTICS.GET_PROACTIVE_BRIEFING"
+    type: "function"
+    execution_environment:
+      type: warehouse
+      warehouse: PROACTIVE_RETAIL_WH
   store_analyst:
     semantic_view: "PROACTIVE_RETAIL_DEMO.ANALYTICS.RETAIL_RETURNS_SV"
     execution_environment:
