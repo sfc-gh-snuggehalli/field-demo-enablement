@@ -1,0 +1,101 @@
+CALL_ID: SD-2026-0205-008
+DATE: 2026-02-05
+DURATION: 00:49:41
+CALL_TYPE: Sales Discovery - Swimwear Prospect
+PARTICIPANTS: Marisol Grant (RelayFox Account Executive); Theo Park (RelayFox Solutions Consultant); Noa Bennett (Founder); Jules Ramirez (Retention Lead)
+BRAND/MERCHANT: Shorebird Swim
+ACCOUNT_TIER: Prospect - Emerging Growth
+
+[00:00] Marisol Grant: Noa, Jules, thanks for making time. You are heading into peak swim season, so what prompted a platform review now instead of September?
+
+[00:12] Noa Bennett: Our Beacon contract renews April 1, and the price jumps thirty-one percent. We have 96,000 active SMS subscribers, but seven months of the year are much quieter. We do not want to pay peak rates all year.
+
+[00:30] Jules Ramirez: The bigger issue is control. We sell bikini tops and bottoms separately. I need segments like "bought a medium top but no matching bottom" or "returned the Solstice one-piece for fit" without exporting CSVs.
+
+[00:49] Theo Park: Shopify Plus is the source of truth?
+
+[00:52] Jules: Shopify Plus, Kestrel email, Loop Returns, and Nosto. Beacon has product events, but return reasons are not available in the segment builder.
+
+[01:08] Theo: We can ingest Loop return events and use reason codes. For example, include customers who kept a Solstice top, have no matching bottom order, and exclude anyone whose return reason was quality issue or whose support ticket is open.
+
+[01:28] Noa: We also use a keyword, TIDE, in beach pop-ups. Last summer it added 18,400 subscribers.
+
+[01:36] Marisol: What was confirmation and first-purchase performance?
+
+[01:40] Jules: Single opt-in, so there was no confirmation step. Thirty-day first-purchase rate was 11.8 percent, but list churn hit 5.1 percent in August after we sent twelve broadcasts.
+
+[01:57] Theo: That suggests the acquisition worked, but frequency and relevance may have eroded the list. We can coordinate broadcast and flow caps and prioritize high-intent messages.
+
+[02:11] Noa: Does that mean sending less?
+
+[02:14] Theo: Sometimes. The goal is not fewer messages universally. It is fewer low-value overlaps. A subscriber with an active cart may receive the cart reminder and skip a generic "weekend picks" broadcast.
+
+[02:31] Jules: Our current system cannot suppress a broadcast based on a cart event that happened five minutes ago.
+
+[02:37] Theo: RelayFox's real-time segment and pre-send evaluation can. The final eligible count updates at launch.
+
+[02:49] Noa: We are visual. We use MMS for every collection drop.
+
+[02:54] Marisol: MMS is supported, but it costs more credits. We would model which sends justify it. Your data shows the "Salt Air" MMS drove $1.42 per recipient, while the "Cabana Basics" MMS drove forty-nine cents. Not every image campaign earned the same premium.
+
+[03:14] Jules: Can we A/B MMS against SMS?
+
+[03:18] Theo: Yes, with a randomized split and a holdout if the audience is large enough. Track revenue per recipient, revenue per credit, click rate, and opt-out. An MMS can win on revenue per recipient but lose on credit efficiency.
+
+[03:36] Noa: Pricing needs to account for seasonality.
+
+[03:40] Marisol: We can propose a base platform fee with annual credits that flex by month, rather than a flat monthly message bucket. Initial range is $118,000 to $146,000 annually depending on service and the peak allocation.
+
+[04:01] Noa: Beacon's renewal is $162,000, but they include strategy.
+
+[04:07] Marisol: Our higher option includes a quarterly strategist and launch support. The lower option is software plus onboarding and priority support. We should compare scope, not only headline price.
+
+[04:20] Jules: What about AI copy? We have a very specific voice. No "hey babe," no fake urgency, and never say "flattering for every body."
+
+[04:31] Theo: Those can be locked as brand rules. You provide approved examples, banned phrases, preferred product language, and character constraints. The AI suggests copy; it does not publish without approval.
+
+[04:51] Noa: Can it generate alt text for MMS?
+
+[04:55] Theo: Yes, though your team should review accessibility language. It can describe the product, color, and scene without adding claims not visible in the image.
+
+[05:12] Jules: Our biggest operational pain is matching sets. Show me how that segment works.
+
+[05:17] Theo: I am using a demo catalog. Include customers who purchased product family SOLSTICE_TOP, kept the item past the return window, have no SOLSTICE_BOTTOM order, size availability equals true, and no contact in seventy-two hours.
+
+[05:37] Noa: Can it match color too?
+
+[05:40] Theo: Yes. Use variant metafield color_group. If the exact color is out of stock, the flow can pause or recommend a coordinated color only if your merchandising rules allow it.
+
+[05:57] Jules: That could be a flow, not a broadcast?
+
+[06:00] Theo: Exactly. Trigger after the return window closes, wait for inventory, then send one personalized message. That is usually more relevant than a broad campaign.
+
+[06:17] Marisol: Your current matching-set reminder is a monthly manual broadcast. It averages fifty-three cents per send. Our historical backtest on exact-match eligibility shows $1.69 per send, 3.2x, across 6,840 profiles.
+
+[06:37] Noa: I know the speech: backtest, not guarantee.
+
+[06:40] Marisol: You have been on enough vendor calls. Yes, we would validate live with a control group.
+
+[06:48] Jules: How hard is migration before April 1?
+
+[06:52] Theo: We need the subscriber export with consent timestamps, sources, and opt-out history; sending-number details; current flow logic; and Shopify access. A six-week timeline is realistic if the export is complete. We can launch with welcome and cart first, then migrate lower-volume flows.
+
+[07:17] Noa: We cannot have both vendors texting the same person.
+
+[07:21] Theo: During parallel setup, RelayFox sends only to test profiles until the cutover. At cutover, acquisition forms and active marketing traffic move in a controlled window. Opt-outs are loaded first.
+
+[07:41] Jules: What happens to our toll-free number?
+
+[07:44] Theo: We can evaluate porting or a new number. Porting preserves familiarity but requires coordination and can create a brief freeze. We would not promise timing until carrier review.
+
+[07:59] Noa: Give us a pilot that does not jeopardize spring launch.
+
+[08:03] Marisol: Run RelayFox in a no-send sandbox with six months of Shopify and Loop data. Build the matching-set segment, backtest two flows, and complete a consent-file audit. Commercial commitment starts only after the audit passes.
+
+[08:25] Jules: Add an MMS-versus-SMS test plan for the June "Low Tide" collection.
+
+[08:31] Theo: Added. We will also model list churn from 5.1 percent toward 3.0 percent using frequency controls, but label that as a target.
+
+[08:45] Noa: Send the seasonal pricing options and migration checklist. We will decide after we see the consent export.
+
+[08:54] Marisol: Will do. I will also include a reference call with a seasonal apparel customer, subject to their availability.

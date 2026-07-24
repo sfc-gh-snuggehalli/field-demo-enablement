@@ -1,0 +1,97 @@
+CALL_ID: SE-2026-0122-011
+DATE: 2026-01-22
+DURATION: 00:43:16
+CALL_TYPE: Sales Expansion - AI and Retention
+PARTICIPANTS: Avery Cole (RelayFox Account Executive); Samir Patel (RelayFox Solutions Engineer); Elliot Vance (CRM Manager); Maren Liu (VP Marketing)
+BRAND/MERCHANT: Northstar Nutrition
+ACCOUNT_TIER: Growth 250K - Expansion Review
+
+[00:00] Avery Cole: Elliot, Maren, good to see you. We pulled the last two quarters of Northstar performance. Before we show features, what is the board asking you to improve?
+
+[00:11] Maren Liu: Subscription retention. SMS acquisition is strong, but list churn is 4.2 percent monthly and subscription cancellation after the first shipment is too high.
+
+[00:24] Elliot Vance: We also spend too much time writing copy. Every product has claims restrictions, and legal reviews messages in screenshots.
+
+[00:35] Samir Patel: What stack is involved?
+
+[00:38] Elliot: Shopify Plus, Recharge, Kestrel email, Helply, and RelayFox. We have 238,000 active SMS subscribers. Flows are welcome, cart, browse, reorder, and subscription-save.
+
+[00:55] Avery: Your current attributed revenue is $4.6 million trailing twelve months. We are not proposing more broadcast volume. The expansion case is better segmentation and lower churn.
+
+[01:10] Maren: Quantify it.
+
+[01:12] Avery: If monthly list churn falls from 4.2 percent to 2.9 percent, the model preserves roughly 39,000 additional subscriber-months over a year. At your observed net revenue per active subscriber-month, that is about $520,000 in retained attributed revenue.
+
+[01:34] Maren: Retained attributed revenue is not cash we can book.
+
+[01:38] Avery: Correct. It is a planning estimate. The cleaner test is to run frequency-control cohorts and compare unsubscribe and purchase behavior.
+
+[01:49] Samir: We can cap total marketing contacts across flows and broadcasts. Right now a subscriber can receive "January Reset," a cart reminder, and a subscription-save message within six hours.
+
+[02:06] Elliot: That happened to me as an internal seed. It felt aggressive.
+
+[02:11] Samir: A global contact policy could hold lower-priority messages. For example, cart can outrank browse, and subscription service messages can outrank a generic broadcast.
+
+[02:28] Maren: We need to be careful calling subscription messages transactional.
+
+[02:33] Samir: Absolutely. We classify by purpose and consent basis, not by what marketing wants to call it. A promotional save offer remains marketing and respects opt-out and quiet-hour rules.
+
+[02:48] Elliot: Show the AI feature.
+
+[02:51] Samir: I am selecting product "Electrolyte Daily," audience "lapsed purchasers 45 to 90 days," objective "reorder without medical claims," and constraint "one GSM-7 segment." Brand rules prohibit "cures," "treats dehydration," and unsupported performance claims.
+
+[03:13] Maren: Legal also bans "doctor approved" unless a specific substantiation file is attached.
+
+[03:19] Samir: We can add that as a locked rule. The suggestion engine would flag it and require an approver.
+
+[03:30] Elliot: What copy did it produce?
+
+[03:32] Samir: Variant one: "Northstar: Running low on Electrolyte Daily? Restock your citrus sticks and save 15% today: [link] Reply STOP to opt out." It is one segment with the branded link.
+
+[03:48] Maren: That is usable. No miracle language.
+
+[03:52] Avery: The expansion includes AI Copy Studio, Advanced Segmentation, and two approval roles. Proposed annual add-on is $54,000.
+
+[04:06] Elliot: What segments are truly new for us?
+
+[04:10] Samir: Recharge next-renewal date, skipped shipment, cancellation reason, product flavor, days since last click, support sentiment tag, and subscription tenure. You could message citrus subscribers differently from berry, and suppress anyone with an unresolved damaged-order ticket.
+
+[04:31] Maren: Can we target people who canceled because of price, but not people who canceled due to side effects?
+
+[04:36] Samir: Yes, assuming the cancellation reasons are reliably captured. A segment might include reason PRICE and exclude reasons ADVERSE_REACTION or DOCTOR_ADVICE. Those exclusions should be treated carefully and reviewed by your legal and customer-care teams.
+
+[04:57] Elliot: We would not put health details in the text.
+
+[05:00] Samir: Correct. Use the data only to suppress or route, not to expose sensitive reasons in copy.
+
+[05:13] Avery: A backtest of your generic reorder broadcast shows sixty-two cents per send. The flavor-specific, reorder-window segment produced $1.08 per send historically, a 74 percent increase.
+
+[05:28] Maren: Again, backtest, not guarantee.
+
+[05:31] Avery: Correct. We propose a 15 percent holdout and a four-week test.
+
+[05:42] Elliot: What about the STARTSTRONG keyword? We fixed double opt-in last year. Can AI improve the confirmation completion rate?
+
+[05:50] Samir: It can suggest shorter confirmation copy, but the more important step is measuring the funnel. Your current STARTSTRONG confirmation completion is 82.3 percent. We can test instruction-first copy such as "Reply Y to confirm" before the offer details.
+
+[06:11] Maren: Does the add-on include compliance review?
+
+[06:14] Avery: It includes product controls and implementation guidance, not legal advice. Your counsel remains responsible for approving claims, consent language, and campaign strategy.
+
+[06:30] Elliot: Our agency is pushing a gym-member list partnership. They say it could add ten thousand subscribers fast.
+
+[06:37] Samir: Make sure Northstar is specifically named in the consent and that you receive row-level evidence before importing. A partner's general marketing permission should not be assumed to cover recurring Northstar texts.
+
+[06:56] Maren: Good warning. We have not signed that yet.
+
+[07:00] Avery: For the pilot, I suggest flavor-specific replenishment, global frequency caps, and AI copy under locked claims rules. Success criteria: reduce targeted-cohort unsubscribe from 1.3 to below 0.8 percent, improve revenue per send by at least 25 percent versus control, and cut copy-production time by half.
+
+[07:24] Elliot: We can measure production time. Right now a campaign takes about three hours including legal review.
+
+[07:31] Samir: Governance can route the exact text, link, audience definition, and credit estimate to an approver. No screenshots required.
+
+[07:47] Maren: Send a sixty-day pilot proposal. I want a termination right if the approval workflow does not support our claims process.
+
+[07:56] Avery: I will draft the proposal with defined acceptance criteria. We will also include the consent-data checklist for any partner list.
+
+[08:08] Elliot: Good. Let's proceed with scoping.

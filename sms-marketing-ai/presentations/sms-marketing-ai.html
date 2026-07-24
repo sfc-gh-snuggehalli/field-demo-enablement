@@ -462,6 +462,7 @@
     <a href="#define-once">Define Once</a>
     <a href="#analyst">Cortex Analyst</a>
     <a href="#search">Cortex Search</a>
+    <a href="#transcripts">Call Transcripts</a>
     <a href="#agent">Cortex Agent</a>
     <a href="#positioning">Layered, Not Versus</a>
     <a href="#closing">Next Steps</a>
@@ -639,6 +640,26 @@
       <div class="card-grid anim-fade">
         <div class="card"><h4>The corpus</h4><p>10 real PDFs: campaign briefs, the SMS/MMS copy library, TCPA/consent guidelines, deliverability best practices, a segmentation playbook, support macros, a quarterly performance review, an attribution whitepaper, and an incident postmortem.</p></div>
         <div class="card"><h4>Grounded &amp; filterable</h4><p>Semantic search returns the actual document text with its title, and filters on attributes like <code>doc_type</code> and <code>region</code> &mdash; no hallucinated policy.</p></div>
+      </div>
+    </section>
+
+    <!-- Slide 9b: Cortex Search over call transcripts -->
+    <section class="slide" id="transcripts">
+      <h2>Cortex Search on call transcripts</h2>
+      <h3>The messiest corpus &mdash; and several ways to bring it in</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step"><div class="step-label">Stage</div><div class="step-title">PUT .txt files</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Ingest</div><div class="step-title">Stage / COPY / Snowpipe</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">Chunk</div><div class="step-title">SPLIT_TEXT_RECURSIVE</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">Search</div><div class="step-title">Hybrid + RAG</div></div>
+      </div>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>The corpus</h4><p>24 synthetic customer calls &mdash; 10 support, 8 sales, 6 compliance &mdash; multi-speaker and conversational. Exactly where hybrid vector + keyword retrieval beats keyword search.</p></div>
+        <div class="card"><h4>Ingestion patterns</h4><p>Chunk directly off the stage, <code>COPY INTO</code> a durable raw table (ELT), or Snowpipe / Snowpipe Streaming for continuous and real-time loads &mdash; no vector DB to manage.</p></div>
+        <div class="card"><h4>Filtered &amp; grounded</h4><p>Attributes <code>call_type</code>, <code>brand</code>, <code>call_date</code> scope retrieval with no re-indexing; the RAG closer feeds top chunks to <code>AI_COMPLETE</code> for cited answers.</p></div>
       </div>
     </section>
 

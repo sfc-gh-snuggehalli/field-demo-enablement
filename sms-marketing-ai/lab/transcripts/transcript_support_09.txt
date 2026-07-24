@@ -1,0 +1,97 @@
+CALL_ID: CS-2026-0312-037
+DATE: 2026-03-12
+DURATION: 00:34:28
+CALL_TYPE: Customer Support - Messaging Credits
+PARTICIPANTS: Nina Foster (RelayFox Billing Support); Gabe Ibarra (E-commerce Manager)
+BRAND/MERCHANT: Pacific Trail Gear
+ACCOUNT_TIER: Growth 250K
+
+[00:00] Nina Foster: RelayFox Billing Support, this is Nina. I have ticket 89133 for Pacific Trail Gear.
+
+[00:08] Gabe Ibarra: Hi. We burned through eighty percent of our monthly credits in eleven days. The dashboard points to RIDGELINE_DROP, but that was supposed to be a plain SMS.
+
+[00:20] Nina: I have campaign CPN-76941. It was composed as an SMS, but 18,406 recipients received MMS fallback because the product card included an image attachment in the saved template.
+
+[00:34] Gabe: There was no image in my preview.
+
+[00:38] Nina: The desktop preview was on the SMS tab. The campaign had a conditional block: subscribers tagged "HIKER_PLUS" received an image of the Ridgeline shell; everyone else received text only.
+
+[00:53] Gabe: That was from an old template. I did not realize the condition was still there.
+
+[00:58] Nina: The audit shows the campaign was duplicated from "ALPINE_PREVIEW_MMS" and the media rule carried forward. Those 18,406 sends used three credits each.
+
+[01:13] Gabe: That is 55,218 credits. Still not enough to explain the total.
+
+[01:18] Nina: The SMS version also split into two segments because it used the mountain emoji and an en dash. With the tracked link, the UCS-2 message was 79 characters, which exceeds a single concatenated segment threshold once headers are included.
+
+[01:37] Gabe: So every text cost two credits?
+
+[01:40] Nina: For 96,112 recipients, yes. The total campaign usage was 247,442 credits: 55,218 for MMS recipients and 192,224 for two-segment SMS recipients.
+
+[01:57] Gabe: Our plan is 250,000 a month. One campaign basically used it.
+
+[02:02] Nina: Correct. There is another audience issue. Your draft estimate was 72,000 subscribers, but at send time the segment "Trail Engaged 180" expanded to 114,518 because a Shopify tag sync was repaired that morning.
+
+[02:22] Gabe: Nobody warned me the audience changed by forty thousand.
+
+[02:26] Nina: The composer showed a final pre-send estimate at 8:52 a.m. Mountain, nine minutes before launch. It was acknowledged by your user gabe@pacifictrail.example. The warning said audience increased 58 percent and estimated usage was 247,000 credits.
+
+[02:47] Gabe: I probably clicked through because we were in launch chaos. Can we require another person to approve?
+
+[02:53] Nina: On your current tier, we can limit scheduling permission to admins. A builder can prepare the campaign, and an admin can perform the final review. Native two-person approval is available in the Advanced Governance add-on.
+
+[03:10] Gabe: What does the add-on cost?
+
+[03:13] Nina: Your account executive would quote it, but the internal estimate is $1,200 per month for your account size. It includes approval rules, budget caps, and audit exports.
+
+[03:29] Gabe: Before sales gets involved, can we stop this from happening again for free?
+
+[03:34] Nina: Yes. I can add usage alerts at 50, 70, and 85 percent, enable a warning when audience changes more than 10 percent after draft creation, and create a saved SMS-only template with no conditional media.
+
+[03:53] Gabe: Do that. Also, what is the difference between an emoji and a normal symbol? Our brand uses arrows and mountains constantly.
+
+[04:02] Nina: Many basic characters are supported by GSM-7, but emoji and some typographic punctuation require Unicode. The composer shows "GSM-7" or "UCS-2" beneath the text box. A plain hyphen is safer than an en dash. Straight apostrophes are safer than curly ones.
+
+[04:22] Gabe: Does using an emoji always double cost?
+
+[04:26] Nina: Not always. A short Unicode message can fit in one segment. The problem is that the single-segment and concatenated limits are lower than GSM-7, so longer copy crosses the boundary sooner.
+
+[04:42] Gabe: Can you rewrite the Ridgeline text as one segment?
+
+[04:46] Nina: I can show an example, but your team should approve marketing copy. Current text is 158 visible characters plus link. A shorter version would be: "Pacific Trail: Ridgeline shells are live. Weatherproof, packable, built for spring miles. Shop: [link] Reply STOP to opt out."
+
+[05:10] Gabe: That is fine. No mountain emoji. The irony is painful.
+
+[05:15] Nina: The preview is one GSM-7 segment with your branded link. I will save it as PTG_SMS_ONE_SEGMENT.
+
+[05:28] Gabe: Was the campaign at least profitable?
+
+[05:32] Nina: It drove $133,780 in seven-day attributed revenue, 8.8 percent unique CTR, and 6.4 percent conversion after click. Revenue per recipient was $1.17. Revenue per credit was fifty-four cents because of the segmentation and MMS cost.
+
+[05:51] Gabe: Our board tracks revenue per send, not revenue per credit.
+
+[05:55] Nina: Revenue per send looks strong, but credit efficiency explains the budget impact. I recommend reporting both for mixed SMS and MMS programs.
+
+[06:10] Gabe: How much overage are we facing?
+
+[06:13] Nina: If no other sends occur, current settled usage is 286,901 credits, so 36,901 over plan. You have six active flows that average 2,400 credits a day. At that pace, month-end usage would be around 332,000.
+
+[06:31] Gabe: Pause the browse-abandonment MMS flow. Leave cart and welcome on.
+
+[06:36] Nina: I cannot pause campaigns without an authorized admin action from your side, but I can guide you. In Flows, open BROWSE-TRAIL-V2, click Status, then Pause. Do not pause transactional shipping alerts.
+
+[06:56] Gabe: Done. The screen says paused at 10:34 a.m.
+
+[07:02] Nina: I see the event. That reduces forecast by roughly 21,000 credits for the rest of March.
+
+[07:14] Gabe: Can you waive the overage?
+
+[07:17] Nina: The usage is valid, so I cannot waive it entirely. Because the conditional media was easy to miss, I can request a $400 courtesy adjustment. Approval reference BILL-9381.
+
+[07:34] Gabe: Put everything in ticket 89133, especially the audience expansion warning and campaign ID.
+
+[07:41] Nina: Will do. I am adding the final figures, template changes, alerts, and the BILL-9381 request. I also recommend an expansion conversation before your summer launch because your active list grew 42 percent since December.
+
+[07:58] Gabe: Fine. Have the AE contact me after we close the billing issue.
+
+[08:03] Nina: Noted. I will keep the ticket open until the courtesy adjustment is decided.

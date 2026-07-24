@@ -1,0 +1,99 @@
+CALL_ID: CE-2026-0406-002
+DATE: 2026-04-06
+DURATION: 01:08:09
+CALL_TYPE: Compliance and Legal Escalation - Non-consented Partner List
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Mira Lowe (RelayFox Product Counsel); Jon Bell (RelayFox Senior Support Specialist); Elliot Vance (CRM Manager); Maren Liu (VP Marketing); Alina Cruz (Northstar Outside Counsel); Victor Dane (IronHouse Partnerships Director)
+BRAND/MERCHANT: Northstar Nutrition
+ACCOUNT_TIER: Growth 250K - Marketing Suspended
+
+[00:00] Elena Park: This is Northstar escalation CE-2026-0406-002, linked to support tickets 89876 and 85119 and incident CMP-STOP-17. Marketing remains suspended for the IronHouse cohort.
+
+[00:19] Alina Cruz: I represent Northstar. Victor is here from IronHouse to explain the source file. We need a factual record of what was collected and what was sent.
+
+[00:30] Victor Dane: IronHouse members agreed to partner communications during membership signup. Northstar was one of our wellness partners.
+
+[00:41] Mira Lowe: Please describe the exact disclosure, not the business relationship.
+
+[00:46] Victor: The checkbox said, "Send me news and special offers from IronHouse and selected wellness partners." It was optional.
+
+[00:55] Alina: Was Northstar named next to the checkbox?
+
+[00:58] Victor: Not in the short text. There was a linked partner page that listed Northstar and nine other companies.
+
+[01:11] Elena: Was the checkbox unchecked by default, and do you have row-level timestamps tied to each phone number?
+
+[01:18] Victor: It was unchecked by default in the current system. The export we delivered has signup date at the member-account level, not the exact checkbox timestamp.
+
+[01:32] Jon Bell: The file IRONHOUSE_MARCH_2026 contains 8,214 phone numbers, first names, membership status, and a column partner_opt_in=yes. It does not contain disclosure version, checkbox timestamp, IP or device evidence, or Northstar-specific selection.
+
+[01:54] Elliot Vance: We were told partner_opt_in=yes was enough. We imported the file on March 28 and included 2,006 records in "APRIL RESET EARLY ACCESS," campaign CPN-78103.
+
+[02:09] Elena: Who approved the import?
+
+[02:12] Elliot: I uploaded it. Our agency built the segment. Maren approved the campaign copy, but we did not have a formal consent review.
+
+[02:25] Maren Liu: That is accurate. We discussed a partner-list checklist in a January expansion call, but the deal was moving quickly and we did not use it.
+
+[02:39] Mira: The prior warning is relevant to process, but today's determination must rest on the actual evidence. RelayFox policy requires evidence of consent appropriate to recurring automated marketing texts from the sending brand. The current file does not demonstrate Northstar-specific consent.
+
+[03:05] Victor: Are you saying a partner list can never be used?
+
+[03:09] Elena: We are saying this list cannot be marketed through RelayFox on the evidence provided. A partner program would need clear disclosure naming the sender or otherwise establishing the necessary consent, plus row-level evidence.
+
+[03:27] Alina: What messages were sent?
+
+[03:30] Jon: Campaign CPN-78103 was sent April 1 at 10:00 a.m. recipient local time. Copy: "Northstar Nutrition: Early access to our April Reset is here. Save 20% on Starter Stack today." It included a tracked link and STOP instruction.
+
+[03:48] Alina: Performance and complaints?
+
+[03:51] Jon: Of 2,006 imported recipients, 1,853 delivered, unique CTR 2.1 percent, 71 purchases totaling $6,940, 76 opt-outs for a 3.8 percent opt-out rate, and nine direct complaints. The normal account opt-out baseline is 0.7 percent.
+
+[04:16] Maren: We also had the number-migration STOP issue.
+
+[04:21] Jon: Separate but overlapping. Seven subscribers across the account received one marketing message after STOP because suppression lists were briefly split during migration. Nine of the fourteen customer-care complaints matched the IronHouse import. Number ending 0147 was both an IronHouse record and one of the seven post-opt-out cases.
+
+[04:48] Alina: Give the timeline for 0147.
+
+[04:51] Jon: Imported March 28. Received CPN-78103 April 1. Entered cart flow April 2. Sent STOP to the legacy long code March 31? Correction - let me be precise. The STOP was March 31 at 6:42 p.m. Eastern, before the April 1 broadcast. Because the migration bridge had not synchronized to the new profile, the cart reminder sent at 6:49 p.m. March 31. The April 1 campaign should also have been suppressed; it was excluded from the final audience after the global mapping repair, so 0147 did not receive CPN-78103. The complaint referenced the cart reminder.
+
+[05:40] Elliot: Are all 8,214 records now blocked?
+
+[05:44] Jon: Yes. HOLD_IRONHOUSE_0403 blocks broadcasts and marketing flows. The original import and all profile records are preserved. Seventy-six STOP records are globally unsubscribed, independent of the cohort hold.
+
+[06:05] Victor: Could IronHouse email members and ask them to text a Northstar keyword?
+
+[06:11] Mira: IronHouse and Northstar should evaluate a re-permission campaign with their counsel. From the platform perspective, a permitted email inviting members to take a fresh affirmative action through a clear Northstar opt-in path is materially different from uploading the current phone list.
+
+[06:30] Alina: No text should be sent to solicit that consent.
+
+[06:33] Elena: Correct. RelayFox will not release the list for an SMS re-permission message.
+
+[07:06] Elliot: What remediation is required for Northstar's account overall?
+
+[07:10] Elena: One, maintain quarantine on all 8,214 records. Two, prohibit partner-list imports without Compliance approval. Three, review every imported source from the last twelve months for row-level consent evidence. Four, retain campaign, consent, and complaint records. Five, complete STOP/HELP validation across migrated numbers. Six, enable consent-source alerts for imports lacking timestamp or disclosure version.
+
+[07:46] Alina: Add that outside counsel will review customer-response language and any notification obligations.
+
+[07:52] Mira: Noted. RelayFox will provide factual exports but will not direct legal strategy.
+
+[08:03] Victor: What evidence would be enough if we can retrieve more logs?
+
+[08:07] Elena: At minimum, phone number, date and time of affirmative action, exact disclosure version, proof the checkbox was optional and unchecked, the page or context where Northstar was clearly identified as a sender, and opt-out history. A general member signup date is not enough.
+
+[08:52] Maren: Will our whole account stay suspended?
+
+[08:55] Elena: The IronHouse cohort is fully suspended. Broader marketing is on temporary review because of the simultaneous STOP migration incident. We can stage release for clearly consented existing subscribers after the opt-out controls pass validation.
+
+[09:16] Jon: Synthetic tests now show STOP suppression under two seconds across the legacy and toll-free profiles. HELP template HELP-NSN-V5 is correct. We are still completing a production canary with internal profiles.
+
+[09:38] Elliot: Which campaigns can resume first?
+
+[09:41] Elena: None until written release. The proposed first release is STARTSTRONG welcome for new, double-confirmed subscribers, followed by a 5,000-person engaged broadcast excluding every imported partner source.
+
+[10:02] Alina: We agree to that sequence.
+
+[10:06] Elena: Final identifiers for the record: ticket 89876, prior ticket 85119, campaign CPN-78103, import IRONHOUSE_MARCH_2026, hold HOLD_IRONHOUSE_0403, and incident CMP-STOP-17.
+
+[10:30] Maren: Understood.
+
+[10:32] Elena: The hold remains active. All additional evidence from IronHouse should be uploaded to the secure case folder, not sent in ordinary email.

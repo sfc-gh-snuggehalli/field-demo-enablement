@@ -48,3 +48,27 @@
   route metric questions to the Analyst tool and policy questions to Search.
 - Next steps: curate expected answers in a Snowflake table, run the baseline/optimized eval loop,
   analyze failures, then generalize and promote.
+
+### Entry: 2026-07-24
+- Version: `optimized` (updated in place)
+- Goal: add a second Cortex Search corpus — customer call transcripts — as a third agent tool,
+  so the agent can answer "voice of the customer" questions alongside KPI and policy questions.
+- Changes made:
+  - **New tool `Call_Transcript_Search`** (`cortex_search` over `CALL_TRANSCRIPTS_SEARCH`): 24
+    synthetic transcripts (10 support, 8 sales, 6 compliance), chunked to preserve dialogue turns.
+    Filterable attributes `call_type` (support/sales/compliance), `brand`, `call_date`; cited by
+    brand + `call_id`.
+  - **Orchestration routing updated:** explicit split between the two Search corpora —
+    `Marketing_Playbook_Search` = OUR internal policy/playbook docs; `Call_Transcript_Search` =
+    transcripts of CALLS with customers. Blended flow now pulls the number (Analyst), the policy
+    (Playbook), and what the customer said (Transcripts).
+  - **Sample question added:** cross-type trace of the 10DLC-suspension brand across its support
+    and compliance calls.
+  - **`tool_resources.Call_Transcript_Search`:** name, `id_column: chunk_id`, `title_column:
+    call_id`, `max_results: 6`.
+- Rationale: transcripts are the hardest corpus for keyword search (multi-speaker, conversational)
+  and the clearest place to show hybrid vector+keyword retrieval + attribute filtering. Keeping the
+  two search corpora as distinct tools (with sharp when-to-use boundaries) prevents the agent from
+  conflating "our policy" with "what the customer said".
+- Deploy: shipped in `lab/setup.sql`; mirrored here as the system of record. Validated live on
+  SNUGGEHALLI_AWS1 (DESCRIBE AGENT shows all three tools; search + RAG queries return grounded hits).

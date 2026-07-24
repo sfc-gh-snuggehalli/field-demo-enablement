@@ -175,10 +175,29 @@ consent rate ≈ **81–84%** per region; list churn ≈ **9–12%** per region;
 
 ---
 
-## Slide 10: Cortex Agent
+## Slide 10: Cortex Search on Call Transcripts
 
 **Talking Points:**
-- The agent has two tools: the semantic view via Analyst (structured KPIs) and Cortex Search (documents). Model = auto.
+- The second Search corpus is the messiest one: 24 synthetic customer call transcripts (10 support, 8 sales, 6 compliance) — multi-speaker, conversational, no tidy fields. This is where hybrid vector + keyword retrieval clearly beats keyword search.
+- Tell the ingestion story: the same corpus, three ways in — (A) chunk directly off the stage with no landing table, (B) `COPY INTO` a durable raw table then chunk (the production ELT path), (C) Snowpipe / Snowpipe Streaming for continuous and real-time loads (narrated in `setup.sql`).
+- Attributes `call_type`, `brand`, `call_date` scope retrieval at query time — no re-indexing, RBAC inherited. The RAG closer feeds the top chunks to `AI_COMPLETE` for a cited answer.
+
+**Presenter Notes:**
+- `setup.sql` §3b lands `lab/transcripts/*.txt` on `@CALL_TRANSCRIPTS_STAGE`, reassembles whole transcripts, chunks with `SPLIT_TEXT_RECURSIVE_CHARACTER` into `TRANSCRIPT_CHUNKS`, and builds `CALL_TRANSCRIPTS_SEARCH`.
+- Demo the attribute filter live: run the compliance-only `SEARCH_PREVIEW` (§7b), then the RAG cell (§7c) or notebook Section 5b.
+- The corpus is fully synthetic and client-agnostic (fictional "RelayFox" platform); brand names are invented and used as the `brand` filter.
+
+**References:**
+- https://docs.snowflake.com/en/sql-reference/sql/create-cortex-search
+- https://docs.snowflake.com/en/sql-reference/functions/split_text_recursive_character-snowflake-cortex
+- https://docs.snowflake.com/en/user-guide/data-load-snowpipe-streaming-overview
+
+---
+
+## Slide 11: Cortex Agent
+
+**Talking Points:**
+- The agent has three tools: the semantic view via Analyst (structured KPIs), Marketing_Playbook_Search (our policy/playbook PDFs), and Call_Transcript_Search (what the customer said on the call). Model = auto.
 - Read the blended question. The agent routes the *number* (attributed revenue for the Q3 flash sale) to Analyst and the *why* (the PNW throughput postmortem plus the Q3 Trailhead Flash Sale brief) to Search — and cites the documents by title.
 - This is where "define once" pays off: the agent's number is the same as the BI dashboard's, because both read the same view.
 
@@ -193,7 +212,7 @@ consent rate ≈ **81–84%** per region; list churn ≈ **9–12%** per region;
 
 ---
 
-## Slide 11: Layered, Not "Versus"
+## Slide 12: Layered, Not "Versus"
 
 **Talking Points:**
 - Head off the "is this replacing dbt / my BI tool?" question. It isn't. dbt is the code-first system of record for how tables are built; the semantic view is the native governed metric layer; BI tools are the render layer (Omni reads/writes the view bi-directionally).
@@ -209,7 +228,7 @@ consent rate ≈ **81–84%** per region; list churn ≈ **9–12%** per region;
 
 ---
 
-## Slide 12: Next Steps
+## Slide 13: Next Steps
 
 **Talking Points:**
 - Four concrete actions: run the lab; point it at your own tables (generate from dbt or the wizard); add your top verified queries; connect BI to the same view.

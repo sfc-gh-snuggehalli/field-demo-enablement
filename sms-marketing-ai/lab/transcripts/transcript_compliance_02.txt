@@ -1,0 +1,99 @@
+CALL_ID: CE-2025-1203-012
+DATE: 2025-12-03
+DURATION: 00:54:46
+CALL_TYPE: Compliance Escalation - Quiet Hours and STOP
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Jon Bell (RelayFox Senior Support Specialist); Mira Lowe (RelayFox Product Counsel); Morgan Tate (Founder); Sloane Kim (Operations Lead)
+BRAND/MERCHANT: Woven Weekend
+ACCOUNT_TIER: Starter 100K - Compliance Review
+
+[00:00] Elena Park: This is a compliance review for Woven Weekend, escalation CE-2025-1203-012, linked to support ticket 86210 from August. Morgan and Sloane, we are discussing quiet-hour delivery and STOP response routing.
+
+[00:17] Morgan Tate: Yes. We had customers on the West Coast receive a Cyber Monday text around six in the morning. We stopped the campaign after screenshots came in.
+
+[00:30] Sloane Kim: Campaign ID CPN-72918, "COZY_CYBER_EXTENDED." We scheduled 8:05 a.m. Eastern and thought smart delivery would hold by local time.
+
+[00:43] Jon Bell: The campaign was configured for recipient-local delivery, but 417 profiles had timezone_source=ACCOUNT_FALLBACK because their area codes were mobile-portability exceptions and no shipping ZIP was available. Account timezone was Eastern, so they released at 8:05 Eastern.
+
+[01:06] Morgan: The dashboard said local time.
+
+[01:09] Jon: The setting was local time with fallback to account timezone. The fallback detail was visible in advanced settings, but it was not prominent. Product issue TZ-2088 is open to make the fallback count visible before send.
+
+[01:27] Mira Lowe: To be clear, we are not giving a legal conclusion about every recipient or state. The concern is that your documented policy says marketing messages are sent only from 8 a.m. to 8 p.m. recipient local time, and 417 messages did not follow that policy.
+
+[01:48] Sloane: How many were actually before 8 a.m.?
+
+[01:51] Jon: Based on billing ZIP, prior shipping ZIP, or later customer confirmation, 417 were likely before 8 a.m. local. The earliest estimated local delivery was 5:05 a.m. Pacific. Twenty-three profiles remain uncertain because we have no location evidence.
+
+[02:15] Morgan: Did anyone opt out?
+
+[02:18] Jon: Forty-nine of the 417 sent STOP within twenty-four hours. That is an 11.8 percent opt-out rate for the affected group, versus 0.9 percent for the overall campaign.
+
+[02:34] Elena: We also found an older routing issue. In August, ticket 86210 corrected STOP and HELP acknowledgments on the new 10DLC number. For this campaign, suppression occurred correctly, but twelve STOP acknowledgments used the legacy business name "Textile Sundays" because a fallback template remained active on one carrier route.
+
+[02:57] Morgan: We thought that template was deleted.
+
+[03:00] Jon: It was removed from the primary route but not the disaster-recovery route. The affected acknowledgments still opted the subscriber out; the confirmation text was wrong.
+
+[03:15] Sloane: Did anyone receive marketing after STOP?
+
+[03:19] Jon: I found zero post-opt-out marketing sends from this incident. Suppression timestamps were under three seconds. The defect concerns acknowledgment identity, not failure to honor STOP.
+
+[03:35] Elena: Required remediation has two tracks. First, quiet hours: change unknown-timezone fallback from account timezone to "hold until location known" or use a conservative national release time. Second, response routing: remove legacy templates from every production and failover route.
+
+[03:58] Morgan: If we hold unknown timezone, could they never receive the campaign?
+
+[04:02] Jon: Yes, unless location becomes known or you manually choose a conservative send. Another option is to release unknown profiles at 11 a.m. Eastern, which is 8 a.m. Pacific. That is conservative for the continental U.S. but does not resolve every territory or travel scenario.
+
+[04:23] Mira: Your counsel should choose the policy based on where you market. The platform can enforce a recipient-local window, a conservative fallback, or a hold. Document the decision and apply it consistently.
+
+[04:38] Sloane: We sell only in the fifty states. Let's use 11 a.m. Eastern for unknown timezone and hold anyone with non-U.S. country data.
+
+[04:50] Morgan: Agreed.
+
+[04:52] Elena: We will record that as the business instruction, subject to your counsel's review. Your terms currently say messages may be sent at varying times but do not describe quiet hours. Your internal policy is stricter than the public text, which is acceptable if you follow it.
+
+[05:17] Morgan: Do we need to contact the 417 people?
+
+[05:20] Mira: That decision belongs to Woven Weekend and its counsel. Do not send an apology by SMS to someone who opted out. We can provide an affected-profile report so you can assess permitted channels.
+
+[05:36] Sloane: We received three emails threatening a complaint. One says the text woke a baby.
+
+[05:44] Elena: Preserve the emails, campaign records, timezone evidence, and any responses. Do not argue about exact location with the customer. Acknowledge the concern and route legal demands to counsel.
+
+[05:59] Jon: I have created affected segment WW_QH_1201 with 417 profiles and complaint subset WW_QH_COMPLAINTS with 28 records. Both are locked from marketing.
+
+[06:17] Morgan: Why lock all 417 if only forty-nine opted out?
+
+[06:21] Elena: Temporary hold while you decide remediation. It prevents an automated flow from contacting them during review. The hold is not the same as permanent unsubscribe unless the person sent STOP.
+
+[06:41] Sloane: What about the 11,906 quarantined contacts from the import?
+
+[06:46] Jon: They remain non-marketable from ticket 86210. None were included in CPN-72918. The active audience came from the accepted 26,506 plus newer onsite subscribers.
+
+[07:03] Morgan: Good. Our current active list is 44,280, by the way.
+
+[07:08] Jon: Correct. List growth since August is strong, but this incident is unrelated to the quarantined legacy file.
+
+[07:20] Elena: Testing requirements: send STOP, STOP ALL, CANCEL, END, QUIT, UNSUBSCRIBE, and HELP through the primary and failover routes. Confirm brand identity, support contact, and suppression. Then schedule a 100-profile internal quiet-hour simulation across Eastern, Central, Mountain, Pacific, Alaska, and Hawaii test profiles.
+
+[07:45] Sloane: We can do that in staging?
+
+[07:48] Jon: Yes. Synthetic profiles only. No customer messages are required for the test.
+
+[08:00] Mira: Record retention: preserve the original campaign draft, final audience, settings, fallback logic, message body, delivery receipts, and customer complaints. Do not overwrite exports with corrected values.
+
+[08:19] Morgan: What regulation are you citing in the ticket?
+
+[08:23] Mira: The ticket will reference TCPA consent and opt-out obligations, CTIA Messaging Principles and Best Practices, and Woven Weekend's own quiet-hours policy. It will not state that a specific statute was violated without a legal determination.
+
+[08:44] Sloane: That is careful, which I appreciate.
+
+[08:49] Elena: Immediate controls are already active: unknown timezone release moved to 11 a.m. Eastern, non-U.S. unknowns held, legacy failover template disabled, affected 417 profiles held, and all scheduled broadcasts paused pending test.
+
+[09:10] Morgan: Can welcome flow continue?
+
+[09:13] Elena: Only after Jon verifies it uses the corrected timezone policy and current STOP/HELP route. It is paused for now.
+
+[09:27] Jon: I will run the synthetic matrix today and post results under ticket 86210 and this escalation ID.
+
+[09:40] Morgan: Understood.

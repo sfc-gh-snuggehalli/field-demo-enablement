@@ -1,0 +1,107 @@
+CALL_ID: CS-2026-0403-061
+DATE: 2026-04-03
+DURATION: 00:46:02
+CALL_TYPE: Customer Support - STOP and HELP Handling
+PARTICIPANTS: Jon Bell (RelayFox Senior Support Specialist); Elliot Vance (CRM Manager); Dana Brooks (Customer Experience Lead)
+BRAND/MERCHANT: Northstar Nutrition
+ACCOUNT_TIER: Growth 250K
+
+[00:00] Jon Bell: Hi Elliot, Dana. Jon from RelayFox. This is ticket 89876. I also reviewed Northstar's earlier flow ticket 85119 from last June.
+
+[00:15] Elliot Vance: Thanks. We migrated from the old long code to a new toll-free number last week. Since then, customer care has screenshots of people texting STOP and getting another marketing message later.
+
+[00:30] Dana Brooks: We have fourteen complaints, and one customer says she opted out twice. I need to know whether this is a display issue or a real compliance failure.
+
+[00:40] Jon: I found a real processing delay affecting a subset of messages routed through the legacy number. STOP was recognized, but the suppression event took up to twenty-seven minutes to synchronize to the new sending profile.
+
+[00:56] Elliot: Twenty-seven minutes is enough for a scheduled flow to fire.
+
+[01:00] Jon: Correct. Seven subscribers received one additional message after their STOP request. No subscriber received more than one post-opt-out marketing message based on the logs I reviewed.
+
+[01:16] Dana: One of our screenshots shows two.
+
+[01:19] Jon: Can you give me the last four digits?
+
+[01:22] Dana: 0147.
+
+[01:25] Jon: Let me pull that record. Number ending 0147 sent STOP at 6:42 p.m. Eastern on March 31 to the legacy long code. A cart reminder sent at 6:49 from the new toll-free number. Then at 7:03 the subscriber received a transactional order confirmation, not a marketing message.
+
+[01:45] Dana: The customer may view both as texts after STOP.
+
+[01:49] Jon: Absolutely. The distinction matters for system behavior, but the experience is still confusing. The order confirmation was permitted by your transactional configuration, while the cart reminder should have been blocked.
+
+[02:05] Elliot: What caused the sync delay?
+
+[02:08] Jon: During migration, the legacy number was mapped to suppression list GLOBAL-NSN, but the new toll-free profile temporarily used list NSN-TF-MARKETING. A bridge job copied opt-outs every thirty minutes instead of sharing the same real-time suppression key.
+
+[02:29] Elliot: That sounds like an implementation mistake.
+
+[02:33] Jon: It was. The migration checklist should have required a shared suppression namespace before traffic moved. I am recording incident code CMP-STOP-17 and escalating to Compliance because post-opt-out marketing messages were sent.
+
+[02:49] Dana: Is the issue still happening?
+
+[02:52] Jon: No. At 8:16 a.m. today, both profiles were remapped to GLOBAL-NSN. I tested STOP, STOP ALL, CANCEL, END, QUIT, and UNSUBSCRIBE from six synthetic test numbers. Suppression completed in under two seconds each time.
+
+[03:12] Elliot: What about HELP? Our reply still mentions the old number.
+
+[03:17] Jon: I see that. The HELP template says "Northstar alerts from 555-010-7722," but messages now originate from the toll-free number ending 8840. The contact email is also outdated.
+
+[03:32] Dana: It should say care@northstarnutrition.example and 1-800-555-8840. All fictional demo numbers, obviously.
+
+[03:41] Jon: I will update it to: "Northstar Nutrition alerts. Recurring messages; frequency varies. Msg & data rates may apply. Reply STOP to cancel. Help: care@northstarnutrition.example or 1-800-555-8840."
+
+[04:02] Elliot: Approved.
+
+[04:04] Jon: Updated. I am sending HELP from test line ending 2218. Response returned in three seconds with template HELP-NSN-V5.
+
+[04:20] Dana: Good. We also imported a small group from a gym partnership on March 28. Could this involve them?
+
+[04:28] Jon: I found an import named IRONHOUSE_MARCH_2026 with 8,214 rows. That introduces a separate consent question. The file has phone, first name, and "member=yes," but no consent timestamp or disclosure text.
+
+[04:48] Elliot: IronHouse told us their members agreed to partner offers.
+
+[04:53] Jon: A general partner-offers statement may not be sufficient for recurring automated texts from Northstar. I am not making a legal conclusion on this support call, but I am quarantining the 8,214 records from marketing while Compliance reviews the evidence.
+
+[05:15] Elliot: Were any of them messaged?
+
+[05:17] Jon: Yes. 2,006 were included in campaign CPN-78103, "APRIL RESET EARLY ACCESS," on April 1. Delivery was 92.4 percent, CTR 2.1 percent, and opt-out rate 3.8 percent, which is much higher than your account baseline of 0.7 percent.
+
+[05:39] Dana: That explains the complaint volume.
+
+[05:42] Jon: It may be related. Of the fourteen support complaints you mentioned, nine numbers match the IronHouse import.
+
+[05:53] Elliot: We need to stop all messaging to that group now.
+
+[05:56] Jon: I have applied a compliance hold segment called HOLD_IRONHOUSE_0403. It blocks broadcasts and marketing flows. Existing global opt-outs remain suppressed independently.
+
+[06:13] Dana: Can we delete the list?
+
+[06:16] Jon: Preserve it for audit purposes. Do not market to it, but retain the original file, import timestamp, source statement, and any evidence from IronHouse. Deleting the record could make the investigation harder.
+
+[06:34] Elliot: What records do you need?
+
+[06:37] Jon: The exact signup language shown to gym members, where and when they agreed, whether Northstar was named, whether the checkbox was optional and unchecked, and a row-level consent timestamp tied to each phone number.
+
+[06:57] Dana: IronHouse may not have all of that.
+
+[07:00] Jon: Then the records should remain non-marketable. Compliance will provide the formal remediation requirements.
+
+[07:12] Elliot: Are tickets 85119 and 89876 connected now?
+
+[07:16] Jon: Yes, but for different reasons. Ticket 85119 documented double opt-in and recipient-local quiet hours. Ticket 89876 covers the number-migration STOP delay and the IronHouse import. Compliance escalation will reference both to show the account history.
+
+[07:38] Dana: Do we need to notify the seven people who got a message after STOP?
+
+[07:42] Jon: Compliance and your counsel should decide outreach. I will not advise you to send another text. We can provide an audit report with the STOP timestamp, post-opt-out message, suppression timestamp, and message classification.
+
+[08:00] Elliot: What is the immediate action list?
+
+[08:03] Jon: Shared suppression mapping is fixed; HELP text is corrected; HOLD_IRONHOUSE_0403 is active; all 8,214 imported records are quarantined; seven post-opt-out marketing sends are identified; and incident CMP-STOP-17 is escalated.
+
+[08:28] Dana: Please include number ending 0147 in the audit sample.
+
+[08:32] Jon: It is included, along with six other affected subscribers and nine complaint records tied to the import. Full phone numbers will be masked in ordinary ticket views.
+
+[08:48] Elliot: Understood. Keep us updated through the ticket.
+
+[08:52] Jon: I will. Ticket 89876 remains open and is now owned jointly by Support and Compliance.

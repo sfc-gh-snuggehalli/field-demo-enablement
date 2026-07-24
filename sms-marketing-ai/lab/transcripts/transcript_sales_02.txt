@@ -1,0 +1,103 @@
+CALL_ID: SE-2025-0923-019
+DATE: 2025-09-23
+DURATION: 00:46:37
+CALL_TYPE: Sales Expansion - Enterprise Features
+PARTICIPANTS: Avery Cole (RelayFox Account Executive); Samir Patel (RelayFox Solutions Engineer); Priya Nanduri (Director of E-commerce); Sara Holt (Lifecycle Specialist)
+BRAND/MERCHANT: LumaLeaf Beauty
+ACCOUNT_TIER: Enterprise - Expansion Review
+
+[00:00] Avery Cole: Priya, Sara, thanks for joining. I know support ticket 84703 was painful, so I want to address that before talking expansion.
+
+[00:11] Priya Nanduri: It was painful, but Jon found the duplicate checkout pixel and the revised report matched our model. We are willing to discuss more features; we are not pretending the incident did not happen.
+
+[00:25] Sara Holt: Our immediate need is scale. We are onboarding twelve creators for Q4, each with a keyword or landing page, and I do not want twelve manually cloned welcome flows.
+
+[00:40] Samir Patel: We can use one parameterized flow. The trigger stores creator_code, offer_code, and acquisition_source, then branches content without duplicating the automation.
+
+[00:54] Sara: Does that work for a simple keyword like DEWY?
+
+[00:58] Samir: Yes, though creator attribution is stronger if the keyword includes a suffix or the signup page passes a creator ID. A plain shared keyword cannot identify the creator by itself.
+
+[01:12] Priya: We learned that the hard way. What is included in the expansion package?
+
+[01:17] Avery: Advanced Segmentation, AI Copy Studio, Governance, and an additional 500,000 monthly message credits. The annual add-on is proposed at $96,000.
+
+[01:31] Priya: That is eight thousand a month. We need more than "AI writes texts."
+
+[01:37] Avery: Agreed. The business case is labor, campaign velocity, and incremental revenue from better targeting. Your team sent twenty-seven broadcasts last quarter, but only six used product- or behavior-based segments beyond VIP versus non-VIP.
+
+[01:55] Sara: Because building a segment takes me half a day and QA takes another half.
+
+[02:01] Samir: With real-time segmentation, you could define "bought Cloud Milk but not Glass Veil, replenishment window 35 to 55 days, clicked in 120 days, no open support ticket, no refund in 60 days." The segment updates continuously.
+
+[02:22] Priya: Can it exclude people with a shade-match complaint in Helply?
+
+[02:26] Samir: If the Helply event or tag is synced, yes. We can map tags like SHADE_ISSUE_OPEN and suppress those customers from promotional flows until the ticket closes.
+
+[02:42] Sara: That would have prevented the Memorial Day message that said "Love your shade? Stock up" to people asking for exchanges.
+
+[02:48] Avery: Exactly. The revenue model assumes avoiding one such mistake is valuable, but the larger impact is segment performance. Your generic replenishment broadcast produced forty-one cents per send. A backtest on matched cleanser buyers produced $1.31 per send, or 3.2x.
+
+[03:10] Priya: Backtest is not live incrementality.
+
+[03:13] Samir: Correct. It is historical association. We recommend a randomized holdout when you launch. The model labels the 3.2x as backtested revenue per send, not guaranteed incremental revenue.
+
+[03:30] Sara: Tell me about AI Copy Studio.
+
+[03:33] Samir: You provide product, audience, objective, offer, and brand constraints. It returns several variants with predicted segment count, prohibited-language checks, and optional MMS concepts. For LumaLeaf, we imported rules such as no "anti-aging," no medical claims, no exclamation points, and use "skin barrier" only when the product page supports it.
+
+[03:58] Priya: Can legal approve the rules centrally?
+
+[04:01] Samir: Governance lets an admin lock brand and compliance instructions. Builders can create drafts, but they cannot remove the rules. You can also require approval for messages over a credit threshold or for campaigns containing terms like "clinically proven."
+
+[04:21] Sara: We had a two-segment message last month because of one sparkle emoji. Can AI avoid that?
+
+[04:27] Samir: Yes. You can request one GSM-7 segment and the composer flags Unicode characters. It also shows the exact credit estimate before scheduling.
+
+[04:41] Priya: Our concern is attribution integrity. If AI increases sends, the dashboard can make itself look successful.
+
+[04:48] Avery: The package does not require more sends. We propose a quarterly measurement plan: default to twenty-four-hour and seven-day click views, deduct refunds, separate unique-code redemption, and use holdouts for the largest flows.
+
+[05:09] Priya: What about creator codes leaking again?
+
+[05:12] Samir: Use unique, single-use Shopify codes generated at flow entry. The code is tied to the subscriber profile. It reduces public coupon leakage and improves order matching.
+
+[05:29] Sara: Does that slow the first message?
+
+[05:32] Samir: Usually less than a second. If Shopify code generation times out, the flow can use a fallback code or delay. We would alert on error SHOP-CODE-429 if the API rate limit is hit.
+
+[05:48] Priya: There is a searchable needle for support, I suppose.
+
+[05:51] Samir: Exactly. Specific codes make troubleshooting less philosophical.
+
+[06:00] Avery: Your list is 412,000 active subscribers, up 38 percent year over year. Current monthly churn is 3.6 percent. The expansion model targets 2.8 percent by coordinating frequency and suppressing poor-fit promotions.
+
+[06:22] Priya: How much revenue do you put against that churn change?
+
+[06:26] Avery: About $410,000 annual retained attributed revenue, based on your current subscriber value. I would treat that as a planning estimate, not a promise, because retained subscribers do not all purchase at the average rate.
+
+[06:45] Sara: And labor savings?
+
+[06:48] Avery: Sixteen hours per month from reusable creator flows, segment templates, and approval routing. At your loaded team cost, the model values that at $22,000 annually.
+
+[07:03] Priya: So the hard-dollar add-on is ninety-six thousand, with a model showing four hundred ten thousand retained revenue plus twenty-two thousand labor.
+
+[07:10] Avery: Correct, before any campaign lift. We can remove the retained-revenue assumption and still model targeted-flow lift separately.
+
+[07:22] Sara: I want a proof of concept on two creators, not twelve.
+
+[07:26] Samir: We can configure creator_code, unique codes, one-segment AI copy, and a 10 percent holdout for two creator launches. Success criteria could be 95 percent flow enrollment, under 1 percent opt-out, and at least $2.75 revenue per entrant.
+
+[07:46] Priya: Include error monitoring because we already had a flow ticket opened and forgotten.
+
+[07:51] Avery: Fair. The pilot will have an operational dashboard and named owner. We will reference ticket 84703 in the measurement notes and open a separate implementation project.
+
+[08:09] Sara: When could we start?
+
+[08:12] Samir: Data mapping can begin next week. We need creator IDs, offer rules, Shopify code permissions, and your approved copy constraints.
+
+[08:26] Priya: Send the pilot scope and remove automatic renewal from the add-on proposal. Procurement will reject it otherwise.
+
+[08:35] Avery: I will send a revised order form for a six-month pilot with conversion criteria, subject to approval. The full annual expansion remains optional.
+
+[08:48] Priya: Good. We have a path forward.

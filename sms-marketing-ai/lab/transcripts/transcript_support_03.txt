@@ -1,0 +1,97 @@
+CALL_ID: CS-2025-0613-009
+DATE: 2025-06-13
+DURATION: 00:35:06
+CALL_TYPE: Customer Support - Opt-in Flow
+PARTICIPANTS: Maya Chen (RelayFox Support Engineer); Elliot Vance (CRM Manager)
+BRAND/MERCHANT: Northstar Nutrition
+ACCOUNT_TIER: Growth 250K
+
+[00:00] Maya Chen: RelayFox Support, Maya speaking. I have Northstar Nutrition and ticket 85119 in front of me.
+
+[00:09] Elliot Vance: Great. We launched a podcast ad Monday telling people to text STARTSTRONG, and the list is growing, but the welcome flow barely moved.
+
+[00:20] Maya: What did you expect versus what happened?
+
+[00:24] Elliot: We have 3,412 keyword opt-ins since Monday. Only 687 entered WELCOME-V3. The flow normally converts around twelve percent, so this is a lot of missed protein bundles.
+
+[00:40] Maya: Let me pull up the keyword configuration. STARTSTRONG is mapped to your long code ending 7722. It is set to double opt-in for subscribers in all states, and the flow trigger requires "Subscriber Created" plus custom property SOURCE_KEYWORD equals STARTSTRONG.
+
+[01:02] Elliot: That sounds right. The confirmation says, "Reply Y to confirm." People are replying Y.
+
+[01:10] Maya: I see the Y replies. The issue is timing and event shape. When double opt-in is enabled, the initial inbound message creates a pending subscriber record. After Y, the platform emits "Consent Confirmed," but your flow waits for "Subscriber Created." Also, SOURCE_KEYWORD is stored on the pending event and not being copied to the confirmed event.
+
+[01:35] Elliot: Was that our mistake or a platform bug?
+
+[01:39] Maya: The trigger choice is a configuration issue. The missing property copy is an edge case I am escalating as automation defect AUTO-1937. Both are contributing.
+
+[01:53] Elliot: Can we just turn off double opt-in? Our agency says single opt-in grows faster.
+
+[02:00] Maya: You can choose single opt-in where your legal team is comfortable, but I would not change consent strategy in the middle of a campaign without review. Double opt-in also gives you a clearer audit trail. We can fix the flow without changing it.
+
+[02:16] Elliot: Okay. What do we change?
+
+[02:19] Maya: I recommend a new trigger: "Consent Confirmed" where acquisition source is Keyword and keyword equals STARTSTRONG. Do not rely on the custom property. I will clone WELCOME-V3 to WELCOME-V3B so we preserve the old version.
+
+[02:41] Elliot: Will that re-enroll everyone who missed it?
+
+[02:44] Maya: Not automatically. We need a controlled backfill. There are 2,725 confirmed subscribers who did not enter the flow. We should exclude anyone who purchased the Starter Stack, anyone who unsubscribed, and anyone who already received message one manually.
+
+[03:05] Elliot: We sent a broadcast yesterday to some of them. It was "Coach Lena's Friday Reset."
+
+[03:11] Maya: I see campaign CPN-64190. I will exclude recipients of that broadcast for forty-eight hours so they do not get two offers back to back.
+
+[03:22] Elliot: The podcast code STRONG15 expires Sunday. Can the backfill happen today?
+
+[03:28] Maya: Yes, after a test. I am creating a segment named STARTSTRONG_MISSED_0613. Current count is 2,118 after purchase, unsubscribe, and recent-send exclusions.
+
+[03:46] Elliot: Why not 2,725?
+
+[03:49] Maya: Three hundred fourteen purchased, ninety-one opted out, and two hundred two received the Friday broadcast within the last forty-eight hours. The math lands at 2,118.
+
+[04:08] Elliot: Got it. What about people who typed "Y!" or "YES" instead of just Y?
+
+[04:14] Maya: Good catch. Your confirmation parser accepts Y and YES, ignoring punctuation and case. I found 73 replies with extra words like "YES PLEASE"; sixty-nine were accepted, four were not because they included an image. MMS replies do not count as confirmation in this configuration.
+
+[04:35] Elliot: That is oddly specific.
+
+[04:37] Maya: Call transcripts are where odd specifics live. I can send those four a fresh confirmation prompt, but only once.
+
+[04:46] Elliot: Do it.
+
+[04:48] Maya: Done. Now I am testing WELCOME-V3B with internal seed subscriber 555-010-2233. That is a fictional test line in your account, not a customer. The event shows Consent Confirmed, source Keyword, keyword STARTSTRONG.
+
+[05:11] Elliot: I see the first message on my screen: "Northstar here - you're confirmed. Build your routine with 15% off Starter Stack." Good.
+
+[05:22] Maya: Enrollment succeeded. One more issue: the second message is scheduled two hours later, but your quiet-hours setting uses account time, Central, not subscriber local time.
+
+[05:32] Elliot: We sell nationally. That could hit California at six in the morning.
+
+[05:36] Maya: Correct. I am not changing it without your approval, but I strongly recommend recipient-local quiet hours. Your policy currently holds sends from 9 p.m. to 8 a.m. Central only.
+
+[05:54] Elliot: Switch it to recipient local, 8 a.m. to 8 p.m. Is that safer?
+
+[06:00] Maya: It is more conservative. I will record that you requested the change. For subscribers with unknown timezone, fallback will be the area code, then account timezone if area code is unavailable.
+
+[06:22] Elliot: Please document all of this. Our legal person always asks.
+
+[06:26] Maya: Ticket 85119 will include the trigger change, the AUTO-1937 defect, the backfill segment logic, and the quiet-hours update. Consent records remain untouched.
+
+[06:44] Elliot: What metrics should we watch?
+
+[06:47] Maya: Flow enrollment rate should rise from 20.1 percent to above 90 percent of confirmed opt-ins. Message-one CTR baseline is 14.6 percent. Revenue per flow entrant over the last quarter is $2.84. Also watch confirmation completion, currently 81.7 percent.
+
+[07:08] Elliot: Can we improve confirmation completion later?
+
+[07:11] Maya: Yes, usually by shortening the confirmation copy and making "Reply Y" the first instruction. That is a separate optimization, not required to fix today's failure.
+
+[07:25] Elliot: Okay. Launch the backfill.
+
+[07:27] Maya: I am scheduling it in batches of 500 with a ten-minute gap. If opt-out rate exceeds 1.5 percent or error code 21610 appears, the job will stop automatically.
+
+[07:46] Elliot: What is 21610?
+
+[07:48] Maya: It means the recipient has opted out and cannot receive the message. We should not see many because the segment excludes unsubscribed profiles, but the guardrail is there.
+
+[08:03] Elliot: Great. Thanks, Maya.
+
+[08:06] Maya: You're welcome. I will check the first two batches and post results to ticket 85119.

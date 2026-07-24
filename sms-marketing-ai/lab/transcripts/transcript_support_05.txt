@@ -1,0 +1,103 @@
+CALL_ID: CS-2025-0814-041
+DATE: 2025-08-14
+DURATION: 00:47:25
+CALL_TYPE: Customer Support - List Import and Consent
+PARTICIPANTS: Jon Bell (RelayFox Senior Support Specialist); Morgan Tate (Founder); Sloane Kim (Operations Lead)
+BRAND/MERCHANT: Woven Weekend
+ACCOUNT_TIER: Starter 100K
+
+[00:00] Jon Bell: Hi Morgan, Sloane. Jon from RelayFox. I have import ticket 86210 and the CSV name "WW_legacy_sms_export_final2.csv."
+
+[00:13] Morgan Tate: That is the one. We uploaded 38,412 contacts from our old provider, but only 26,506 appear as active subscribers. We are launching a bedding collection tomorrow.
+
+[00:28] Sloane Kim: The old vendor says every person was opted in. We cannot lose twelve thousand people because of a column-name problem.
+
+[00:36] Jon: I reviewed the file and the import report. The gap is not just a column name. Eleven thousand nine hundred six rows were suppressed because they lacked a verifiable SMS consent timestamp or source. Some have an email opt-in date, but that does not establish SMS consent.
+
+[00:58] Morgan: They came through a checkout box that said marketing.
+
+[01:02] Jon: Do you have the exact checkbox language and whether the box was unchecked by default?
+
+[01:08] Morgan: Not in this export. We have screenshots from last year, maybe.
+
+[01:13] Jon: That evidence matters. The file includes a field called marketing_status with values "subscribed," but it combines email and SMS. There is no channel-specific consent flag for those 11,906 records.
+
+[01:34] Sloane: Can we import them as pending and ask them to confirm?
+
+[01:39] Jon: We cannot send a confirmation text to people when we do not have evidence that we may text them in the first place. A re-permission campaign must use another permitted channel, such as email or an onsite form.
+
+[01:58] Morgan: That is brutal. They are customers.
+
+[02:01] Jon: Purchase status is not the same as consent to recurring marketing texts. I know the business impact is real, but the safe route is to preserve the suppressed status until evidence is provided.
+
+[02:16] Sloane: What evidence would clear them?
+
+[02:20] Jon: A record showing phone number, date and time, signup source, the disclosure shown, and an affirmative action. For example, a checkout event log tied to the specific phone number plus the versioned consent language.
+
+[02:39] Morgan: The old vendor gave us consent_source values like "checkout" and "popup," but half are blank.
+
+[02:47] Jon: For the 26,506 accepted subscribers, the file had source and timestamp. I spot-checked twenty. The oldest accepted consent is October 9, 2023. The newest is August 12, 2025. Those records are active.
+
+[03:05] Sloane: There are also 312 people marked STOPPED. We expected those to stay blocked.
+
+[03:11] Jon: They did. In fact, the import suppression total is separate from the existing opt-out list. The 312 STOPPED records were matched to your global suppression list and carry status UNSUBSCRIBED_LEGACY.
+
+[03:31] Morgan: We tested STOP this morning and got no reply. That scared us.
+
+[03:35] Jon: Let me check the test number. Which keyword did you send?
+
+[03:39] Morgan: I sent "STOP ALL" from my phone ending 6621.
+
+[03:44] Jon: I see the inbound message at 9:14 a.m. Pacific. It unsubscribed the number immediately, but the confirmation reply failed because your default compliance response is assigned to the old toll-free number ending 4408, not the new 10DLC number ending 1186.
+
+[04:05] Sloane: So opt-out worked, but the acknowledgment did not.
+
+[04:09] Jon: Correct. The audit event is STOP_RECEIVED, and the outbound acknowledgment failed with routing error RTE-104. I can map the compliance response to both numbers.
+
+[04:24] Morgan: Please. What about HELP?
+
+[04:27] Jon: HELP is also misrouted. It should respond with the brand name, support contact, message-frequency disclosure, and "Msg & data rates may apply." Your current text still says "Textile Sundays," which was the old business name.
+
+[04:47] Morgan: Oh, no. Change it to Woven Weekend and support@wovenweekend.example.
+
+[04:55] Jon: I can update the template, but I need you to approve the exact wording. Proposed: "Woven Weekend alerts: recurring messages. Msg & data rates may apply. Reply STOP to cancel. Help: support@wovenweekend.example."
+
+[05:13] Morgan: Approved.
+
+[05:15] Jon: Updated and mapped. Please send HELP from a different test number because your phone is now opted out.
+
+[05:25] Sloane: I will do it. Sent from ending 9034.
+
+[05:31] Jon: Received and replied in four seconds. The response is logged as HELP_AUTOREPLY_V2.
+
+[05:42] Sloane: Got it. Then I sent STOP and got the confirmation.
+
+[05:48] Jon: Good. I also added an automated daily check for compliance-response routing across both numbers.
+
+[06:02] Morgan: Back to the twelve thousand. We have a collection drop at 10 a.m. Can we at least send to the accepted 26,506?
+
+[06:10] Jon: Yes, provided you exclude the test numbers and existing unsubscribes. Your draft "SOFT_LAUNCH_AUG15," campaign CPN-67221, currently targets 26,194 eligible subscribers after suppressions.
+
+[06:29] Morgan: Is 26,194 right? We thought 26,506.
+
+[06:33] Jon: The difference is 201 recent opt-outs, 73 invalid numbers, and 38 quiet-hour holds at the scheduled time. The held subscribers will receive later when their local window opens if you keep smart delivery enabled.
+
+[06:53] Sloane: What growth metric should we use now? Our board thinks we have a forty-thousand-person SMS list.
+
+[07:00] Jon: I would report 26,506 active imported subscribers, 11,906 quarantined pending consent evidence, and 312 legacy unsubscribes. Do not combine quarantined records with marketable list size.
+
+[07:18] Morgan: Our opt-in growth was 2,800 a month on the old platform. We need to recover quickly.
+
+[07:23] Jon: Your onsite popup currently converts at 2.1 percent. Similar home-goods accounts often improve by making the incentive concrete and reducing fields. I can connect you with onboarding for a test, but I do not want optimization to blur today's compliance decision.
+
+[07:39] Morgan: Fair. Will the ticket state that the vendor export was incomplete, not that we did something malicious?
+
+[07:46] Jon: Yes. Ticket 86210 will say the import was partially accepted, records without channel-specific consent evidence were quarantined, and STOP/HELP routing was corrected. It will not characterize intent.
+
+[08:04] Sloane: Can we upload evidence later in batches?
+
+[08:08] Jon: Yes. Use the consent-evidence template I am attaching. Each approved batch will be reviewed against phone, timestamp, source, and disclosure version. Do not overwrite the original export; we want a clean audit trail.
+
+[08:29] Morgan: Understood. Keep the campaign draft as-is and do not release the quarantined group.
+
+[08:35] Jon: Confirmed. I am locking the quarantine segment from campaign use pending review.

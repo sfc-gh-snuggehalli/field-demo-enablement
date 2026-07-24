@@ -1,0 +1,97 @@
+CALL_ID: SD-2025-0311-006
+DATE: 2025-03-11
+DURATION: 00:51:20
+CALL_TYPE: Sales Discovery - Competitive Displacement
+PARTICIPANTS: Avery Cole (RelayFox Account Executive); Samir Patel (RelayFox Solutions Engineer); Tessa Ward (VP of Growth); Ian Cho (Retention Manager)
+BRAND/MERCHANT: Cedar Row Apparel
+ACCOUNT_TIER: Prospect - Mid-Market
+
+[00:00] Avery Cole: Thanks for making time. Tessa, you mentioned in your email that Cedar Row is evaluating alternatives before your Beacon renewal in June. Maybe start with what is not working.
+
+[00:14] Tessa Ward: The program is not broken. It is just expensive and opaque. We have 183,000 SMS subscribers, around 1.2 million email profiles in Kestrel, and Shopify Plus. SMS drove about $3.8 million last year according to Beacon, but finance does not trust the attribution.
+
+[00:32] Ian Cho: Also, every segment request becomes a professional-services ticket. I want to build "linen buyers who have not purchased knitwear and clicked SMS in ninety days" without waiting a week.
+
+[00:48] Samir Patel: That is a good concrete use case. Are your product and order events already clean in Shopify and Kestrel?
+
+[00:56] Ian: Mostly. We have Shopify, Kestrel email, Loop Returns, and Rebuy. Beacon receives checkout and browse data, but the segment builder only exposes some of it.
+
+[01:11] Avery: What business outcome matters most: more total revenue, lower platform cost, or reducing unsubscribe rate?
+
+[01:19] Tessa: Revenue first, but not by blasting more. Our monthly list churn is four percent. We added 26,000 subscribers during holiday and lost almost 18,000 by February.
+
+[01:34] Samir: How many broadcasts per month?
+
+[01:37] Ian: Ten to fourteen, plus welcome, cart, browse, back-in-stock, and post-purchase flows. The highest-frequency cohort can get twenty messages.
+
+[01:47] Tessa: And that is part of the problem. Broadcast and flow calendars are managed separately, so people get a cart nudge two hours after a sitewide sale text.
+
+[02:01] Samir: RelayFox can use frequency caps across flows and broadcasts, not only within one automation. We can define a global rule, for example no more than four marketing messages in seven days, with exceptions for high-intent cart events.
+
+[02:18] Ian: Can we see who would be suppressed before launch?
+
+[02:22] Samir: Yes. The audience estimate shows eligible, quiet-hour held, frequency-capped, unsubscribed, and invalid-number counts. You can export the suppression reasons.
+
+[02:37] Avery: You said finance distrusts attribution. What is the current dispute?
+
+[02:41] Tessa: Beacon claims $412,000 from a Presidents' Day campaign. Shopify code sales were $177,000. We know code sales are not the whole picture, but $412,000 feels heroic.
+
+[02:55] Samir: We would propose a measurement workshop before promising lift. RelayFox can show twenty-four-hour and seven-day click attribution, subtract refunds, and separate first orders from returning-customer orders. We can also create a holdout segment to estimate incrementality.
+
+[03:14] Ian: Does holdout mean intentionally not texting customers?
+
+[03:18] Samir: A small randomized control group, usually five to ten percent for a defined test. You compare conversion and revenue between messaged and unmessaged groups. It is not perfect, but it is stronger than claiming every order after a view.
+
+[03:35] Tessa: Our CEO will ask for a number. What lift do you typically see?
+
+[03:41] Avery: I do not want to give you a generic benchmark as a guarantee. Based on the data you shared, our model assumes no increase in sends, a drop in monthly churn from 4.0 to 2.5 percent, and a revenue-per-send improvement from forty-six cents to sixty-eight cents through segmentation and flow coordination.
+
+[04:05] Tessa: That is not 3.2x.
+
+[04:08] Avery: The 3.2x figure applies to a specific segment test, not the whole program. For lapsed VIP buyers receiving category-specific MMS, the projected revenue per send is $1.44 versus forty-five cents on your current generic winback. We should not apply that multiplier to all 183,000 subscribers.
+
+[04:29] Ian: Thank you. Vendors usually put the biggest multiplier on everything.
+
+[04:34] Samir: The segment would be customers with lifetime spend above $350, no purchase in 120 days, prior purchase in linen or outerwear, and no return rate above 50 percent. We can split creative by category.
+
+[04:51] Tessa: We care about MMS, but our finance team hates variable messaging costs.
+
+[04:56] Avery: Pricing is based on platform tier plus message credits. MMS uses more credits than SMS. We would model your actual mix instead of quoting a fake unlimited plan.
+
+[05:08] Ian: Give us the range.
+
+[05:10] Avery: For 183,000 subscribers and your current volume, the annual proposal is likely between $265,000 and $310,000, including implementation and a seasonal message buffer. Your current disclosed spend is about $348,000 before overages.
+
+[05:31] Tessa: Migration risk is the real objection. We cannot lose consent records or pause cart flow in May.
+
+[05:38] Samir: We would run parallel implementation. First, export phone, consent timestamp, source, and opt-out status. Second, validate a sample. Third, rebuild flows in draft and test with synthetic profiles. Fourth, switch acquisition forms and sending traffic in a controlled window. Global opt-outs are loaded before any marketing send.
+
+[06:05] Ian: Can you ingest Beacon consent history?
+
+[06:08] Samir: If the export contains row-level timestamps and source evidence, yes. Records without SMS-specific consent are quarantined rather than treated as marketable.
+
+[06:21] Tessa: Beacon will not make the export easy.
+
+[06:24] Avery: We can give you a field checklist and migration project plan. We cannot fabricate missing evidence or bypass their process.
+
+[07:19] Ian: I want to see the linen-versus-knitwear segment live.
+
+[07:23] Samir: I have a sandbox with anonymized Cedar Row-like data. I will build: purchased Linen Collection in the last 365 days, never purchased Knitwear, clicked any SMS in ninety days, not returned more than half of orders, and not contacted in three days.
+
+[07:43] Tessa: How fast does it calculate?
+
+[07:46] Samir: In the sandbox, 12,418 eligible profiles in about four seconds. The explanation panel shows each inclusion and exclusion count.
+
+[08:00] Ian: That is the feature I care about.
+
+[08:04] Avery: For next steps, I suggest a ninety-minute data and attribution session, then a commercial review. We can also run a no-send backtest on six months of order history to estimate how the segment would have performed.
+
+[08:23] Tessa: We will need a reference customer in apparel and an exit clause if migration slips past June 1.
+
+[08:30] Avery: We can discuss implementation milestones and contractual remedies with procurement. I will not promise an exit clause on this call, but I will bring a proposed structure.
+
+[08:44] Ian: Send us the ROI model with assumptions, not just the output.
+
+[08:49] Avery: Absolutely. The workbook will show list growth, churn, sends, message mix, gross margin, attribution window, and holdout assumptions. No hidden 3.2x across the whole account.
+
+[09:03] Tessa: Good. That is enough for a second meeting.

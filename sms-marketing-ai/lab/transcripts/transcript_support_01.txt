@@ -1,0 +1,91 @@
+CALL_ID: CS-2025-0418-017
+DATE: 2025-04-18
+DURATION: 00:38:42
+CALL_TYPE: Customer Support - Deliverability
+PARTICIPANTS: Maya Chen (RelayFox Support Engineer); Colin Mercer (Lifecycle Marketing Manager)
+BRAND/MERCHANT: Harbor & Pine Home
+ACCOUNT_TIER: Growth 500K
+
+[00:00] Maya Chen: Thanks for calling RelayFox Support, this is Maya. I have ticket 84217 open. Am I speaking with Colin at Harbor & Pine?
+
+[00:08] Colin Mercer: Yeah, that's me. Sorry if I sound frantic. We had a spring refresh text scheduled for noon Eastern and it looks like half the list just... did not go.
+
+[00:20] Maya: No problem. Let me pull up the account. Is this the broadcast named "HP_SpringRefresh_0425" or the earlier rug drop?
+
+[00:31] Colin: Spring refresh, campaign ID CPN-61482. The preview looked fine. We sent to 186,440 people and the dashboard says 113,987 delivered. We normally land around 96 or 97 percent.
+
+[00:49] Maya: I see it. Delivery rate is 61.2 percent, click-through is 4.8 percent on the delivered portion, and there are 61,903 carrier-filtered events. Most have provider error 30007, which is the generic carrier violation or filtering response.
+
+[01:10] Colin: What does that actually mean? We did not change the copy. It says, "Fresh room, fresh start. Twenty percent off storage and rugs." There is one link and no weird words.
+
+[01:23] Maya: Copy can contribute, but this pattern is broader. I am checking your 10DLC registration. Your brand registration was approved in February, but the campaign record is showing an EIN mismatch after the legal entity name was updated from Harbor and Pine LLC to H&P Housewares Holdings LLC.
+
+[01:47] Colin: That change happened when finance reorganized us. We told our Shopify rep, but I guess not you.
+
+[02:02] Maya: Right, Shopify and carrier registration are separate systems. The campaign is still active, but one carrier has reduced trust and throughput while the identity data is under review. Your normal throughput is about 75 messages per second across the pool; for this send it fell below 18 per second and then filtering increased.
+
+[02:26] Colin: So are the messages still queued, or are they dead?
+
+[02:31] Maya: The filtered ones are final failures. The 8,700 currently queued are still attempting. I do not recommend resending to the full audience today because duplicate delivery to the successful segment could spike complaints.
+
+[02:47] Colin: We have a sale ending Sunday. Revenue per send on last month's "Closet Calm" campaign was ninety-two cents. This is not a small miss.
+
+[03:04] Maya: Understood. For context, this campaign has generated $27,418 in attributed revenue so far, or twenty-four cents per attempted send. That number will keep moving within your seven-day click window, but it will not make up for a thirty-five-point delivery drop.
+
+[03:25] Colin: What do you need from me?
+
+[03:29] Maya: First, a current IRS confirmation letter or another document showing the EIN and new legal entity name. Second, I need you to confirm the website footer and privacy policy list H&P Housewares Holdings LLC. Third, I will submit a 10DLC profile correction and ask carrier operations for an expedited review.
+
+[04:01] Colin: Can I email the CP 575 letter to the ticket?
+
+[04:05] Maya: Yes. Redact any bank information; we only need the business name, address, and EIN. Reply to ticket 84217. I will add a secure upload link too.
+
+[04:22] Colin: Is there anything in the message itself we should change for tomorrow?
+
+[04:27] Maya: A few low-risk adjustments: avoid leading with the discount, include the brand name in the first sentence, and use the same branded domain you registered. I see this broadcast used hp-home.co while the registration lists harborandpine.com.
+
+[04:45] Colin: Ah. Our agency made that short domain on Wednesday.
+
+[04:51] Maya: That is likely another signal. New redirect domains can look suspicious, especially during an identity review. Use the RelayFox-managed branded link on harborandpine.com until the new domain has history and is added to your campaign examples.
+
+[05:13] Colin: Could the image be the issue? It was an MMS with a room photo.
+
+[05:19] Maya: The image passed. The failures happened before media retrieval. I can see MMS delivered normally to the first carrier batch, then the filter rate climbed. This is not an attachment-size error.
+
+[05:38] Colin: Okay. We also have a welcome flow. Are those getting blocked?
+
+[05:43] Maya: Good question. Your welcome flow is still at 94.9 percent delivered because it sends at lower volume and has strong engagement. The problem is most visible on large broadcasts. I am adding monitoring for flow ID FLW-21907 so we can compare.
+
+[06:06] Colin: What should we tell leadership? They are asking whether RelayFox had an outage.
+
+[06:13] Maya: You can say there was no platform-wide outage. The account experienced carrier filtering associated with a 10DLC business-profile mismatch and an unregistered redirect domain. We are correcting the registration and preserving evidence under ticket 84217.
+
+[06:34] Colin: Can you give me a target metric before we send again?
+
+[06:39] Maya: After the correction is accepted, I want to see test-batch delivery above 93 percent, error 30007 below 2 percent, and throughput back above 60 messages per second. We will send to a 5,000-person engaged segment first, not the entire list.
+
+[07:02] Colin: Engaged meaning clicked in ninety days?
+
+[07:06] Maya: Clicked or purchased in ninety days, excluding anyone who opted in less than ten minutes ago and excluding recent soft failures. I can build the segment and leave it unsent for your approval.
+
+[07:47] Colin: Makes sense. I just uploaded the letter.
+
+[07:54] Maya: I see it. The legal name matches. The address has Suite 310 here and Suite 300 in the carrier record. I will correct that as well.
+
+[08:11] Colin: Tiny difference, big consequences.
+
+[08:14] Maya: Unfortunately, yes. Automated identity checks can be literal. I am escalating this as SEV-2 because more than thirty percent of a revenue broadcast failed. Reference code for carrier operations is CO-77831.
+
+[08:34] Colin: Will I get updates by email?
+
+[08:37] Maya: Yes. I will post the registration submission, the carrier response, and the test-batch results to ticket 84217. If you call back, mention CPN-61482, error 30007, and CO-77831 so the next agent lands in the right thread.
+
+[09:02] Maya: Before we wrap, I am pausing tomorrow's "Entryway Edit" broadcast so it cannot auto-send while the review is pending.
+
+[09:20] Colin: Leave it paused. I will tell the team.
+
+[09:25] Maya: Done. I have also documented your baseline: 96.8 percent average delivery, 6.1 percent CTR, and eighty-seven cents revenue per send over the last thirty days. That gives us a clean comparison after remediation.
+
+[09:42] Colin: Perfect. Thanks, Maya.
+
+[09:45] Maya: You are welcome. I will own the ticket through the first successful test.

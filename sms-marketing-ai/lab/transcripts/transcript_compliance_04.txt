@@ -1,0 +1,109 @@
+CALL_ID: CE-2026-0326-015
+DATE: 2026-03-26
+DURATION: 00:56:21
+CALL_TYPE: Compliance Escalation - Post-Opt-out Sends
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Nina Foster (RelayFox Billing Support); Mira Lowe (RelayFox Product Counsel); Jasmine Okafor (VP, Retention); Luke Meyer (Finance Manager); Owen Price (Lifecycle Agency Lead)
+BRAND/MERCHANT: Alder & Ash Apparel
+ACCOUNT_TIER: Growth 500K - Compliance Hold
+
+[00:00] Elena Park: This is compliance escalation CE-2026-0326-015 for Alder & Ash Apparel. It is linked to billing ticket 85644 because the same role and approval configuration is relevant, although today's issue is not billing.
+
+[00:18] Jasmine Okafor: Understood. We had a spring sale message go out after people had already texted STOP. Our agency says it was a queue delay.
+
+[00:29] Owen Price: Campaign name "LINEN_WEEKEND_LAST_CALL," ID CPN-77418. It was staged in batches because the audience was large.
+
+[00:39] Elena: Nina, summarize the event timeline.
+
+[00:43] Nina Foster: The campaign audience was finalized at 3:00 p.m. Eastern on March 24. Batch one sent at 3:05. Batches two through six were queued with a snapshot of eligible recipients. Seventy-three subscribers sent STOP after the snapshot but before their later batch released between 3:28 and 3:57.
+
+[01:07] Luke Meyer: So STOP worked, but the queue ignored it?
+
+[01:11] Nina: STOP updated the live global suppression list within two seconds. The defect is that queued batches did not re-check suppression immediately before send. They relied on the 3:00 snapshot.
+
+[01:26] Jasmine: How many messages went out after STOP?
+
+[01:29] Nina: Seventy-three marketing messages to seventy-three subscribers. No affected subscriber received more than one post-opt-out message. The delay from STOP to message ranged from two minutes to forty-six minutes.
+
+[01:46] Mira Lowe: This is a serious compliance incident. We need factual precision, record preservation, and no attempt to reclassify the sale message as transactional. It was marketing.
+
+[02:02] Owen: The message included an order deadline, but yes, it was promotional.
+
+[02:06] Elena: The campaign is now under legal hold AA-LH-204. Do not edit or delete the draft, audience export, queue logs, STOP events, or complaint records.
+
+[02:22] Luke: Was this a platform-wide bug?
+
+[02:26] Nina: Engineering found the stale-snapshot behavior in the legacy high-volume queue path. It affected three accounts using the same batching mode between March 23 and March 25. Incident code QSUP-402. The path was disabled at 1:18 a.m. on March 26.
+
+[02:46] Jasmine: Why were we on a legacy path?
+
+[02:49] Nina: Your account was temporarily routed there after a throughput tuning change for a large MMS launch. That change was not visible in your user settings.
+
+[03:04] Owen: We did not request it.
+
+[03:06] Nina: Correct. This was an internal routing decision, not a customer configuration.
+
+[03:14] Elena: Immediate containment is complete: all Alder & Ash marketing campaigns and promotional flows are paused; queued messages were canceled; the legacy queue path is disabled; and affected subscribers have an additional compliance hold beyond normal unsubscribe.
+
+[03:36] Jasmine: Why pause the whole account if the path is disabled?
+
+[03:40] Elena: Until we validate STOP across every sending profile and flow, we are not resuming marketing. Transactional order and shipping notices remain separate, but their templates are being reviewed to confirm they do not contain promotions.
+
+[04:01] Luke: Are we required to notify the seventy-three people?
+
+[04:05] Mira: Alder & Ash should decide with its counsel. Do not send an apology text to an opted-out number. We will provide a masked affected-recipient report and exact timestamps.
+
+[04:22] Jasmine: We have six complaints, one of which says "I already said stop." Customer care responded by email.
+
+[04:30] Elena: Preserve those threads. The response should acknowledge the concern without asking the consumer to text again. If any demand or attorney contact arrives, route it to counsel and this escalation.
+
+[04:48] Owen: What tests do you need before release?
+
+[04:51] Nina: A synthetic queue test with 500 test profiles. We will schedule six batches, send STOP from profiles between batch creation and release, and confirm every later batch re-checks the live suppression list. We will also test STOP ALL, CANCEL, END, QUIT, and UNSUBSCRIBE.
+
+[05:15] Elena: We also need HELP identity and global suppression across the primary 10DLC number and the backup toll-free profile. Ticket 85644 showed stale account contacts and agency permissions; Governance roles must be reviewed.
+
+[05:34] Luke: That ticket was about credits and the dead notification mailbox.
+
+[05:38] Elena: Correct. It showed that agency-builder could acknowledge high-impact warnings and that operational contacts were stale. For compliance, we need named owners who receive opt-out anomaly alerts.
+
+[05:58] Jasmine: Add me, Luke, and compliance@alderash.example. Remove the former employee.
+
+[06:06] Nina: I have updated alert recipients. New monitor STOP-LAG-AA triggers if any marketing send occurs more than five seconds after a suppression event for the same profile.
+
+[06:23] Owen: Five seconds seems strict if events cross systems.
+
+[06:27] Elena: The alert can tolerate ingestion latency internally, but the consumer outcome must be no marketing after opt-out. A strict monitor is appropriate during remediation.
+
+[06:40] Mira: We should also distinguish standard STOP keywords from natural-language requests. What is the current setting?
+
+[06:47] Nina: Standard keywords plus expanded intent at threshold 0.90. Phrases such as "please stop messaging me" create immediate temporary suppression and review.
+
+[07:02] Jasmine: Good.
+
+[07:05] Elena: Metrics from the incident: campaign attempted 312,440 recipients; delivery 96.1 percent; unique CTR 5.7 percent; opt-out 1.4 percent overall; seventy-three post-opt-out sends; six direct complaints; provider errors were normal. This was not carrier filtering.
+
+[07:28] Luke: Did we pay for those seventy-three sends?
+
+[07:31] Nina: They are being removed from billable usage, and a broader service-credit review is open under FIN-11482. The financial adjustment is separate from remediation.
+
+[07:49] Jasmine: When can welcome and cart flows resume?
+
+[07:52] Elena: After the synthetic test passes, Engineering certifies the queue fix, and Compliance reviews the first production test. We will release one low-volume flow first, not everything at once.
+
+[08:10] Owen: Which flow?
+
+[08:12] Elena: Welcome flow AA-WELCOME-V6, because enrollment is low volume and easy to observe. Cart and browse follow later.
+
+[08:26] Mira: Your counsel should evaluate any external obligations. RelayFox will preserve records and cooperate with factual requests under the applicable agreements.
+
+[08:42] Jasmine: Read back the action list.
+
+[08:45] Elena: Preserve records under AA-LH-204; maintain marketing pause; complete 500-profile queue test; validate all opt-out keywords and HELP on both numbers; keep STOP-LAG-AA active; review agency and admin roles; provide affected-recipient report; and stage flow release after written approval.
+
+[09:10] Luke: And incident QSUP-402, campaign CPN-77418.
+
+[09:14] Nina: Correct. Those identifiers and ticket 85644 will be cross-linked.
+
+[09:25] Jasmine: We understand. Please keep communications in one thread.
+
+[09:30] Elena: We will. No one should create a new campaign to work around the pause.

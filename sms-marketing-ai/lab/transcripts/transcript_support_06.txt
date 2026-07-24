@@ -1,0 +1,99 @@
+CALL_ID: CS-2025-1017-052
+DATE: 2025-10-17
+DURATION: 00:41:33
+CALL_TYPE: Customer Support - Carrier Filtering Follow-up
+PARTICIPANTS: Maya Chen (RelayFox Support Engineer); Colin Mercer (Lifecycle Marketing Manager); Andre Silva (Agency Strategist)
+BRAND/MERCHANT: Harbor & Pine Home
+ACCOUNT_TIER: Growth 500K
+
+[00:00] Maya Chen: Hi Colin, Andre. Maya from RelayFox. I am reopening the Harbor & Pine deliverability thread. The new ticket is 87263, linked to 84217 from April.
+
+[00:14] Colin Mercer: Thanks. We thought this was fixed. Delivery recovered all summer, then yesterday's "Holiday Preview - Velvet" send cratered at one carrier.
+
+[00:25] Andre Silva: Campaign ID is CPN-71108. We sent 204,118. Dashboard says 73.4 percent delivered. Other platforms are telling us this is a RelayFox routing problem.
+
+[00:36] Maya: I reviewed the carrier receipts before the call. There is no broad routing outage. The dominant failure is 30034, "campaign suspended or not provisioned," not the 30007 filtering code we saw in April.
+
+[00:53] Colin: Suspended? Nobody told us the campaign was suspended.
+
+[00:59] Maya: A notice was sent October 14 to the registration contact, legal@harborandpine.example. It says the 10DLC campaign was paused because recent message samples no longer matched the approved use case and opt-in description.
+
+[01:17] Andre: That mailbox forwards to outside counsel. They may not have known it was operational.
+
+[01:23] Maya: That explains the delay, but not the suspension itself. Let me compare the approved samples. Your registration says recurring home-decor offers with brand identification and a maximum of six messages per month. The last four broadcasts include a third-party sweepstakes, "Win a cabin weekend with Roamstead," and the frequency rose to eleven messages in thirty days for some subscribers.
+
+[01:49] Colin: Roamstead is a partner, not some random affiliate.
+
+[01:53] Maya: I understand, but the carrier review is based on the registered campaign description. A co-marketing sweepstakes can require updated samples and clearer terms. The use case cannot silently expand.
+
+[02:08] Andre: The message still said Harbor & Pine at the top.
+
+[02:12] Maya: It did, which is good. The linked landing page, however, displayed Roamstead branding first and collected email and phone for both brands. The consent disclosure did not clearly state whether Harbor & Pine subscribers were agreeing to Roamstead texts.
+
+[02:33] Colin: We did not send the collected numbers to Roamstead.
+
+[02:37] Maya: That helps, but the page presentation triggered review. Carrier operations also flagged a mismatch between the registered domain harborandpine.com and the redirect cabinweekend.win.
+
+[02:51] Andre: So what is live right now? Are flows sending?
+
+[02:55] Maya: Transactional order updates are unaffected. Marketing traffic on the primary 10DLC campaign is suspended for one carrier and rate-limited for another. Your welcome flow delivery is 88.1 percent, down from 95 percent, because it shares the marketing campaign registration.
+
+[03:16] Colin: We have Black Friday in six weeks. We cannot wait a month for paperwork.
+
+[03:21] Maya: The remediation can be faster if the evidence is complete. We need: updated opt-in screenshots, current terms, a list of all domains used in messages, revised message samples, and a written explanation of the sweepstakes. We also need confirmation that message frequency has been corrected.
+
+[03:43] Andre: Can we just create a new 10DLC campaign for promotions?
+
+[03:47] Maya: Not as a shortcut around a suspension. A duplicate campaign with the same traffic can be rejected and may reduce trust further. We should remediate the existing registration. A genuinely separate use case can be evaluated later.
+
+[04:03] Colin: What did our frequency actually reach?
+
+[04:06] Maya: The highest cohort received thirteen marketing messages between September 16 and October 15: eight broadcasts and five flow messages. Your disclosure says "up to six per month."
+
+[04:20] Colin: We count flows separately.
+
+[04:23] Maya: Subscribers and carriers generally experience total message frequency, not your internal campaign categories. The disclosure should reflect the expected combined volume.
+
+[04:38] Andre: We can change it to "message frequency varies."
+
+[04:42] Maya: That is commonly used, but your legal team should approve the exact language. From an operational perspective, it would align better with variable campaign volume.
+
+[04:52] Colin: What can we send while this is being reviewed?
+
+[04:56] Maya: Do not send another full broadcast on the suspended campaign. We can run a 2,000-recipient test after carrier operations confirms the remediation packet is accepted. Until then, keep transactional traffic separate and pause marketing flows that are not time-sensitive.
+
+[05:17] Colin: That is painful. Yesterday's campaign drove only $41,980. The same holiday preview last year did $128,000.
+
+[05:27] Maya: I have those metrics. Revenue per send fell from sixty-four cents last year to twenty-one cents yesterday. Unique CTR among delivered messages was still 7.2 percent, so engagement is not the primary problem.
+
+[05:48] Andre: Did complaints contribute?
+
+[05:51] Maya: Complaint rate was 0.19 percent, above your thirty-day baseline of 0.06. The sweepstakes message had the highest spike. That was included in the suspension packet.
+
+[06:11] Colin: We need a clean action list.
+
+[06:14] Maya: One: remove cabinweekend.win from all active drafts. Two: update the sweepstakes page so consent is brand-specific and no partner texting is implied without separate consent. Three: revise the frequency disclosure. Four: provide five representative message samples, including STOP language. Five: move the registration contact from legal@ to an operational owner plus compliance backup.
+
+[06:43] Andre: I can handle domains and samples. Colin can do frequency. Who handles the carrier?
+
+[06:49] Maya: I will submit under carrier case CO-99142 and keep ticket 87263 as the customer-facing record. Because the original identity issue was corrected in April, I will note that this is a use-case suspension, not an EIN problem.
+
+[07:11] Colin: Is there any chance April's issue is being held against us?
+
+[07:15] Maya: The history is visible, but the current suspension notice cites message examples, domains, frequency, and complaint signals. I do not see an identity mismatch now.
+
+[07:31] Andre: We uploaded the landing-page screenshot and draft terms while you were talking.
+
+[07:36] Maya: I see them. The screenshot still has a prechecked marketing box. Please replace it with an unchecked box and retain a versioned copy of the disclosure shown at signup.
+
+[07:55] Colin: We will fix that today. Is this becoming a compliance escalation?
+
+[08:00] Maya: Yes. Given the carrier suspension and co-marketing consent ambiguity, I am adding RelayFox Compliance to the thread. That does not mean legal action; it means the remediation needs formal review.
+
+[08:18] Colin: Who should we expect?
+
+[08:20] Maya: Elena Park from Compliance will likely join. She will reference tickets 84217 and 87263 and carrier case CO-99142. Please keep all evidence in the ticket rather than separate email chains.
+
+[08:39] Andre: Understood.
+
+[08:42] Maya: I have paused three scheduled marketing broadcasts and two promotional flows with Colin's authorization. Order confirmations remain active. I will update you when the packet is accepted for review.

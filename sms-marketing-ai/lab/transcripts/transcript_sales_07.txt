@@ -1,0 +1,107 @@
+CALL_ID: SD-2026-0514-031
+DATE: 2026-05-14
+DURATION: 00:52:08
+CALL_TYPE: Sales Discovery - Beauty Competitive Review
+PARTICIPANTS: Marisol Grant (RelayFox Account Executive); Theo Park (RelayFox Solutions Consultant); Amina Solis (Chief Marketing Officer); Beck Tan (CRM Lead); Rachel Voss (Legal Operations)
+BRAND/MERCHANT: Moss & Marrow Skincare
+ACCOUNT_TIER: Prospect - Enterprise
+
+[00:00] Marisol Grant: Thanks, everyone. Amina, your note said the evaluation is driven by cost, but Rachel from legal is here, so I suspect there is more to it.
+
+[00:12] Amina Solis: Cost opened the conversation. Governance made it urgent. We have 220,000 active SMS subscribers in Beacon, and our team launches fast. Sometimes too fast.
+
+[00:27] Rachel Voss: We need auditable consent, locked claims language, and proof that STOP requests suppress every marketing workflow. Our board asked after a competitor in our category received a demand letter.
+
+[00:43] Beck Tan: Operationally, I need better segmentation. We use Shopify Plus, Kestrel email, Vellum, Helply, and Recharge for one subscription product.
+
+[00:56] Theo Park: What kinds of segments are hard today?
+
+[01:00] Beck: "Bought Barrier Balm, left a four- or five-star review, no open irritation ticket, not subscribed, and clicked SMS in 120 days." We can approximate it, but not in one place.
+
+[01:16] Theo: RelayFox can combine those events, but I want to flag the irritation-ticket data. It is safer to use that as a suppression criterion and avoid exposing or inferring health information in copy.
+
+[01:33] Rachel: Agreed. We would send a boolean eligibility field from our warehouse, not the reason.
+
+[01:41] Marisol: What is the current SMS performance?
+
+[01:44] Amina: Beacon attributes $6.9 million trailing twelve months. Finance discounts it to $4.1 million. List churn averages 3.9 percent. We send eight broadcasts monthly, more during launches.
+
+[02:01] Beck: Our best campaign, "BARRIER WEEK," did $1.16 revenue per send. Generic promotions are closer to forty cents.
+
+[02:12] Theo: That spread suggests segmentation opportunity. We can backtest product-affinity and replenishment audiences, then validate with holdouts.
+
+[02:23] Amina: Everyone says holdouts now. How easy is it actually?
+
+[02:27] Theo: You define the eligible audience and reserve a random control percentage. The system persists control membership so the same people do not move in and out during the test. Reporting compares conversion and revenue under the same attribution window.
+
+[02:49] Rachel: Does the control group still receive transactional texts?
+
+[02:53] Theo: A marketing holdout does not block true transactional messages. Classification and consent basis remain separate. We would document which message types are excluded.
+
+[03:09] Amina: Let's talk AI. Can it write skincare copy without inventing clinical claims?
+
+[03:14] Theo: It can operate under locked rules and approved source content. You can ban terms such as "heals eczema," require substantiation before "clinically proven," and restrict suggestions to product-page language. It still requires human approval.
+
+[03:34] Rachel: Can an admin prevent marketers from removing those rules?
+
+[03:38] Theo: Yes. Governance policies can be locked by role. Campaigns containing flagged terms can require legal approval before scheduling.
+
+[03:51] Beck: Our current approval is a Slack screenshot. It is not searchable six months later.
+
+[03:57] Theo: The audit log stores draft text, audience definition, link, media, approval identity, timestamp, and subsequent edits. An edit after approval can invalidate approval and route it again.
+
+[04:17] Rachel: Good. Consent migration is my biggest concern.
+
+[04:21] Theo: We need phone number, status, consent timestamp, source, disclosure version or evidence reference, and opt-out history. Records missing SMS-specific evidence are quarantined. We do not treat "customer" or "email subscribed" as SMS consent.
+
+[04:43] Amina: That could shrink the list.
+
+[04:46] Marisol: It could shrink the marketable count if the source data is incomplete. We would rather expose that during audit than after a complaint.
+
+[05:00] Beck: We acquired about 34,000 numbers through a spa partner last year. The file says "partner opt-in" but does not name us in every row.
+
+[05:11] Rachel: That is exactly the kind of thing I want reviewed.
+
+[05:15] Theo: We would place that source in a separate quarantine group until you can show the disclosure and row-level action. Do not include it in a migration success metric as active subscribers before review.
+
+[05:32] Amina: Commercially, how do you price 220,000 active plus maybe 34,000 quarantined?
+
+[05:38] Marisol: Pricing is based on the active program and message volume, not charging you to store a quarantine file as if it were marketable. Initial annual range is $285,000 to $335,000 including Enterprise Governance and implementation.
+
+[05:56] Amina: Beacon is $361,000 at renewal. We need savings and better control.
+
+[06:01] Marisol: The midpoint saves about $50,000 annually. The ROI model also targets list churn from 3.9 to 2.7 percent and revenue per send from fifty-seven to seventy-four cents, but those are testable assumptions.
+
+[06:22] Beck: What is the most credible feature lift?
+
+[06:25] Theo: Product-specific replenishment. In your sample data, customers 42 to 70 days after Barrier Balm purchase, with no refill and recent engagement, produced a backtested $1.28 per send versus forty cents for generic sitewide. That is 3.2x, but only for a 14,600-profile segment.
+
+[06:47] Amina: I appreciate the boundary.
+
+[06:50] Rachel: STOP handling across numbers?
+
+[06:54] Theo: Global suppression should be shared across all marketing sending profiles. During migration, we test STOP, STOP ALL, CANCEL, END, QUIT, UNSUBSCRIBE, and HELP. We also verify that an opt-out on the legacy number suppresses the new number before traffic moves.
+
+[07:18] Rachel: Put that exact test in the statement of work.
+
+[07:22] Marisol: We will.
+
+[07:25] Beck: We have quiet-hours concerns in Florida and Oklahoma. Can delivery use recipient local time?
+
+[07:33] Theo: Yes. You set a permitted window and fallback logic for unknown timezone. Your counsel should define the policy; the platform enforces it and logs holds.
+
+[07:48] Amina: I want a pilot without sending to the questionable spa list.
+
+[07:53] Marisol: Proposed pilot: migrate 50,000 clearly consented subscribers, rebuild welcome and Barrier Balm replenishment, configure locked claims approval, and run STOP/HELP migration tests. The spa list remains quarantined.
+
+[08:19] Rachel: Add a consent evidence report and an incident escalation path.
+
+[08:24] Theo: Yes. We can create a consent audit export and alert if any marketable profile lacks timestamp or source.
+
+[08:38] Beck: Timeline?
+
+[08:40] Theo: Six to eight weeks after receiving complete exports and integration access. The consent audit happens first, not at the end.
+
+[08:55] Amina: Send the pilot and annual proposal. Rachel gets approval rights over the governance section.
+
+[09:04] Marisol: Understood. We will include the spa source as a named risk, not bury it in assumptions.

@@ -1,0 +1,101 @@
+CALL_ID: SE-2026-0304-022
+DATE: 2026-03-04
+DURATION: 00:45:54
+CALL_TYPE: Sales Expansion - Supplements Enterprise
+PARTICIPANTS: Avery Cole (RelayFox Account Executive); Samir Patel (RelayFox Solutions Engineer); Renee Calder (Head of Growth); Dev Shah (Data Analyst)
+BRAND/MERCHANT: Ember & Root Supplements
+ACCOUNT_TIER: Enterprise - Expansion Review
+
+[00:00] Avery Cole: Renee, Dev, thanks for coming back. Jon shared the resolution from ticket 87991, including the normalized RESET-ROUTINE-0106 report. Are we aligned on the $149,620 comparable revenue figure?
+
+[00:14] Dev Shah: Yes. We updated our warehouse model to exclude existing-subscription rebills from acquisition revenue. The totals now match within 0.6 percent.
+
+[00:25] Renee Calder: That cleanup is why we are willing to talk expansion. I want growth features, but not another metric definition problem.
+
+[00:35] Samir Patel: Then we should start with data contracts. Every proposed dashboard will state attribution window, gross or net basis, refund handling, and whether renewals are included.
+
+[00:48] Avery: Business-wise, what is the priority for Q2?
+
+[00:52] Renee: Improve second-order rate on new subscriptions and reduce list churn. We have 305,000 SMS subscribers. Monthly churn is 3.7 percent. New subscribers from influencer keywords convert well, but the follow-up is generic.
+
+[01:10] Dev: We also want cohort reporting by acquisition source, not just campaign.
+
+[01:15] Samir: Advanced Analytics can group by keyword, form, creator_code, first product, and subscription status. You can compare thirty-, sixty-, and ninety-day value without crediting every future rebill to the acquisition text.
+
+[01:36] Renee: Good. Show a real use case.
+
+[01:39] Samir: For customers who started with Morning Mineral Bundle, we can branch based on flavor, days until first renewal, and support status. A message seven days before renewal could offer education or a swap, but only to subscribers with marketing consent and no open adverse-reaction ticket.
+
+[02:01] Renee: We need to be extremely careful with health-related support tags.
+
+[02:06] Samir: Agreed. Use sensitive tags for suppression, not personalization. The message should never reveal why someone is excluded or reference a health complaint.
+
+[02:18] Dev: Can the segment logic stay in the warehouse?
+
+[02:21] Samir: Yes. You can sync a warehouse-computed eligibility flag or build the logic in RelayFox. For auditability, some customers keep sensitive classification upstream and send only a boolean like eligible_retention_message=true.
+
+[02:43] Renee: That is preferable.
+
+[02:46] Avery: The proposed package includes Advanced Segmentation, AI Copy Studio, warehouse audience sync, and subscription cohort analytics. Annual add-on: $108,000.
+
+[02:59] Renee: What is the quantified return?
+
+[03:02] Avery: We modeled three components. First, flavor-specific replenishment improves revenue per send from sixty-two cents to ninety-one cents. Second, list churn falls from 3.7 to 2.9 percent. Third, improved first-to-second subscription renewal adds 1.5 percentage points.
+
+[03:24] Dev: Which of those is observed versus assumed?
+
+[03:27] Avery: The sixty-two-cent baseline is observed. Ninety-one cents is from a matched historical backtest. The churn and renewal changes are assumptions to test.
+
+[03:41] Renee: What does the model produce if you remove the churn assumption?
+
+[03:46] Avery: About $286,000 in annual incremental attributed revenue from targeted replenishment and creator-flow improvements, before gross margin. At your 68 percent contribution margin, roughly $194,000 contribution.
+
+[04:04] Dev: And if the backtest overstates by half?
+
+[04:08] Avery: Contribution falls to about $97,000, slightly below the add-on price. That is why we suggest a pilot with exit criteria rather than asking you to accept the model.
+
+[04:22] Renee: Good answer. What is the pilot?
+
+[04:25] Samir: Two flows over sixty days. Flow one: flavor-specific replenishment for one-time buyers. Flow two: creator welcome with unique Shopify codes and a 10 percent holdout. AI Copy Studio generates one-segment variants under locked claims rules.
+
+[04:48] Dev: How do you prevent unique-code API rate limits?
+
+[04:52] Samir: Pre-generate a code pool and monitor Shopify responses. If the integration returns SHOP-CODE-429, the flow uses a fallback generic code only if approved; otherwise it pauses and alerts.
+
+[05:08] Renee: No silent generic fallback. Pause and alert.
+
+[05:12] Samir: We can enforce that. Alert recipients can include growth, support, and an on-call distribution list.
+
+[05:28] Dev: Metrics?
+
+[05:30] Samir: Replenishment: revenue per eligible profile, revenue per send, purchase rate, opt-out rate, and holdout lift. Creator welcome: confirmation completion, flow-entry rate, first-order conversion, coupon leakage, and thirty-day value. Attribution defaults to seven-day click, net of refunds, excluding existing rebills.
+
+[05:58] Renee: I want twenty-four-hour click shown too.
+
+[06:01] Samir: Included as a secondary view.
+
+[06:11] Avery: On list churn, your highest-churn segment is subscribers receiving more than six marketing messages in seven days. Their monthly churn is 6.4 percent versus 2.6 percent for subscribers receiving three or fewer.
+
+[06:29] Renee: That correlation may reflect high-intent users entering more flows.
+
+[06:33] Dev: Or frustrated users getting more reminders.
+
+[06:37] Samir: Exactly. We should not infer causation from that chart. A controlled frequency-cap test can answer it better.
+
+[06:50] Renee: Can global caps distinguish cart from browse?
+
+[06:53] Samir: Yes. Cart can have priority, browse lower priority, and broad broadcasts lowest. You can also set a minimum gap after a support-triggered suppression.
+
+[07:11] Dev: Data export remains available?
+
+[07:14] Samir: Campaign, flow, message, consent, and attribution events can be exported to your warehouse. The package adds scheduled audience sync but does not remove existing API access.
+
+[07:30] Renee: Commercially, I want a sixty-day paid pilot at no more than twenty thousand dollars, credited toward the annual add-on if we proceed.
+
+[07:39] Avery: I can take that structure for approval. We will define success as at least 20 percent lift in revenue per eligible profile on one flow, no increase in opt-out above 0.3 percentage points, and data reconciliation within one percent.
+
+[08:02] Dev: Add that rebill attribution remains excluded by default.
+
+[08:06] Avery: Added. The pilot measurement plan will reference ticket 87991 as the baseline definition.
+
+[08:18] Renee: Then send the scope. We can start after our March product launch.

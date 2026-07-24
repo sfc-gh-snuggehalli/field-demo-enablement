@@ -1,0 +1,101 @@
+CALL_ID: CE-2026-0224-007
+DATE: 2026-02-24
+DURATION: 01:02:31
+CALL_TYPE: Compliance and Legal Escalation - Consent Dispute
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Mira Lowe (RelayFox Product Counsel); Maya Chen (RelayFox Support Engineer); Priya Nanduri (Director of E-commerce); Rachel Ames (LumaLeaf Outside Counsel); Sara Holt (Lifecycle Specialist)
+BRAND/MERCHANT: LumaLeaf Beauty
+ACCOUNT_TIER: Enterprise - Legal Hold
+
+[00:00] Elena Park: This call is under escalation CE-2026-0224-007 and legal hold LH-318. It is linked to LumaLeaf support ticket 88420 and flow WELCOME-DEWY-V4.1. We will discuss one consumer complaint and the broader creator opt-in path.
+
+[00:20] Rachel Ames: I represent LumaLeaf. We understand RelayFox is not our outside counsel. We need the factual audit trail and platform actions.
+
+[00:31] Mira Lowe: Correct. We can explain system records and required platform remediation, not provide legal advice to LumaLeaf.
+
+[00:43] Priya Nanduri: The complaint came from a person ending 7719 who says she never consented and received four marketing messages after entering a giveaway.
+
+[00:56] Maya Chen: I have the profile. The number entered through creator landing page LP-DEWY-MAYA7 on February 17, 2026 at 2:14:09 p.m. Pacific. The page submitted phone, creator_code MAYA7, and disclosure_version LL-SMS-2026-02A.
+
+[01:18] Rachel: What exactly did the disclosure say?
+
+[01:21] Maya: The stored text says: "By submitting, you agree to receive recurring automated promotional and personalized marketing text messages from LumaLeaf at the number provided. Consent is not a condition of purchase. Msg & data rates may apply. Reply STOP to cancel, HELP for help."
+
+[01:41] Rachel: Was the checkbox prechecked?
+
+[01:44] Maya: The event payload says checkbox_state=true and checkbox_default=false. We also have a screenshot from deployment showing it unchecked by default. However, the complaint's session replay is unavailable because analytics consent was declined.
+
+[02:02] Priya: The person says she entered only for the giveaway and did not see the text language.
+
+[02:08] Elena: Visibility is part of the review. The disclosure appeared below the phone field in 11-pixel text on mobile. It was present, but our policy requires clear and conspicuous presentation. We are requiring a larger font, higher contrast, and no submit action until the disclosure block has loaded.
+
+[02:32] Sara Holt: We used the creator's landing-page template. Could it have loaded late?
+
+[02:37] Maya: Yes. On slow connections, the phone field and button rendered about 1.4 seconds before the disclosure stylesheet. The text existed in the page source, but the visual block could appear late.
+
+[02:55] Rachel: That is material. Was double opt-in enabled?
+
+[02:58] Maya: It was enabled for this page. The number received "LumaLeaf: Reply Y to confirm recurring marketing texts" at 2:14:12 and replied "yes" at 2:15:03. Consent Confirmed was recorded at 2:15:04.
+
+[03:17] Priya: So we have a confirmation reply.
+
+[03:20] Rachel: We have evidence, but we still need the full experience and whether the initial prompt was clear.
+
+[03:26] Mira: Agreed. Double opt-in strengthens the audit trail but does not eliminate the need for a clear initial disclosure and accurate confirmation message.
+
+[03:39] Elena: The complaint also alleges four messages after opting out. Let's review timing.
+
+[03:44] Maya: Marketing messages were sent February 17 at 2:15, February 18 at 10:02, February 20 at 9:31, and February 22 at 11:08, all local Pacific time. The person sent "stop texting me" at 11:11 on February 22.
+
+[04:06] Rachel: Did the platform recognize that phrase?
+
+[04:09] Maya: The natural-language classifier marked it OPT_OUT_INTENT with confidence 0.91, but your account setting was "standard keywords only." It did not automatically suppress until an agent applied unsubscribe at 3:42 p.m. after the complaint email.
+
+[04:31] Priya: That is over four hours. Did any message go out in the gap?
+
+[04:35] Maya: No marketing message was sent after the 11:11 inbound. A browse-flow message was scheduled for 1:00 but was held by a frequency cap. Still, the person did not receive an immediate opt-out acknowledgment.
+
+[04:52] Elena: Platform requirement going forward: enable expanded opt-out intent handling, route uncertain phrases to immediate temporary suppression, and review within twenty-four hours. Standard STOP keywords remain automatic.
+
+[05:13] Sara: Could expanded intent mistakenly unsubscribe someone asking, "How do I stop dryness?"
+
+[05:19] Maya: That is why the classifier uses context and confidence. Phrases below threshold can be routed to review without sending more marketing in the meantime. Product-related uses of "stop" are common in skincare.
+
+[05:39] Rachel: What threshold do you recommend?
+
+[05:42] Elena: We are requiring 0.85 for immediate suppression on this account during remediation, with manual review of lower-confidence opt-out intent. Your counsel can review policy, but the platform hold is mandatory.
+
+[06:00] Priya: What happened to the creator page?
+
+[06:03] Maya: It was disabled at 8:20 a.m. today. New version LP-DEWY-MAYA7-B uses 14-pixel disclosure text, higher contrast, delayed button activation until the disclosure renders, and the confirmation prompt names LumaLeaf and says recurring marketing.
+
+[06:25] Rachel: How many subscribers entered through the old version?
+
+[06:28] Maya: 18,642 submissions, 16,907 confirmed, 15,992 entered the welcome flow, and 915 did not enter due to quiet hours, suppressions, or the trigger issue documented in ticket 88420.
+
+[06:49] Priya: Are all 16,907 now on legal hold?
+
+[06:53] Elena: Not unsubscribed, but the acquisition cohort is under temporary campaign hold while we sample evidence and assess the late-rendering issue. Transactional messages tied to actual orders remain separately evaluated.
+
+[07:18] Elena: The hold is limited to the creator-page cohort while evidence is reviewed.
+
+[07:34] Rachel: What sample are you reviewing?
+
+[07:38] Maya: Five hundred records stratified by device, connection speed, confirmation timing, and creator source. We will verify page version, checkbox event, confirmation reply, flow entry, STOP/HELP history, and message timestamps.
+
+[08:00] Sara: The creator's video said, "Text DEWY for a chance to win and 20% off." It did not say recurring messages aloud.
+
+[08:09] Elena: The call-to-action should include clear disclosure or direct users to a page where the disclosure is prominent before submission. We are requiring updated creator scripts and captions before the page is reactivated.
+
+[08:28] Rachel: Required remediation, please, in one list.
+
+[08:32] Elena: Preserve all page versions and event logs; keep LP-DEWY-MAYA7 disabled; deploy the improved page only after review; update creator scripts; enable expanded opt-out intent with temporary suppression; sample 500 consent records; maintain the cohort hold; and provide the complaint profile's full timeline under legal hold LH-318.
+
+[09:02] Mira: Also do not contact the complainant by SMS. Any response should be coordinated through LumaLeaf counsel using a permitted channel.
+
+[09:14] Priya: Understood.
+
+[09:16] Maya: For searchable details, the key identifiers are ticket 88420, flow FLW-33118, page LP-DEWY-MAYA7, disclosure LL-SMS-2026-02A, and classifier event OPT_OUT_INTENT 0.91.
+
+[09:35] Rachel: Thank you. We will review the factual export and return comments on the creator script.
+
+[09:44] Elena: The cohort remains held until Compliance posts written release. Every action will be recorded in CE-2026-0224-007.

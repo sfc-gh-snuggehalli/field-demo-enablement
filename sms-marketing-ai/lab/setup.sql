@@ -10,9 +10,11 @@
 -- This one script is idempotent and builds the ENTIRE AI-BI stack end to end:
 --   (1) star-schema data via SQL GENERATOR  (~90k message + order rows)
 --   (2) a governed document corpus for grounded retrieval
+--   (2b) a call-transcript corpus (24 synthetic calls) + several ingestion patterns
 --   (3) the native SEMANTIC VIEW that defines every KPI once
---   (4) a Cortex Search service over the document corpus
---   (5) a Cortex Agent that uses the semantic view (Analyst) AND Search as tools
+--   (4) TWO Cortex Search services (marketing docs + call transcripts)
+--   (5) a Cortex Agent that uses the semantic view (Analyst) AND both Search
+--       services as tools, plus a RAG closer over the transcripts
 --
 -- POSITIONING (read aloud): the whole point of the semantic view is that a
 -- metric like "attributed revenue" is defined ONCE, in the platform, and then
@@ -27,10 +29,11 @@
 --     (enable cross-region inference if a model is not local:
 --      ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY_REGION';).
 --   - The document corpus PDFs (shipped in lab/docs/) uploaded to the @SMS_DOCS
---     stage. Section 3 creates the stage; upload the PDFs with the PUT command
---     shown there (SnowSQL / `snow sql`) BEFORE the SMS_DOC_CHUNKS build, or use
---     the Snowsight stage file-upload button. The parse step reads whatever PDFs
---     are on the stage.
+--     stage, AND the call transcripts (shipped in lab/transcripts/) uploaded to
+--     the @CALL_TRANSCRIPTS_STAGE stage. Sections 3 and 3b create the stages;
+--     upload with the PUT commands shown there (SnowSQL / `snow sql`) BEFORE the
+--     parse/chunk steps, or use the Snowsight stage file-upload button. The parse
+--     and COPY steps read whatever files are on the stages.
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -204,6 +207,185 @@ SELECT
       ):content
     )                                                                    AS text
 FROM DIRECTORY(@SMS_DOCS);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 3b. CALL TRANSCRIPTS — the second Search corpus + ingestion patterns
+-- ─────────────────────────────────────────────────────────────────────────────
+-- A corpus of 24 synthetic customer call transcripts (10 support, 8 sales,
+-- 6 compliance) for the RelayFox SMS platform, shipped in lab/transcripts/.
+-- Transcripts are the HARDEST corpus for keyword search — multi-speaker,
+-- conversational, timestamped — which is exactly where Cortex Search's hybrid
+-- vector + keyword retrieval wins. We land them, chunk them (preserving dialogue
+-- turns), and index them with a second Cortex Search service.
+--
+-- This section deliberately shows SEVERAL INGESTION PATTERNS so the demo can
+-- narrate the trade-offs:
+--   Pattern A  chunk DIRECTLY off the stage (no landing table)      — runnable
+--   Pattern B  COPY INTO a durable raw table, then chunk (ELT)      — runnable, PROD path
+--   Pattern C  Snowpipe auto-ingest / Snowpipe Streaming            — narrated DDL
+-- Pattern B is the durable path the Search service is built on below.
+
+-- Internal stage for the .txt transcripts + manifest.csv (directory table on).
+CREATE STAGE IF NOT EXISTS CALL_TRANSCRIPTS_STAGE
+  DIRECTORY = (ENABLE = TRUE)
+  ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE');
+
+-- Upload the shipped corpus, then make it visible to DIRECTORY().
+-- PUT is a client-side command (SnowSQL / `snow sql`); the Snowsight worksheet
+-- cannot run PUT — use the stage file-upload button there instead, then REFRESH.
+--   PUT 'file://<repo>/sms-marketing-ai/lab/transcripts/*.txt'
+--       @SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+--   PUT 'file://<repo>/sms-marketing-ai/lab/transcripts/manifest.csv'
+--       @SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+ALTER STAGE CALL_TRANSCRIPTS_STAGE REFRESH;
+
+-- File format that reads each transcript LINE as one field ($1). FIELD_DELIMITER
+-- = NONE keeps commas inside a line intact; RECORD_DELIMITER = newline makes one
+-- row per dialogue line. We reassemble whole transcripts with LISTAGG below.
+CREATE OR REPLACE FILE FORMAT FF_TRANSCRIPT_LINES
+  TYPE = CSV
+  FIELD_DELIMITER = NONE
+  RECORD_DELIMITER = '\n'
+  FIELD_OPTIONALLY_ENCLOSED_BY = NONE
+  ESCAPE_UNENCLOSED_FIELD = NONE
+  SKIP_HEADER = 0;
+
+-- ---- Call metadata (manifest.csv) --------------------------------------------
+-- CALL_ID joins each transcript to its brand, date, and one-line summary.
+CREATE OR REPLACE FILE FORMAT FF_MANIFEST_CSV
+  TYPE = CSV
+  SKIP_HEADER = 1
+  FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+  FIELD_DELIMITER = ','
+  ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE;
+
+CREATE OR REPLACE TABLE CALL_MANIFEST (
+  call_id          STRING,
+  call_date        DATE,
+  call_type_detail STRING,   -- granular type from the manifest, e.g. "Customer Support - Deliverability"
+  brand            STRING,
+  summary          STRING
+);
+
+COPY INTO CALL_MANIFEST (call_id, call_date, call_type_detail, brand, summary)
+  FROM @CALL_TRANSCRIPTS_STAGE/manifest.csv
+  FILE_FORMAT = (FORMAT_NAME = 'FF_MANIFEST_CSV')
+  ON_ERROR = ABORT_STATEMENT;
+
+-- ---- Pattern A — chunk DIRECTLY off the stage (no landing table) -------------
+-- Reassemble + chunk staged files in a single query. Nothing is persisted; this
+-- is handy for exploration or when the stage IS your system of record. Run it to
+-- see the chunk shape without materializing anything.
+SELECT
+    REGEXP_SUBSTR(f.transcript_text, 'CALL_ID:\\s*(\\S+)', 1, 1, 'e', 1) AS call_id,
+    c.index                                                             AS chunk_index,
+    c.value::STRING                                                     AS chunk_text
+FROM (
+    SELECT REGEXP_REPLACE(METADATA$FILENAME, '^.*/', '')                          AS file_name,
+           LISTAGG($1, '\n') WITHIN GROUP (ORDER BY METADATA$FILE_ROW_NUMBER)     AS transcript_text
+    FROM @CALL_TRANSCRIPTS_STAGE (FILE_FORMAT => 'FF_TRANSCRIPT_LINES',
+                                  PATTERN => '.*transcript_.*[.]txt')
+    GROUP BY file_name
+) f,
+LATERAL FLATTEN(input => SNOWFLAKE.CORTEX.SPLIT_TEXT_RECURSIVE_CHARACTER(f.transcript_text, 'none', 1200, 200)) c
+LIMIT 10;
+
+-- ---- Pattern B — COPY INTO a durable raw table (ELT), the production path ----
+-- Bulk-load every line into a landing table (one row per line, carrying the
+-- source filename + line number from COPY metadata), then reassemble each file
+-- into one transcript with LISTAGG. This is the durable, re-queryable pattern
+-- most pipelines use, and it is what the chunk table + Search service build on.
+CREATE OR REPLACE TABLE CALL_TRANSCRIPTS_RAW_LINES (
+  file_name STRING,
+  row_num   NUMBER,
+  line      STRING
+);
+
+COPY INTO CALL_TRANSCRIPTS_RAW_LINES (file_name, row_num, line)
+  FROM (
+    SELECT REGEXP_REPLACE(METADATA$FILENAME, '^.*/', ''),
+           METADATA$FILE_ROW_NUMBER,
+           $1
+    FROM @CALL_TRANSCRIPTS_STAGE
+  )
+  FILE_FORMAT = (FORMAT_NAME = 'FF_TRANSCRIPT_LINES')
+  PATTERN = '.*transcript_.*[.]txt'
+  ON_ERROR = ABORT_STATEMENT;
+
+-- One row per transcript: reassemble text, extract CALL_ID from the header, and
+-- derive a coarse call_type from the CALL_ID prefix (CS=support, SD/SE=sales,
+-- CE=compliance) for a clean Search attribute.
+CREATE OR REPLACE TABLE CALL_TRANSCRIPTS_RAW AS
+WITH files AS (
+  SELECT file_name,
+         LISTAGG(line, '\n') WITHIN GROUP (ORDER BY row_num) AS transcript_text
+  FROM CALL_TRANSCRIPTS_RAW_LINES
+  GROUP BY file_name
+)
+SELECT
+    REGEXP_SUBSTR(transcript_text, 'CALL_ID:\\s*(\\S+)', 1, 1, 'e', 1) AS call_id,
+    file_name,
+    CASE LEFT(REGEXP_SUBSTR(transcript_text, 'CALL_ID:\\s*(\\S+)', 1, 1, 'e', 1), 2)
+        WHEN 'CS' THEN 'support'
+        WHEN 'SD' THEN 'sales'
+        WHEN 'SE' THEN 'sales'
+        WHEN 'CE' THEN 'compliance'
+        ELSE 'other'
+    END                                                                AS call_type,
+    transcript_text
+FROM files;
+
+-- ---- Pattern C — Snowpipe (continuous ingestion) — NARRATED, not run ---------
+-- When transcripts land continuously (e.g. a nightly export to cloud storage),
+-- swap the one-time COPY for a Snowpipe that auto-ingests new files. On an
+-- EXTERNAL stage (S3/GCS/Azure) with an event notification, this needs no task:
+--
+--   CREATE PIPE CALL_TRANSCRIPTS_PIPE
+--     AUTO_INGEST = TRUE
+--   AS
+--     COPY INTO CALL_TRANSCRIPTS_RAW_LINES (file_name, row_num, line)
+--     FROM (SELECT METADATA$FILENAME, METADATA$FILE_ROW_NUMBER, $1
+--           FROM @MY_EXTERNAL_TRANSCRIPTS_STAGE)
+--     FILE_FORMAT = (FORMAT_NAME = 'FF_TRANSCRIPT_LINES')
+--     PATTERN = '.*transcript_.*[.]txt';
+--   -- then wire the pipe's notification channel (SYSTEM$PIPE_STATUS) to the
+--   -- bucket's event notifications; new files flow in within ~a minute.
+--
+-- For true real-time (row-level, sub-second) ingestion of live call events,
+-- use Snowpipe Streaming: rows are appended via the SDK straight into the
+-- landing table with no files or COPY at all. A downstream Dynamic Table or
+-- Task then keeps TRANSCRIPT_CHUNKS fresh, and the Search service's TARGET_LAG
+-- pulls the new chunks into the index automatically.
+
+-- ---- Chunk into TRANSCRIPT_CHUNKS (join manifest for brand/date/summary) -----
+-- SPLIT_TEXT_RECURSIVE_CHARACTER keeps dialogue turns together (~1200 chars,
+-- 200 overlap). The manifest join is 1:1 on call_id (brand/date/summary as
+-- filterable attributes); LATERAL FLATTEN is the intended one-transcript-to-many
+-- -chunks expansion.
+CREATE OR REPLACE TABLE TRANSCRIPT_CHUNKS AS
+WITH chunked AS (
+  SELECT
+      r.call_id,
+      r.call_type,
+      m.brand,
+      m.call_date,
+      m.summary,
+      c.index          AS chunk_index,
+      c.value::STRING  AS chunk_text
+  FROM CALL_TRANSCRIPTS_RAW r
+  LEFT JOIN CALL_MANIFEST m ON r.call_id = m.call_id,
+  LATERAL FLATTEN(input => SNOWFLAKE.CORTEX.SPLIT_TEXT_RECURSIVE_CHARACTER(r.transcript_text, 'none', 1200, 200)) c
+)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY call_id, chunk_index) AS chunk_id,
+    call_id,
+    call_type,
+    brand,
+    call_date,
+    summary,
+    chunk_index,
+    chunk_text
+FROM chunked;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 4. SEMANTIC VIEW — the centerpiece: define every KPI ONCE
@@ -442,6 +624,32 @@ AS (
 );
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 5b. CORTEX SEARCH SERVICE — call transcripts (voice of the customer)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- The second Search service, over the chunked call transcripts. Attributes let
+-- the agent scope retrieval to "compliance calls only", a specific brand, or a
+-- date range without re-indexing. This is the "what did the customer actually
+-- SAY on the call" corpus — complementary to SMS_DOCS_SEARCH (policy/playbook).
+CREATE OR REPLACE CORTEX SEARCH SERVICE CALL_TRANSCRIPTS_SEARCH
+  ON chunk_text
+  ATTRIBUTES call_type, brand, call_date
+  WAREHOUSE = SMS_MARKETING_WH
+  TARGET_LAG = '1 hour'
+  EMBEDDING_MODEL = 'snowflake-arctic-embed-l-v2.0'
+  COMMENT = 'Hybrid search over synthetic customer call transcripts (support, sales, compliance) for the SMS marketing platform'
+AS (
+  SELECT
+      chunk_id,
+      call_id,
+      call_type,
+      brand,
+      call_date,
+      summary,
+      chunk_text
+  FROM TRANSCRIPT_CHUNKS
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 6. CORTEX AGENT — semantic view (via Analyst) + Cortex Search as tools
 -- ─────────────────────────────────────────────────────────────────────────────
 -- The agent blends structured analytics (governed by the semantic view) with
@@ -479,8 +687,10 @@ instructions:
     - Revenue is last-touch attributed from store orders back to the send that drove them. Regions are NE, SE, MW, SW, W.
     Tool selection:
     - Use Marketing_KPI_Analyst for any question about numbers, rates, trends, rankings, or comparisons of metrics (attributed revenue, revenue per send, CTR, opt-in growth, subscriber LTV, list churn, consent rate) sliced by region, channel, campaign type, theme, plan tier, industry, or month.
-    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
-    - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst and the explanation or supporting brief from Marketing_Playbook_Search, then combine them.
+    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by our own documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
+    - Use Call_Transcript_Search for the voice of the CUSTOMER: what was said on a specific support, sales, or compliance call — objections, complaints, root-cause discussions, promises made, or which brand/call raised an issue. Scope with its filters (call_type = support/sales/compliance, brand, call_date) when the user names one.
+    - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst, our policy/brief from Marketing_Playbook_Search, and what the customer actually said from Call_Transcript_Search, then combine them.
+    - Distinguish the two Search corpora: Marketing_Playbook_Search = OUR internal policy/playbook documents; Call_Transcript_Search = transcripts of CALLS with customers. "What's our policy" -> Playbook; "what did the customer say / what happened on the call" -> Transcripts.
     Business rules:
     - Do not conflate historical aggregates (semantic view) with predictions — this agent does not forecast.
     - If the time range is ambiguous, default to the last 12 months and say so.
@@ -490,6 +700,7 @@ instructions:
     - question: "Which region has the fastest opt-in growth, and what is its consent rate and list churn?"
     - question: "Attributed revenue for the Q3 flash sale came in below plan — what does the incident postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"
     - question: "What does our playbook say about TCPA consent and quiet hours before a broadcast?"
+    - question: "Trace the brand that had a 10DLC campaign suspension across its support and compliance calls — what did the customer say, and what was the remediation?"
 
 tools:
   - tool_spec:
@@ -512,6 +723,14 @@ tools:
         When NOT to use: numeric/metric questions (use Marketing_KPI_Analyst).
         Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, segmentation, support_macro, performance_review, attribution, postmortem) and region (currently ALL for every document). Cite results by their title.
   - tool_spec:
+      type: "cortex_search"
+      name: "Call_Transcript_Search"
+      description: |
+        Semantic search over 24 synthetic customer CALL TRANSCRIPTS on the SMS platform: 10 support, 8 sales, and 6 compliance calls, chunked to preserve dialogue turns.
+        When to use: "what did the customer say", "what happened on the call", objections raised (e.g. vs a competitor), complaints, deliverability/10DLC/attribution root-cause discussions, consent/STOP/TCPA disputes, or tracing one brand's issue across multiple calls; the voice of the customer.
+        When NOT to use: aggregate numbers/rates (use Marketing_KPI_Analyst); our own policy, copy, or playbook guidance (use Marketing_Playbook_Search).
+        Filterable attributes: call_type (support, sales, compliance), brand (e.g. "Harbor & Pine Home", "LumaLeaf Beauty"), and call_date. Cite results by brand and call_id.
+  - tool_spec:
       type: "data_to_chart"
       name: "data_to_chart"
       description: "Generates a chart from tabular results when a visualization helps a comparison, trend, or ranking."
@@ -527,6 +746,11 @@ tool_resources:
     max_results: "5"
     title_column: "title"
     id_column: "doc_id"
+  Call_Transcript_Search:
+    name: "SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH"
+    max_results: "6"
+    title_column: "call_id"
+    id_column: "chunk_id"
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -553,6 +777,72 @@ SELECT PARSE_JSON(
     '{ "query": "what caused the PNW flash sale throughput incident", "columns": ["title","doc_type"], "limit": 3 }'
   )
 )['results'] AS results;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 7b. CALL-TRANSCRIPT SEARCH — demo queries (hybrid retrieval beats keyword)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Sanity: chunk + call counts (expect 24 calls; ~5-7 chunks each).
+SELECT COUNT(DISTINCT call_id) AS calls, COUNT(*) AS chunks,
+       COUNT(*) - COUNT(brand) AS chunks_missing_manifest   -- expect 0 (1:1 join)
+FROM TRANSCRIPT_CHUNKS;
+
+-- Q1 (support): deliverability / 10DLC throttling.
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "carrier filtering and 10DLC throttling causing a deliverability drop",
+     "columns": ["call_id","brand","call_type","chunk_text"], "limit": 3 }'))['results'] AS results;
+
+-- Q2 (support): attribution discrepancy vs Shopify revenue.
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "why does our revenue not match the Shopify report attribution window",
+     "columns": ["call_id","brand","chunk_text"], "limit": 3 }'))['results'] AS results;
+
+-- Q3 (compliance, ATTRIBUTE FILTER): TCPA consent / STOP handling on compliance calls only.
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "express written consent dispute and STOP opt-out handling",
+     "columns": ["call_id","brand","call_type","chunk_text"],
+     "filter": { "@eq": { "call_type": "compliance" } }, "limit": 3 }'))['results'] AS results;
+
+-- Q4 (sales): competitor objections during discovery/expansion calls.
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "objections about migrating off a competing SMS platform, pricing and churn concerns",
+     "columns": ["call_id","brand","call_type","chunk_text"],
+     "filter": { "@eq": { "call_type": "sales" } }, "limit": 3 }'))['results'] AS results;
+
+-- Q5 (cross-type, BRAND FILTER): trace the suspended-10DLC brand across its calls.
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "10DLC campaign suspension remediation and reinstatement",
+     "columns": ["call_id","brand","call_type","chunk_text"],
+     "filter": { "@eq": { "brand": "Harbor & Pine Home" } }, "limit": 4 }'))['results'] AS results;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 7c. RAG CLOSER — retrieve top chunks, then AI_COMPLETE a cited answer
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Grounded generation: pull the most relevant transcript chunks for a question,
+-- feed them to AI_COMPLETE as context, and ask for a cited answer. No hallucination
+-- on "what did the customer say?" — the model only sees retrieved evidence.
+WITH hits AS (
+  SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+    'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+    '{ "query": "attribution discrepancy between our platform and Shopify revenue",
+       "columns": ["call_id","brand","chunk_text"], "limit": 5 }'))['results'] AS results
+),
+context AS (
+  SELECT LISTAGG(r.value:brand::STRING || ' [' || r.value:call_id::STRING || ']: '
+                 || r.value:chunk_text::STRING, '\n---\n') AS ctx
+  FROM hits, LATERAL FLATTEN(input => hits.results) r
+)
+SELECT SNOWFLAKE.CORTEX.AI_COMPLETE(
+  'llama3.1-70b',
+  'You are a support analyst. Using ONLY the call transcript excerpts below, explain what caused '
+  || 'the attribution discrepancy between our platform and Shopify, and cite the brand and call_id '
+  || 'for each point. If the excerpts do not answer it, say so.\n\nEXCERPTS:\n' || ctx
+) AS grounded_answer
+FROM context;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Setup complete.

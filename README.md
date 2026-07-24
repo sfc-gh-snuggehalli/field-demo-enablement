@@ -107,12 +107,14 @@ wizard), then layers Cortex Analyst, Cortex Search, and a Cortex Agent on the si
 
 | File | Description |
 |------|-------------|
-| `presentations/sms-marketing-ai.html` | Slide deck (12 slides) |
+| `presentations/sms-marketing-ai.html` | Slide deck (13 slides) |
 | `presentations/sms-marketing-ai-speaker-notes.md` | Speaker notes |
 | `demo_script.md` | Run-of-show live talk track mapped to the positioning |
-| `lab/setup.sql` | Idempotent setup — data + semantic view + Cortex Search + Cortex Agent |
+| `lab/setup.sql` | Idempotent setup — data + semantic view + two Cortex Search services + Cortex Agent |
 | `lab/cleanup.sql` | Tear everything down to start fresh |
-| `lab/sms-marketing-ai-lab.ipynb` | Hands-on lab — semantic view, Analyst, Search, Agent |
+| `lab/docs/` | 10 real PDFs (playbook/policy corpus) for `SMS_DOCS_SEARCH` |
+| `lab/transcripts/` | 24 synthetic call transcripts + manifest for `CALL_TRANSCRIPTS_SEARCH` |
+| `lab/sms-marketing-ai-lab.ipynb` | Hands-on lab — semantic view, Analyst, two Search services, Agent |
 | `app/streamlit_app.py` | Optional Streamlit-in-Snowflake chat app over the agent |
 
 ### Proactive Retail Intelligence with Snowflake Cortex
@@ -192,6 +194,8 @@ field-demo-enablement/
 │   ├── lab/
 │   │   ├── setup.sql
 │   │   ├── cleanup.sql
+│   │   ├── docs/                # 10 PDFs — SMS_DOCS_SEARCH corpus
+│   │   ├── transcripts/         # 24 call transcripts + manifest — CALL_TRANSCRIPTS_SEARCH corpus
 │   │   └── sms-marketing-ai-lab.ipynb
 │   ├── app/
 │   │   └── streamlit_app.py

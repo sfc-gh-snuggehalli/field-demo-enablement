@@ -16,8 +16,10 @@ instructions:
     - Revenue is last-touch attributed from store orders back to the send that drove them. Regions are NE, SE, MW, SW, W.
     Tool selection:
     - Use Marketing_KPI_Analyst for any question about numbers, rates, trends, rankings, or comparisons of metrics (attributed revenue, revenue per send, CTR, opt-in growth, subscriber LTV, list churn, consent rate) sliced by region, channel, campaign type, theme, plan tier, industry, or month.
-    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
-    - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst and the explanation or supporting brief from Marketing_Playbook_Search, then combine them.
+    - Use Marketing_Playbook_Search for how / why / policy / copy questions answered by our own documents (campaign briefs, copy library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly performance review, attribution whitepaper, incident postmortem).
+    - Use Call_Transcript_Search for the voice of the CUSTOMER: what was said on a specific support, sales, or compliance call — objections, complaints, root-cause discussions, promises made, or which brand/call raised an issue. Scope with its filters (call_type = support/sales/compliance, brand, call_date) when the user names one.
+    - For blended "what happened and why" questions, get the number from Marketing_KPI_Analyst, our policy/brief from Marketing_Playbook_Search, and what the customer actually said from Call_Transcript_Search, then combine them.
+    - Distinguish the two Search corpora: Marketing_Playbook_Search = OUR internal policy/playbook documents; Call_Transcript_Search = transcripts of CALLS with customers. "What's our policy" -> Playbook; "what did the customer say / what happened on the call" -> Transcripts.
     Business rules:
     - Do not conflate historical aggregates (semantic view) with predictions — this agent does not forecast.
     - If the time range is ambiguous, default to the last 12 months and say so.
@@ -27,6 +29,7 @@ instructions:
     - question: "Which region has the fastest opt-in growth, and what is its consent rate and list churn?"
     - question: "Attributed revenue for the Q3 flash sale came in below plan — what does the incident postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"
     - question: "What does our playbook say about TCPA consent and quiet hours before a broadcast?"
+    - question: "Trace the brand that had a 10DLC campaign suspension across its support and compliance calls — what did the customer say, and what was the remediation?"
 
 tools:
   - tool_spec:
@@ -49,6 +52,14 @@ tools:
         When NOT to use: numeric/metric questions (use Marketing_KPI_Analyst).
         Filterable attributes: doc_type (campaign_brief, copy_library, tcpa_consent, deliverability, segmentation, support_macro, performance_review, attribution, postmortem) and region (currently ALL for every document). Cite results by their title.
   - tool_spec:
+      type: "cortex_search"
+      name: "Call_Transcript_Search"
+      description: |
+        Semantic search over 24 synthetic customer CALL TRANSCRIPTS on the SMS platform: 10 support, 8 sales, and 6 compliance calls, chunked to preserve dialogue turns.
+        When to use: "what did the customer say", "what happened on the call", objections raised (e.g. vs a competitor), complaints, deliverability/10DLC/attribution root-cause discussions, consent/STOP/TCPA disputes, or tracing one brand's issue across multiple calls; the voice of the customer.
+        When NOT to use: aggregate numbers/rates (use Marketing_KPI_Analyst); our own policy, copy, or playbook guidance (use Marketing_Playbook_Search).
+        Filterable attributes: call_type (support, sales, compliance), brand (e.g. "Harbor & Pine Home", "LumaLeaf Beauty"), and call_date. Cite results by brand and call_id.
+  - tool_spec:
       type: "data_to_chart"
       name: "data_to_chart"
       description: "Generates a chart from tabular results when a visualization helps a comparison, trend, or ranking."
@@ -64,3 +75,8 @@ tool_resources:
     max_results: "5"
     title_column: "title"
     id_column: "doc_id"
+  Call_Transcript_Search:
+    name: "SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH"
+    max_results: "6"
+    title_column: "call_id"
+    id_column: "chunk_id"

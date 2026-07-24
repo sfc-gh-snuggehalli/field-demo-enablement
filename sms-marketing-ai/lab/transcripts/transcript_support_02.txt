@@ -1,0 +1,93 @@
+CALL_ID: CS-2025-0527-033
+DATE: 2025-05-27
+DURATION: 00:44:11
+CALL_TYPE: Customer Support - Attribution
+PARTICIPANTS: Jon Bell (RelayFox Senior Support Specialist); Priya Nanduri (Director of E-commerce); Mateo Ruiz (Shopify Developer)
+BRAND/MERCHANT: LumaLeaf Beauty
+ACCOUNT_TIER: Enterprise
+
+[00:00] Jon Bell: Hi Priya, Jon from RelayFox. Mateo, are you on as well?
+
+[00:07] Mateo Ruiz: I am here. I may be muted for parts of this because our agency stand-up is going on behind me.
+
+[00:15] Priya Nanduri: Thanks. Ticket 84703 is the one. Finance thinks the SMS dashboard is overstating revenue by about twenty-eight thousand dollars.
+
+[00:29] Jon: I have the comparison you sent. Shopify reports $84,210 using the discount-code sales report, while RelayFox shows $112,640 attributed to the broadcast "GLASS_SKIN_MAY," campaign ID CPN-62811.
+
+[00:45] Priya: Correct. The campaign only went to 142,800 subscribers. A hundred twelve grand would be amazing, but it does not pass the smell test.
+
+[00:55] Jon: Let me separate three things that are being compared. Shopify's discount report only includes orders where code DEWY20 was entered. RelayFox's seven-day click attribution includes orders after an SMS click whether or not the code was used. And I see a likely implementation issue: two checkout-completed events are arriving for some orders.
+
+[01:16] Mateo: Two events? We use Shopify Checkout Extensibility. There should be one customer event pixel.
+
+[01:24] Jon: There is one current pixel named PS-Core-2025, but an older script called relayfox_order_complete is still firing through a legacy custom-pixel container on the thank-you page.
+
+[01:39] Mateo: Let me pull that up. We removed the script tag in March. Maybe the agency left the custom event subscription.
+
+[01:50] Priya: Would that literally double every order?
+
+[01:54] Jon: Not every order. It affects sessions that load the legacy thank-you extension, mostly returning customers on Shop Pay. In our raw event sample, order LL-105883 produced event IDs evt_91a3 and evt_91b1, both for $186.00, thirty-two seconds apart.
+
+[02:18] Mateo: Yeah, I see it. The second event has source "legacy-web-pixel." That's ours.
+
+[02:27] Priya: So the answer is the dashboard is wrong?
+
+[02:31] Jon: Partially inflated, yes. I want to avoid saying all the difference is an error. I ran a deduplicated estimate using Shopify order ID as the key. RelayFox attribution falls from $112,640 to $96,480. The remaining $12,270 difference versus the discount-code report is mostly orders that clicked the text but did not use DEWY20.
+
+[02:55] Priya: Finance will still ask why we get credit if the customer did not use the code.
+
+[03:01] Jon: The configured model is last non-direct SMS click within seven days. If someone clicks the text on Tuesday and buys full-price on Thursday, the revenue is attributed to the message. That is different from promo-code redemption, which is a narrower measurement.
+
+[03:24] Priya: Can we change it to twenty-four hours?
+
+[03:27] Jon: We can change the reporting view and your default comparison, but changing the account-wide attribution window will affect historical benchmarking. Your current dashboard also has a twenty-four-hour click report. For this campaign it is $78,940 after deduplication.
+
+[03:49] Priya: Interesting. That is actually below Shopify's code report.
+
+[03:53] Jon: Because some code users did not click the text. The code leaked onto an affiliate coupon site at 3:17 p.m. on launch day. I found 413 orders using DEWY20 with no SMS click or subscriber match.
+
+[04:14] Mateo: We saw that in Refersion. So neither number is the single truth.
+
+[04:19] Jon: Exactly. They answer different questions. For a board deck, I would show deduplicated seven-day click revenue, twenty-four-hour click revenue, and code-redemption revenue side by side, with definitions.
+
+[04:34] Priya: Before we do reporting philosophy, can we fix the duplicate event?
+
+[04:39] Mateo: I can disable the legacy pixel now, but I want a safe sequence. We cannot break Recharge orders.
+
+[04:48] Jon: Recharge subscription starts are coming through the server integration, not that browser pixel. I will send you the event map. Disable only custom pixel LL-Legacy-Checkout, then place a $1 test order using product "Cloud Milk Cleanser Mini." We should see one checkout_completed event and one order_created server event, which our deduper recognizes as the same transaction.
+
+[05:17] Mateo: Done. Test order LL-106204 is processing.
+
+[05:22] Jon: I see it. One browser event, one server confirmation, same order key. No duplicate revenue row. That looks clean.
+
+[05:34] Priya: Can historical numbers be restated?
+
+[05:38] Jon: I can request a reprocessing job for May 1 through May 27. It will deduplicate by order ID and preserve refunds. The job reference will be DATA-44192. Your exported report will change; screenshots will not, obviously.
+
+[05:56] Priya: Please reprocess. Also, campaign refunds seem low. We had a lot of shade exchanges.
+
+[06:03] Jon: Exchanges are not refunds in Shopify unless money moves. I see $4,811 in actual refunded value tied to the campaign and $9,220 in exchanges where the net order value stayed the same. RelayFox subtracts the refunded amount, not the retail value of swapped items.
+
+[06:29] Priya: Okay. Another thing: the dashboard says revenue per message is seventy-nine cents. Is that attempted or delivered?
+
+[06:36] Jon: Revenue per send uses attempted recipients, excluding pre-send suppressions. Revenue per delivered message is a separate metric. For GLASS_SKIN_MAY, after dedupe, it is sixty-eight cents per send and seventy-one cents per delivered message.
+
+[06:54] Priya: CTR is 8.4 percent, right?
+
+[06:58] Jon: Unique click rate is 8.4 percent. Total click rate is 10.1 because some subscribers clicked more than once. Conversion after unique click is 7.9 percent.
+
+[07:13] Mateo: I have a question about consent but maybe separate ticket. Our DEWY keyword subscribers are not always entering the welcome series.
+
+[07:22] Jon: I see a recent increase in keyword opt-ins with no flow enrollment. That is separate from attribution. I will create linked ticket 88420 and assign it to our automation queue so this call does not become three hours long.
+
+[07:39] Priya: Thank you. Please include that the keyword is DEWY and the flow is WELCOME-DEWY-V4.
+
+[07:45] Jon: Added. For today's ticket 84703, action items are: Mateo disabled LL-Legacy-Checkout; I requested reprocessing under DATA-44192; and I will attach a reconciliation workbook showing Shopify code revenue, twenty-four-hour click revenue, and seven-day click revenue.
+
+[08:09] Priya: Can you put a sentence in there that finance can quote?
+
+[08:13] Jon: I will write: "The initial RelayFox figure was inflated by duplicate checkout events; after deduplication, the remaining difference reflects attribution methodology rather than duplicate orders."
+
+[08:25] Priya: Perfect. That is exactly what I needed.
+
+[08:28] Jon: Great. I will keep ticket 84703 open until the May reprocessing finishes and you confirm the revised total.

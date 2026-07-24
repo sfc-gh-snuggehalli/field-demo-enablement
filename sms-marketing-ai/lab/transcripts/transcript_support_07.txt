@@ -1,0 +1,97 @@
+CALL_ID: CS-2026-0108-014
+DATE: 2026-01-08
+DURATION: 00:39:17
+CALL_TYPE: Customer Support - Subscription Attribution
+PARTICIPANTS: Jon Bell (RelayFox Senior Support Specialist); Renee Calder (Head of Growth); Dev Shah (Data Analyst)
+BRAND/MERCHANT: Ember & Root Supplements
+ACCOUNT_TIER: Enterprise
+
+[00:00] Jon Bell: Good morning, Renee, Dev. Jon from RelayFox. I have ticket 87991 and campaign RESET-ROUTINE-0106, ID CPN-74882.
+
+[00:12] Renee Calder: Thanks. We need help before our investor update. RelayFox says the campaign drove $219,460, but Shopify says the launch-day sales were $151,000. Recharge says something else again.
+
+[00:25] Dev Shah: I exported order IDs and I cannot reconcile the last sixty-eight thousand dollars.
+
+[00:31] Jon: I have your files. The main issue is that three different revenue definitions are in play: Shopify gross sales for January 6, Recharge subscription activity, and RelayFox seven-day attributed revenue. There is also a configuration question about rebills.
+
+[00:51] Renee: We do not want recurring rebills credited to a text forever.
+
+[00:55] Jon: Agreed. Your account is currently configured to attribute the initial subscription order and any rebill within seven days of the click. That can happen when a subscriber has an existing subscription renewal scheduled shortly after clicking a campaign.
+
+[01:13] Dev: How much of the $219,460 is rebills?
+
+[01:17] Jon: $31,880 is Recharge renewal revenue. Of that, $24,610 came from existing subscribers, not new subscription starts. Another $18,740 is revenue from January 7 through January 12, which is outside Shopify's launch-day report but inside the attribution window.
+
+[01:38] Renee: That already explains fifty thousand. What is the rest?
+
+[01:43] Jon: Shopify's $151,000 figure is net sales after discounts and excludes taxes, while the dashboard card you are viewing is gross attributed revenue before refunds. After normalizing gross versus net and subtracting $9,420 in refunds, the comparable RelayFox figure is $174,230 before removing existing-subscription rebills.
+
+[02:08] Dev: Then remove the $24,610 and we are at $149,620. That is basically Shopify.
+
+[02:14] Jon: Correct, for the comparable definition. There is a $1,380 residual caused by late order edits and exchange adjustments. I can provide order-level detail.
+
+[02:25] Renee: Why did we ever turn on rebill attribution?
+
+[02:30] Jon: The setting was enabled during onboarding in March 2024. The note says your prior growth lead wanted to measure churn prevention from SMS. That can be useful, but it should be reported separately from acquisition revenue.
+
+[02:48] Renee: That person is gone, and nobody knew. Can we split the dashboard?
+
+[02:53] Jon: Yes. I recommend three views: first-order revenue, new-subscription revenue, and existing-subscription renewal revenue. We can also set the default campaign ROI card to exclude existing renewals.
+
+[03:11] Dev: Please do not delete historical data.
+
+[03:14] Jon: We will not. The events remain available. The change affects the default attribution category going forward and can be applied as a report filter historically.
+
+[03:30] Renee: What about view-through? Our agency included $38,000 of "influenced" revenue in a slide.
+
+[03:37] Jon: Your account has a twenty-four-hour view-through model enabled for holdout analysis, but view-through revenue is not included in the $219,460 click-attributed total. The agency report added it separately. There is overlap risk if they summed categories without deduplicating.
+
+[03:58] Dev: I saw a column called influenced_order. It is not additive, then.
+
+[04:04] Jon: Correct. An order can be both click-attributed and view-influenced in raw exports. Use the attribution_priority field to avoid double counting.
+
+[04:19] Renee: Let's talk performance after the cleanup. Was the campaign good?
+
+[04:23] Jon: It sent to 176,220 eligible subscribers, delivered at 95.6 percent, unique CTR 9.7 percent, and generated $149,620 in normalized first-order and new-subscription revenue. That is eighty-five cents per attempted send.
+
+[04:45] Renee: Our benchmark is around sixty-two cents, so yes.
+
+[04:50] Dev: New subscriptions specifically?
+
+[04:53] Jon: 1,842 new subscriptions, with $108,310 in initial-order revenue. The "Morning Mineral Bundle" accounted for 46 percent of those starts.
+
+[05:09] Renee: And churn?
+
+[05:12] Jon: It is too early to know subscriber LTV or subscription churn from a January 6 campaign. We can measure cancellation and second-renewal rates later, but I would not claim that now.
+
+[05:27] Renee: Thank you for saying that. Sales decks love premature LTV.
+
+[05:33] Jon: I am creating a saved report named RESET_ROUTINE_NORMALIZED. It will use seven-day click, exclude existing-subscription rebills, subtract refunds, and show taxes separately.
+
+[05:52] Dev: Can the API return the same definition?
+
+[05:55] Jon: Yes. Use attribution_scope=first_or_new_subscription and revenue_basis=net_refunds. I will attach an example request. Your current warehouse job pulls all attributed_order events and sums gross_total, which is why it matches the larger card.
+
+[06:17] Dev: That is on me. I inherited the dbt model and assumed the event was already normalized.
+
+[06:24] Jon: The schema exposes the components so customers can choose. We can improve the field documentation, though. I am filing docs issue DOC-2284 because the rebill flag is easy to miss.
+
+[06:39] Renee: Is there any data defect?
+
+[06:43] Jon: I do not see duplicate orders or missing webhook events. This is a definition and configuration mismatch, not a corrupted dataset.
+
+[06:55] Dev: Can you read back the final numbers for the ticket?
+
+[06:58] Jon: Original dashboard gross click-attributed revenue: $219,460. Less $31,880 in renewal revenue, but add back $7,270 of renewals tied to newly created subscriptions if you want new-subscription economics. Less $9,420 refunds and normalize tax treatment. Comparable acquisition-oriented net revenue: $149,620.
+
+[07:24] Renee: And campaign ID CPN-74882, ticket 87991.
+
+[07:28] Jon: Correct. I will preserve both figures with labels so nobody thinks the system silently changed history.
+
+[07:42] Renee: Great. We also want to discuss expanding AI copy and segmentation this quarter.
+
+[07:47] Jon: I will note that for your account executive and keep it separate from support. Your next business review can use this normalized baseline.
+
+[08:00] Dev: Perfect.
+
+[08:02] Jon: I will send the report and API example today and leave ticket 87991 open until your warehouse total matches within one percent.

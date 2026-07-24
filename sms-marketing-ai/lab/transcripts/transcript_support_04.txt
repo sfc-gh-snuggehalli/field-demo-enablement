@@ -1,0 +1,91 @@
+CALL_ID: CS-2025-0709-028
+DATE: 2025-07-09
+DURATION: 00:31:58
+CALL_TYPE: Customer Support - Billing and Overage
+PARTICIPANTS: Nina Foster (RelayFox Billing Support); Jasmine Okafor (VP, Retention); Luke Meyer (Finance Manager)
+BRAND/MERCHANT: Alder & Ash Apparel
+ACCOUNT_TIER: Growth 500K
+
+[00:00] Nina Foster: Hi Jasmine, hi Luke. This is Nina from RelayFox Billing Support. I have invoice question ticket 85644.
+
+[00:10] Jasmine Okafor: Thanks. The invoice is $6,980 higher than forecast, and our CFO highlighted the line "message credit overage." We need to know whether that is a mistake.
+
+[00:25] Luke Meyer: The plan says five hundred thousand sends. We sent 482,000 messages in June. That should be under.
+
+[00:33] Nina: The plan includes 500,000 message credits, not 500,000 recipient records. One standard SMS segment uses one credit. MMS uses three credits. A long SMS can use two or more credits per recipient depending on encoding and length.
+
+[00:55] Jasmine: We did one MMS, the linen launch. Everything else was text.
+
+[01:01] Nina: The MMS was large: campaign "SUMMER_LINEN_DROP," ID CPN-65504, went to 98,720 recipients. At three credits each, that used 296,160 credits.
+
+[01:16] Luke: Okay, but that still leaves two hundred thousand.
+
+[01:19] Nina: Right. The second driver is the "Last Chance, Soft Pants" SMS. The copy contains a curly apostrophe, an em dash, and the sun emoji. That shifted the message from GSM-7 encoding to UCS-2. At 118 characters plus the tracked link, it split into two segments for 121,390 recipients.
+
+[01:43] Jasmine: You are telling me a sun emoji cost us over a hundred thousand credits?
+
+[01:49] Nina: The emoji plus the message length did. If the text had remained under the UCS-2 single-segment threshold, it would still be one. Or if you removed the emoji and special punctuation, the GSM-7 threshold would be higher.
+
+[02:09] Luke: What was the exact total?
+
+[02:12] Nina: June usage was 627,940 credits: 296,160 MMS credits, 242,780 SMS segment credits across broadcasts, 68,300 flow credits, and 20,700 test and transactional credits. The overage was 127,940 credits.
+
+[02:36] Luke: The portal chart says 611,000.
+
+[02:40] Nina: That chart excludes the final two days until carrier reconciliation closes. The invoice includes the settled amount. I agree the lag is confusing, and I am filing billing UI issue BILL-772 so the chart labels "estimated" versus "settled."
+
+[02:58] Jasmine: We never got an alert.
+
+[03:02] Nina: Your alert threshold is set to 110 percent, and notifications go only to a former employee, cassie@alderash.example. The account crossed 100 percent on June 24 and 110 percent on June 29.
+
+[03:20] Luke: That mailbox is dead. Can you add me and Jasmine?
+
+[03:24] Nina: Yes. I will set alerts at 75, 90, and 100 percent, with Luke and Jasmine as recipients. You will also get a pre-send warning when a campaign would consume more than 15 percent of the monthly allowance.
+
+[03:40] Jasmine: Was the linen campaign worth it, at least?
+
+[03:44] Nina: It generated $184,620 in attributed revenue within seven days. Revenue per credit was sixty-two cents; revenue per recipient was $1.87. Your normal SMS broadcasts average seventy-four cents per recipient, so the MMS performed strongly even though it cost more.
+
+[04:02] Jasmine: That helps. Our click-through was 11.2 percent, right?
+
+[04:06] Nina: Unique CTR was 11.2 percent, conversion rate was 9.1 percent of clickers, and unsubscribe rate was 0.38 percent.
+
+[04:18] Luke: What are our options? Refund, higher tier, or just stop using pictures?
+
+[04:23] Nina: I do not see a billing error, so I cannot promise a refund. I can apply a one-time courtesy credit of $750 because the dashboard lag and stale notification contact contributed. For future months, you could upgrade to Growth 1M, buy a seasonal credit pack, or stay on the current tier and tighten campaign planning.
+
+[04:46] Luke: What does Growth 1M cost?
+
+[04:49] Nina: Your account executive would give the final quote. The current proposal in your account is $18,500 monthly platform and messaging bundle, versus $13,200 now, with one million credits and lower overage rates.
+
+[05:08] Jasmine: We are seasonal. One million every month may be too much.
+
+[05:12] Nina: Then a three-month peak pack could fit better. Another practical step is using the segment estimator before send. For SUMMER_LINEN_DROP, the composer displayed "estimated 296,160 credits," but the warning was dismissed by the user named agency-builder.
+
+[05:31] Jasmine: I need that in the ticket. Our agency told us the platform did not warn them.
+
+[05:36] Nina: I will include the audit timestamp: June 12, 2025 at 9:41 a.m. Eastern, warning acknowledged by agency-builder, IP masked in the report.
+
+[05:53] Luke: Can we require finance approval above a certain credit count?
+
+[05:57] Nina: There is no native finance approval workflow on your tier, but we can restrict send permission to administrators and let builders create drafts. An admin would then schedule campaigns over 75,000 credits.
+
+[06:14] Jasmine: Do that for now. Builders can draft; Luke and I approve sends.
+
+[06:19] Nina: I will send the steps, but only your account owner can change roles. Jasmine is the owner, so you can apply them today.
+
+[06:31] Luke: What about shortening texts? Is there an easy checker?
+
+[06:35] Nina: The composer shows encoding and segment count under the message preview. I recommend keeping GSM-7 broadcasts under 145 visible characters once a tracked link is included. For emoji copy, watch the UCS-2 counter. The exact limit varies because concatenated messages reserve header space.
+
+[06:57] Jasmine: Can AI copy suggestions avoid segment overages?
+
+[07:01] Nina: They can be constrained by character count. Add "one SMS segment, GSM-7 only" to the suggestion settings. The tool will flag unsupported characters, though a human should still check the preview.
+
+[07:18] Luke: So ticket outcome: no invoice error, $750 courtesy credit, alerts fixed, and we review a seasonal pack.
+
+[07:28] Nina: Correct. I am also attaching the itemized credit ledger and filing BILL-772 for the estimated-versus-settled chart label.
+
+[07:42] Jasmine: Fine. We are not happy, but at least the math is clear.
+
+[07:47] Nina: I understand. I will keep ticket 85644 open through Friday in case the ledger raises another question.

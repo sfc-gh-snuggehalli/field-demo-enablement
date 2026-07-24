@@ -1,0 +1,95 @@
+CALL_ID: CS-2026-0219-026
+DATE: 2026-02-19
+DURATION: 00:36:49
+CALL_TYPE: Customer Support - Welcome Flow
+PARTICIPANTS: Maya Chen (RelayFox Support Engineer); Priya Nanduri (Director of E-commerce); Sara Holt (Lifecycle Specialist)
+BRAND/MERCHANT: LumaLeaf Beauty
+ACCOUNT_TIER: Enterprise
+
+[00:00] Maya Chen: Hi Priya, hi Sara. Maya from RelayFox. I have linked ticket 88420, originally created from attribution ticket 84703 last May.
+
+[00:13] Priya Nanduri: Yes. This has become urgent because our creator campaign says "Text DEWY for the routine," and subscribers are complaining they get the confirmation but not the coupon.
+
+[00:25] Sara Holt: Yesterday we had 5,208 inbound DEWY texts, 4,611 confirmed, and only 2,094 entered WELCOME-DEWY-V4.
+
+[00:38] Maya: I pulled the flow and event logs. There are three separate causes. First, the flow trigger still listens for Subscriber Created rather than Consent Confirmed for double opt-in records. Second, the trigger checks membership in segment DEWY-CREATOR-2026, and that segment refreshes every four hours. Third, recipient-local quiet hours are delaying some message-one sends until 8 a.m.
+
+[01:06] Priya: Delayed is okay. Missing is not.
+
+[01:09] Maya: Agreed. Of the 2,517 apparent misses, 684 are queued for quiet hours, 1,701 failed the trigger because of the event mismatch, and 132 are in an unknown state caused by stale segment membership.
+
+[01:30] Sara: We thought this was fixed after the ticket last year.
+
+[01:34] Maya: The linked ticket was created, but I see it was closed after the attribution call without the flow change being deployed. That was our process failure. The notes mention WELCOME-DEWY-V4 but no implementation task was completed.
+
+[01:49] Priya: I appreciate the honesty. We need a recovery plan, not just an apology.
+
+[01:54] Maya: Understood. I am cloning the flow to WELCOME-DEWY-V4.1 and changing the trigger to Consent Confirmed where keyword equals DEWY. I will remove the segment-membership dependency and instead write creator source as an event property at opt-in.
+
+[02:16] Sara: We need to know which creator drove the signup for commission reporting.
+
+[02:22] Maya: Keep the creator_code property, but do not make flow enrollment wait for a batch segment. The inbound keyword can be DEWY plus a creator suffix, such as DEWY MAYA7, and the parser will store MAYA7 immediately.
+
+[02:39] Priya: Our videos only say DEWY. The landing page has the creator ID in the URL.
+
+[02:44] Maya: Then the popup event can pass creator_code before the text confirmation. I see that working for 82 percent of records. The remaining records have Safari privacy restrictions and fall back to creator_code=UNKNOWN.
+
+[03:01] Sara: Fine. How do we backfill the 1,701?
+
+[03:05] Maya: We will create a segment of confirmed DEWY subscribers since February 16 who did not receive flow message one, exclude purchasers of the Glass Veil Set, exclude unsubscribes, and respect quiet hours. Current eligible count is 1,488.
+
+[03:26] Priya: Why exclude purchasers? They still deserve the coupon.
+
+[03:31] Maya: They already purchased, and the first message is a 20 percent discount. Sending it afterward could trigger price-adjustment requests. We can send purchasers a thank-you education message instead if you choose.
+
+[03:47] Priya: Good point. Separate them.
+
+[03:50] Maya: I have 173 purchasers. I will leave them out of the promotional backfill and export the list for your retention team.
+
+[04:02] Sara: What is the coupon code?
+
+[04:05] Maya: DEWY20. I checked Shopify: it is active through February 28, one use per customer, no stack with subscriptions.
+
+[04:17] Priya: The last time we had attribution confusion because that code leaked. Can we use unique codes?
+
+[04:23] Maya: Yes. WELCOME-DEWY-V4.1 can generate a single-use code per subscriber. That improves leakage control, but it changes the copy and test process.
+
+[04:36] Sara: Let's do unique codes for new enrollments, but use DEWY20 for today's backfill. We cannot wait.
+
+[04:42] Maya: That is reasonable. I am also checking the message body. It includes a sparkle emoji and a smart apostrophe, making it two UCS-2 segments. On Enterprise you are not near your monthly cap, but it doubles SMS credit usage.
+
+[05:01] Priya: Remove the emoji. Keep it one segment.
+
+[05:05] Sara: The brand team will complain.
+
+[05:08] Priya: The brand team can buy us more credits. Remove it.
+
+[05:12] Maya: Updated. The preview is now 151 GSM-7 characters including the tracked link, still two concatenated segments. If I shorten "your custom glass-skin routine" to "your routine," it becomes one.
+
+[05:29] Priya: Approved.
+
+[05:31] Maya: One-segment preview confirmed. I am sending a seed test to the internal number ending 2209.
+
+[05:42] Sara: Received: "LumaLeaf: You're in. Build your routine and take 20% off the Glass Veil Set with DEWY20." Link works.
+
+[05:54] Maya: Great. Enrollment event shows FLOW_ENTERED, flow ID FLW-33118, version 4.1.
+
+[06:06] Priya: What metrics should we expect after backfill?
+
+[06:10] Maya: Your prior welcome flow had 16.8 percent unique CTR, 8.9 percent conversion, and $3.42 revenue per entrant. During this incident, effective enrollment was 45.4 percent of confirmed opt-ins. The target after remediation is above 95 percent, with the remainder explained by quiet hours or suppressions.
+
+[06:31] Sara: Can we monitor it by hour during creator posts?
+
+[06:35] Maya: Yes. I am adding an alert if confirmed opt-ins exceed flow entries by more than 8 percent after accounting for holds. Alert ID MON-5516.
+
+[06:51] Priya: Please also document that ticket 88420 was opened in May 2025 and not implemented. We need that for our service review.
+
+[07:00] Maya: I will. I am marking it as a reopened linked incident, not a brand-new problem. I am also adding a service credit review request because the unresolved configuration caused measurable lost flow enrollment.
+
+[07:19] Priya: Thank you. Launch the backfill in local-time windows.
+
+[07:24] Maya: Scheduled in three waves. No one will receive before 8 a.m. or after 8 p.m. local. STOP and HELP handling remain active on every message.
+
+[07:39] Sara: We will watch Shopify orders.
+
+[07:42] Maya: I will watch event counts and delivery. Ticket 88420 will stay open until enrollment exceeds 95 percent for two consecutive creator pushes.

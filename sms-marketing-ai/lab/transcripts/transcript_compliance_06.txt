@@ -1,0 +1,109 @@
+CALL_ID: CE-2026-0701-021
+DATE: 2026-07-01
+DURATION: 00:59:35
+CALL_TYPE: Compliance Escalation - Migration Consent and Carrier Suspension
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Theo Park (RelayFox Solutions Consultant); Darius Wynn (Carrier Operations); Rachel Voss (Legal Operations); Beck Tan (CRM Lead); Amina Solis (Chief Marketing Officer)
+BRAND/MERCHANT: Moss & Marrow Skincare
+ACCOUNT_TIER: Enterprise Pilot - Suspended
+
+[00:00] Elena Park: This is compliance escalation CE-2026-0701-021 for Moss & Marrow. The account is in Enterprise pilot and marketing traffic is suspended pending review.
+
+[00:15] Rachel Voss: We anticipated a consent audit, but we did not expect a carrier suspension during a no-send migration phase.
+
+[00:22] Theo Park: The issue began when the spa-partner source was accidentally mapped from quarantine_status=PENDING to marketing_status=ACTIVE during a warehouse sync test. A production campaign draft then evaluated those profiles as eligible.
+
+[00:40] Beck Tan: The campaign did send. Not to all thirty-four thousand, but to some.
+
+[00:46] Darius Wynn: Correct. Campaign CPN-80214, "BARRIER_BALM_PILOT_0630," attempted 12,500 recipients before the carrier suspended the 10DLC campaign. Of those, 4,218 were from the spa-partner source.
+
+[01:07] Amina Solis: How did a pilot draft become production?
+
+[01:11] Theo: The user migration-admin had schedule permission during testing. The campaign was approved as an internal canary when the audience was 300 test profiles. After the warehouse sync, the audience changed, but approval did not invalidate because Governance was not fully enabled yet.
+
+[01:33] Rachel: That was one of the controls we specifically discussed in May.
+
+[01:37] Theo: Yes. The statement of work required consent audit first and approval invalidation on audience change. Those controls were configured in staging but not active on the production pilot account. That is an implementation failure.
+
+[01:58] Elena: Immediate containment: all marketing sends are paused; the spa cohort is locked under HOLD_SPA_0701; migration-admin scheduling permission is removed; the warehouse mapping is reverted; and legal hold MM-LH-88 preserves the draft, sync logs, and consent files.
+
+[02:20] Rachel: What do we know about the spa records?
+
+[02:23] Beck: 34,106 phone numbers from a wellness-spa partner. The file says partner_opt_in, signup_date, and location. It does not include the exact disclosure text in each row.
+
+[02:38] Elena: During discovery, Moss & Marrow identified this source as questionable and agreed it would remain quarantined. The current evidence still does not establish Moss & Marrow-specific express written consent for recurring automated marketing texts.
+
+[02:57] Amina: We did not intend to message them. What exactly was sent?
+
+[03:01] Darius: The message said: "Moss & Marrow: Barrier Balm is back. Replenish your routine and save 15% today." It included a branded link and STOP language. Of 4,218 spa-source attempts, 3,904 delivered before suspension.
+
+[03:21] Rachel: Opt-outs and complaints?
+
+[03:24] Darius: 287 STOP events, a 7.4 percent opt-out rate among delivered spa records, and 41 carrier complaints within the initial window. The carrier then returned error 30034 for later batches.
+
+[03:43] Amina: That is catastrophic.
+
+[03:46] Elena: It is serious. Revenue or intent does not change the need to remediate. The campaign produced $18,240 in attributed revenue across the full audience, but that is not evidence of consent.
+
+[04:03] Beck: Were clearly consented subscribers also affected by the suspension?
+
+[04:07] Darius: Yes. The 10DLC campaign-level suspension stopped later traffic to all marketing recipients on that registration. Transactional order updates are separate.
+
+[04:24] Rachel: What did the carrier cite?
+
+[04:27] Darius: High opt-out and complaint rates, audience-source inconsistency, and message traffic not matching the approved pilot samples. Carrier case CO-122771. Error code 30034 indicates campaign suspended or not provisioned.
+
+[04:50] Theo: The approved sample audience was existing Barrier Balm purchasers with documented onsite consent. The accidental spa cohort did not match that source.
+
+[05:02] Elena: We need two investigations. One, consent and customer impact. Two, implementation control failure. They will be documented separately but linked.
+
+[05:13] Rachel: For consent, what records are required?
+
+[05:16] Elena: Preserve the original spa export, any historical signup pages, partner agreements, disclosure versions, row-level timestamps, and opt-out history. Do not recreate missing evidence as if historical. Unless sufficient evidence is produced and reviewed, the entire 34,106-record source remains non-marketable.
+
+[05:43] Amina: Can we delete it from RelayFox after exporting for legal?
+
+[05:48] Elena: Not during legal hold. The profiles can be blocked from use while records are preserved. Deletion decisions come later under counsel and retention policy.
+
+[06:12] Elena: RelayFox will provide a masked affected-recipient report with delivery, STOP, complaint, and purchase events. No SMS may be sent to opted-out numbers.
+
+[06:26] Amina: What implementation actions are mandatory?
+
+[06:29] Theo: Separate production and staging service accounts; remove schedule permission from migration roles; enforce approval invalidation on any audience change above 1 percent during pilot; block campaign eligibility when consent_status is not VERIFIED; and add a pre-send consent-source report.
+
+[06:54] Rachel: One percent is still hundreds of people.
+
+[06:58] Theo: We can invalidate on any audience change after approval for the pilot. Longer term you may choose a threshold for normal operations.
+
+[07:11] Elena: For remediation, use any change. The next approver must review exact counts and source composition.
+
+[07:24] Darius: Carrier reinstatement requires a root-cause statement, proof the spa cohort is blocked, updated opt-in examples, governance screenshots, and a staged test. First test: 1,000 verified onsite subscribers.
+
+[07:47] Amina: Metrics?
+
+[07:49] Darius: Delivery above 95 percent, error 30034 at zero, complaint below 0.1 percent, opt-out below 1 percent, and no recipient from spa source SPAPARTNER_2025.
+
+[08:10] Beck: The source code is actually SPA-WELLNESS-24.
+
+[08:14] Theo: Correcting the record: source code SPA-WELLNESS-24. HOLD_SPA_0701 contains 34,106 profiles.
+
+[08:27] Rachel: How do we prove none leak into the test?
+
+[08:31] Theo: The eligibility export will include consent_source and consent_status for every recipient. Compliance will hash-compare the audience against the hold list before release.
+
+[08:48] Elena: Also, every verified profile must have timestamp, source, and disclosure reference. A profile cannot qualify merely because it purchased a product.
+
+[09:43] Theo: We have already disabled the faulty warehouse mapping and confirmed no additional spa profiles entered active segments after 9:22 a.m. July 1.
+
+[09:57] Darius: The carrier packet will reference CO-122771, campaign CPN-80214, error 30034, hold HOLD_SPA_0701, and source SPA-WELLNESS-24.
+
+[10:16] Rachel: Please keep the factual incident report separate from sales communications. This began as a pilot, but we do not want commercial pressure mixed into remediation.
+
+[10:28] Elena: Agreed. Compliance owns the case. Sales will not participate in release decisions.
+
+[10:38] Amina: Read the final action list.
+
+[10:41] Elena: Maintain full marketing suspension; preserve evidence under MM-LH-88; keep 34,106 spa profiles blocked; provide customer-impact export; implement source-level consent blocking and approval invalidation; separate production and staging permissions; submit carrier remediation; and run a 1,000-profile verified test only after written authorization.
+
+[11:09] Rachel: Understood.
+
+[11:11] Elena: We will post all status changes to CE-2026-0701-021. No workaround campaigns or alternate numbers may be used.

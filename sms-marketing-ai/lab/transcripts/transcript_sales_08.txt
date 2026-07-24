@@ -1,0 +1,101 @@
+CALL_ID: SE-2026-0618-044
+DATE: 2026-06-18
+DURATION: 00:42:39
+CALL_TYPE: Sales Expansion - Outdoor Gear Governance
+PARTICIPANTS: Avery Cole (RelayFox Account Executive); Samir Patel (RelayFox Solutions Engineer); Gabe Ibarra (E-commerce Manager); Lena Wu (COO)
+BRAND/MERCHANT: Pacific Trail Gear
+ACCOUNT_TIER: Growth 250K - Expansion Review
+
+[00:00] Avery Cole: Gabe, Lena, thanks for joining. We reviewed ticket 89133, especially the RIDGELINE_DROP campaign that used 247,442 credits. I do not want this to feel like we caused a billing problem and then showed up to sell an add-on.
+
+[00:16] Lena Wu: Good, because that is exactly how it looked on my calendar.
+
+[00:21] Gabe Ibarra: Nina was helpful. The conditional MMS and Unicode segmentation were real. But I need guardrails before our fall launch.
+
+[00:31] Samir Patel: Let's start with the failure mode. A campaign duplicated from an MMS template retained conditional media, the audience expanded 58 percent after a tag sync, and one emoji pushed the SMS branch into two segments.
+
+[00:49] Lena: What could the platform have stopped automatically?
+
+[00:53] Samir: With Advanced Governance, you could require approval when estimated credits exceed 75,000, when audience changes more than 10 percent after draft approval, or when any branch uses MMS. You can also invalidate approval if encoding changes from GSM-7 to UCS-2.
+
+[01:17] Gabe: That last one would have caught it.
+
+[01:20] Samir: Yes. The final review would show 18,406 MMS recipients, 96,112 two-segment SMS recipients, and total estimated credits before scheduling.
+
+[01:36] Lena: How is that different from the warning Gabe clicked through?
+
+[01:41] Samir: The standard warning is advisory. Governance can make it blocking and route approval to a second user. Gabe could not self-approve if the rule requires COO or finance review.
+
+[01:58] Lena: Now we are talking. What is the price?
+
+[02:01] Avery: Governance plus seasonal credit planning is proposed at $24,000 annually. A broader Advanced package with AI Copy Studio and real-time warehouse audiences is $58,000 annually.
+
+[02:18] Lena: I do not want a bundle padded with AI.
+
+[02:22] Avery: Then start with Governance. We included the broader option because Gabe mentioned copy-length control and category-specific segments, but it is not required.
+
+[02:33] Gabe: AI could still help us keep one segment.
+
+[02:37] Samir: It can generate one-segment GSM-7 options and flag unsupported characters. That convenience alone probably does not justify the full package. The stronger value is combining copy constraints with live audiences and approval rules.
+
+[02:57] Lena: Quantify the governance value without pretending every prevented mistake is revenue.
+
+[03:03] Avery: Directly, it reduces overage risk. RIDGELINE_DROP created about 82,000 credits above your normal campaign expectation. At your overage rate, that represented roughly $3,280 in incremental cost. One incident does not pay for a $24,000 add-on.
+
+[03:25] Lena: Correct.
+
+[03:27] Avery: The remaining case is operational control across all major launches, auditability, and avoiding a send to an unintended audience. We should not fabricate a hard ROI for risk reduction.
+
+[03:41] Gabe: The seasonal credit plan may be more valuable. We are at 171,000 active subscribers now, up from 120,000 in December.
+
+[03:51] Avery: Your current tier is likely undersized for August through November. We can move to an annual credit pool with a higher fall allocation instead of paying monthly overage.
+
+[04:04] Lena: Give me numbers.
+
+[04:06] Avery: Current plan plus projected overages is about $214,000 for the next twelve months. A seasonal pool with 5.4 million annual credits is proposed at $198,000. Add Governance and total is $222,000.
+
+[04:24] Lena: So with Governance, we spend eight thousand more than doing nothing and hoping the forecast is right.
+
+[04:31] Avery: Yes, based on the current forecast. If list growth continues above plan, the pool reduces downside. We will show low, base, and high scenarios.
+
+[04:42] Gabe: Feature-wise, can approval rules distinguish a small test from a full send?
+
+[04:47] Samir: Yes. Internal seed tests can bypass the threshold. A campaign to fewer than 500 approved test profiles can send without COO approval, while production sends above 75,000 credits require it.
+
+[05:06] Lena: Can agencies draft but never schedule?
+
+[05:10] Samir: Yes. Role-based permissions can allow content creation and segment viewing but block scheduling, exports, and consent changes.
+
+[05:27] Gabe: We also use MMS for gear diagrams. I do not want Governance to make every image a bureaucratic event.
+
+[05:34] Samir: You can define approved templates. For example, template PTG_FIT_GUIDE_MMS may not require new media approval if the audience is under 20,000 and credits under 60,000. A new image or larger audience triggers review.
+
+[05:55] Lena: That is flexible enough.
+
+[05:58] Avery: We also modeled campaign efficiency. RIDGELINE_DROP drove $1.17 per recipient but fifty-four cents per credit. Your one-segment "Rain Check" SMS drove eighty-nine cents per recipient and eighty-nine cents per credit. Governance reporting can show both.
+
+[06:18] Gabe: Finance only sees revenue per send today. Revenue per credit will change our creative decisions.
+
+[06:24] Lena: That report should not be locked behind the expensive package.
+
+[06:28] Avery: Basic revenue-per-credit reporting is available now. The add-on provides approval and budget rules based on it. We can configure the report regardless of purchase.
+
+[06:41] Lena: Good distinction.
+
+[06:44] Samir: For the fall pilot, we can apply Governance to two campaigns: "TIMBERLINE_SHELL_0826" and "BASECAMP_GIFT_GUIDE." Rules: second approval above 75,000 credits; block audience drift above 10 percent; block unapproved MMS; invalidate on encoding change; and preserve an audit export.
+
+[07:10] Gabe: Add an alert if any text exceeds one SMS segment.
+
+[07:14] Samir: Added. You can allow an exception with written approval if the copy truly needs two segments.
+
+[07:25] Lena: Commercial ask: three-month pilot for five thousand dollars, credited toward annual Governance if we proceed.
+
+[07:34] Avery: I can submit that. The seasonal credit proposal can be separate so you are not forced to buy both.
+
+[07:48] Gabe: And please reference ticket 89133 so the implementation team understands why the rules matter.
+
+[07:54] Avery: Absolutely. The pilot scope will cite campaign CPN-76941, the 58 percent audience expansion, and the UCS-2 shift.
+
+[08:10] Lena: Send the low, base, and high credit scenarios. If the base case is honest, we can move quickly.
+
+[08:18] Avery: You will get the model with assumptions visible and no automatic renewal in the pilot draft.

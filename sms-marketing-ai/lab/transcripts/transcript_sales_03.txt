@@ -1,0 +1,99 @@
+CALL_ID: SD-2025-1106-024
+DATE: 2025-11-06
+DURATION: 00:48:03
+CALL_TYPE: Sales Discovery - Shopify Plus Home Goods
+PARTICIPANTS: Marisol Grant (RelayFox Account Executive); Theo Park (RelayFox Solutions Consultant); Ben Holloway (Co-founder); Keisha Bell (E-commerce Director)
+BRAND/MERCHANT: Hearthlane Home
+ACCOUNT_TIER: Prospect - Growth
+
+[00:00] Marisol Grant: Ben, Keisha, thanks for joining. I understand Hearthlane uses Kestrel for email and SMS today. What made you take this call?
+
+[00:12] Keisha Bell: SMS is treated like a small email channel. The templates are fine, but we cannot coordinate furniture delivery cycles, browse behavior, and local showroom events the way we want.
+
+[00:27] Ben Holloway: Also, our SMS revenue looks great until finance asks whether the order would have happened anyway. We did $18 million on Shopify Plus last year. I do not need another dashboard taking credit for everything.
+
+[00:43] Theo Park: What is the current list size and send pattern?
+
+[00:47] Keisha: Eighty-five thousand active subscribers. Six broadcasts a month, welcome, cart, browse, back-in-stock, and a delivery-education flow. Average revenue per send is fifty-eight cents by Kestrel's model.
+
+[01:05] Marisol: What would success look like twelve months from now?
+
+[01:09] Ben: Grow the list to 140,000 without raising opt-out above one percent per campaign, and drive at least $1.5 million in attributable SMS revenue that finance can reproduce.
+
+[01:24] Keisha: My operational goal is more specific: stop sending sofa promotions to people waiting on a delayed sofa.
+
+[01:31] Theo: Do you have order-status and support-ticket data available?
+
+[01:35] Keisha: Shopify order tags, Narvar shipment events, and Helply tags. We can identify DELAYED_FREIGHT and DAMAGE_CLAIM, but Kestrel segmentation gets messy when those are nested with product collections.
+
+[01:53] Theo: We can ingest those events and use them as exclusions. A segment could be "viewed sofa twice, no sofa purchase, no open freight or damage ticket, within 50 miles of Denver showroom, opted in more than 24 hours ago."
+
+[02:14] Ben: How do you know distance from a showroom?
+
+[02:18] Theo: We can use shipping ZIP from prior orders or location captured with consent. For profiles without a reliable ZIP, exclude them from local messaging rather than guess.
+
+[02:33] Keisha: We have a keyword, SIT, on showroom signage. Can the welcome flow differ by store?
+
+[02:40] Theo: Yes. Use SITDEN, SITAUS, and SITPDX, or a QR page that stores location. The flow can branch to showroom hours, local inventory, and appointment links.
+
+[02:58] Ben: What about double opt-in?
+
+[03:00] Theo: Supported. The flow should trigger on Consent Confirmed, not the initial pending record. We retain the keyword, timestamp, source, and disclosure version in the consent trail.
+
+[03:18] Keisha: We tried double opt-in once and enrollment fell by twenty percent.
+
+[03:23] Theo: There is a tradeoff. You can test confirmation copy and placement. We would report initial keyword volume, confirmation completion, flow entry, and first-purchase conversion separately.
+
+[03:39] Marisol: Pricing for your volume would likely be $9,500 to $12,000 per month, depending on credits and service. How does that compare?
+
+[03:52] Ben: More than the SMS line item in Kestrel, less than Beacon quotes. The question is whether specialization pays for itself.
+
+[04:04] Marisol: Your model shows roughly 510,000 marketing recipients per month plus flows. At a conservative lift of fifteen cents per send from better segmentation, that is about $918,000 in annual attributed revenue. We haircut that by 40 percent in the ROI case because attribution is not incrementality.
+
+[04:25] Ben: Good. Keep the haircut.
+
+[04:28] Theo: We also propose holdouts on browse and local showroom campaigns. For example, randomly withhold 10 percent of eligible profiles and compare orders within seven days.
+
+[04:44] Keisha: Can we do MMS for room scenes? Furniture needs visuals.
+
+[04:49] Theo: Yes. MMS costs more credits, so use it where the image adds information. We can compare an MMS room scene against a one-segment SMS with a product link. Metrics should include revenue per recipient and revenue per credit.
+
+[05:10] Ben: Our CFO will like revenue per credit.
+
+[05:14] Marisol: The platform also flags when Unicode punctuation or emoji turns a message into multiple segments. That matters for budget predictability.
+
+[05:28] Keisha: What is the migration effort from Kestrel SMS if we keep Kestrel email?
+
+[05:33] Theo: We keep Kestrel as the email system. Shopify remains the commerce source. We import SMS subscribers with phone, status, timestamp, source, and opt-out history; rebuild forms and flows; then switch SMS sending. Email profiles continue syncing.
+
+[05:55] Ben: Will contacts become duplicated?
+
+[05:58] Theo: Profiles are matched by normalized phone and Shopify customer ID where available. Shared email does not automatically merge two phone numbers. We provide a duplicate report before launch.
+
+[06:14] Keisha: We have family orders where one email is used by two people. Good.
+
+[06:18] Marisol: What objections are we missing?
+
+[06:22] Ben: Vendor lock-in. If we leave in two years, can we export consent and event data?
+
+[06:27] Marisol: You can export subscribers, consent metadata, campaign history, and message events. Contract terms govern retention and assistance, but the data is not designed to be trapped in a proprietary black box.
+
+[06:45] Keisha: Support responsiveness matters. Furniture launches happen on weekends.
+
+[06:50] Marisol: The proposed Growth package includes priority support and an onboarding manager, not 24/7 dedicated engineering. We can include escalation contacts for launch weekends.
+
+[07:05] Theo: The platform has health alerts for delivery drops, flow-entry gaps, and unusual opt-out rates. A failed flow trigger can alert before a marketer notices lost revenue.
+
+[07:23] Ben: Give me a concrete pilot.
+
+[07:26] Theo: Denver showroom keyword plus sofa browse flow. Import a 20,000-profile consented subset, build SITDEN welcome, suppress delayed-freight customers, and run a holdout. Targets: confirmation above 75 percent, flow-entry above 95 percent of confirmed, opt-out below 1 percent, and measurable lift versus holdout.
+
+[07:52] Keisha: Add an MMS versus SMS test for the "Haven Modular" room scene.
+
+[07:58] Theo: Added. We will track revenue per send, revenue per credit, and showroom appointment bookings.
+
+[08:10] Ben: Send a proposal with monthly and annual options. No three-year term.
+
+[08:15] Marisol: I will send one-year and six-month pilot structures, with assumptions visible. We will not include a three-year option unless you request it.
+
+[08:28] Keisha: That works.

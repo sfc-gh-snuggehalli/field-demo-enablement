@@ -1,0 +1,101 @@
+CALL_ID: CE-2025-1020-003
+DATE: 2025-10-20
+DURATION: 00:58:14
+CALL_TYPE: Compliance Escalation - 10DLC Suspension
+PARTICIPANTS: Elena Park (RelayFox Compliance Manager); Maya Chen (RelayFox Support Engineer); Darius Wynn (Carrier Operations); Colin Mercer (Lifecycle Marketing Manager); Andre Silva (Agency Strategist)
+BRAND/MERCHANT: Harbor & Pine Home
+ACCOUNT_TIER: Growth 500K - Restricted
+
+[00:00] Elena Park: This call is being documented under compliance escalation CE-2025-1020-003, linked to support tickets 84217 and 87263 and carrier case CO-99142. Colin, Andre, do you consent to us recording internal notes from the discussion?
+
+[00:19] Colin Mercer: Yes.
+
+[00:21] Andre Silva: Yes.
+
+[00:24] Elena: The purpose is to review Harbor & Pine's suspended 10DLC marketing campaign and agree on remediation. This is not legal advice. Your counsel should review consent language and sweepstakes terms.
+
+[00:39] Colin: Understood. We need to know what must change before holiday campaigns can resume.
+
+[00:46] Darius Wynn: Carrier operations received the suspension on October 14. The cited signals were unregistered redirect domain cabinweekend.win, message samples inconsistent with the approved home-decor use case, subscriber frequency above the disclosed maximum, and elevated complaint rate.
+
+[01:11] Andre: We already removed the domain and paused the sweepstakes.
+
+[01:15] Maya Chen: I confirmed the three scheduled broadcasts and two promotional flows remain paused. Transactional order notifications are on a separate route and are not part of this suspension.
+
+[01:29] Elena: Let's address consent first. The sweepstakes page collected phone numbers beneath both Harbor & Pine and Roamstead logos. The disclosure said "By entering, you agree to receive recurring automated marketing messages from our partners." It did not name which partners would text.
+
+[01:51] Colin: We never transferred the numbers to Roamstead.
+
+[01:55] Elena: That reduces one risk but does not cure ambiguous presentation. For remediation, do not import or message the 6,842 sweepstakes entries through Harbor & Pine until your counsel confirms the disclosure supports Harbor & Pine messaging and you can tie each record to the version shown.
+
+[02:39] Colin: We will quarantine them. Existing Harbor & Pine subscribers stay separate from the questionable sweepstakes entries, correct?
+
+[02:45] Elena: Correct. Keep the datasets separate and do not use SMS to re-permission records whose SMS consent is in doubt.
+
+[03:02] Darius: For carrier reinstatement, we need updated opt-in screenshots from the actual live paths: website popup, checkout, keyword, and any partner page. Screenshots must include the full disclosure, unchecked state where applicable, brand identity, HELP and STOP language, and links to terms and privacy policy.
+
+[03:25] Andre: We have four screenshots in the ticket.
+
+[03:28] Maya: Two are complete. The mobile checkout screenshot cuts off the recurring-message disclosure below the fold, and the keyword screenshot does not show the call-to-action placement.
+
+[03:42] Colin: We can redo them today.
+
+[03:45] Elena: Frequency is next. Your old disclosure said "up to six messages per month." The highest cohort received thirteen marketing messages in thirty days when broadcasts and flows were combined.
+
+[04:01] Colin: We changed the website to "message frequency varies."
+
+[04:05] Elena: I see the change published October 19 at 4:12 p.m. Eastern. Preserve the prior version and deployment timestamp. Changing the disclosure does not retroactively explain past volume, but it aligns future expectations.
+
+[04:24] Andre: We also implemented a cap of six messages in seven days.
+
+[04:29] Elena: Six in seven days could still be more than twenty in a month. Why that threshold?
+
+[04:35] Andre: It was the default suggested by our agency playbook.
+
+[04:39] Elena: That is not a sufficient rationale. Based on your historical engagement, I recommend a temporary remediation cap of four marketing messages in seven days and a minimum eight-hour gap, subject to your counsel and business approval.
+
+[05:00] Colin: Four is restrictive during Black Friday.
+
+[05:04] Elena: The campaign is currently suspended. A conservative period helps demonstrate control. You can request adjustment after stable delivery and complaint metrics.
+
+[05:18] Darius: The carrier will also ask for five representative samples. They must match actual traffic. One welcome, one cart or browse flow, two promotions, and one loyalty message would be appropriate.
+
+[05:36] Maya: The samples should use harborandpine.com links only, identify Harbor & Pine in the first line, avoid third-party lead collection, and include opt-out language where required by the approved template.
+
+[05:53] Andre: Do we need "Reply STOP" in every message?
+
+[05:56] Elena: Follow the platform and carrier requirements for your program, and have counsel approve your cadence. For remediation, include it in the submitted samples and make sure STOP works globally even when the text omits the instruction.
+
+[06:34] Elena: Complaint handling: the sweepstakes broadcast had a 0.19 percent complaint rate versus 0.06 percent baseline. What did customer care hear?
+
+[06:44] Colin: Mostly "I did not sign up for cabin offers" and "too many texts." We had 118 tickets in Helply.
+
+[06:53] Elena: Export those complaints with timestamps and categorize them. Do not delete records. We need to identify whether complainants were existing Harbor & Pine subscribers, new sweepstakes entrants, or both.
+
+[07:30] Darius: Reinstatement sequence is: submit packet, carrier review, limited test, then staged ramp. The first test will be 2,000 highly engaged subscribers. Success thresholds: delivery above 93 percent, 30034 at zero, 30007 below 2 percent, and complaint rate below 0.1 percent.
+
+[07:57] Colin: If that passes, can we send to everyone?
+
+[08:00] Darius: No. Next would be 10,000, then 50,000, then broader traffic if metrics remain stable. The ramp may take several days.
+
+[08:17] Colin: Black Friday planning starts now.
+
+[08:20] Elena: Build contingency plans that do not assume immediate full restoration. Email, onsite, and permitted transactional channels should not be used to disguise marketing, but they can support your launch within their normal rules.
+
+[08:39] Andre: We have uploaded the new screenshots and five samples. The sample campaign is called HP_REINSTATE_TEST_1022.
+
+[08:48] Maya: I see campaign draft CPN-71440. Audience is currently 2,436; we need exactly 2,000 after exclusions. I will apply the engaged ninety-day segment and remove anyone contacted in seventy-two hours.
+
+[09:07] Elena: Final action list: quarantine 6,842 sweepstakes entries; preserve consent and complaint evidence; maintain four-in-seven-day temporary cap; use registered domain; update operational registration contacts; submit five accurate samples; complete staged testing.
+
+[09:29] Colin: Who owns each part?
+
+[09:31] Elena: Andre owns pages, domains, and samples. Colin owns frequency controls and complaint export. Maya owns ticket evidence and test configuration. Darius owns carrier submission. I own compliance review and release recommendation.
+
+[09:50] Colin: When will the packet go in?
+
+[09:53] Darius: Once the two incomplete screenshots are replaced and Elena signs off, I will submit under CO-99142. I am not giving a carrier decision time estimate on this call.
+
+[10:08] Elena: Correct. We will document each status change in ticket 87263. No marketing send should occur outside the approved test until written release is posted.
+
+[10:24] Colin: Understood.

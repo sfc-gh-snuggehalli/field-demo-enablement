@@ -22,7 +22,11 @@ metric layer and AI-BI stack on Snowflake.
   the no-code Snowsight wizard
 - Cortex Analyst over the semantic view (governed text-to-SQL)
 - Cortex Search over a document corpus of 10 real PDFs (grounded, cited retrieval via PARSE_DOCUMENT)
-- A Cortex Agent blending the semantic view (via Analyst) and Cortex Search as tools
+- A second Cortex Search service over 24 synthetic call transcripts (support/sales/compliance),
+  with multiple ingestion patterns (stage parse-on-read, COPY-into-table ELT, Snowpipe narrated)
+  and a RAG closer
+- A Cortex Agent blending the semantic view (via Analyst), the doc corpus, and the call
+  transcripts as three tools
 - Positioning: define once, layered-not-versus (dbt / semantic view / BI), governed by default,
   open & portable, AI-native
 
@@ -30,11 +34,13 @@ metric layer and AI-BI stack on Snowflake.
 
 | File | Description |
 |------|-------------|
-| `presentations/sms-marketing-ai.html` | Slide deck (12 slides) |
+| `presentations/sms-marketing-ai.html` | Slide deck (13 slides) |
 | `presentations/sms-marketing-ai-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
 | `demo_script.md` | Run-of-show live talk track mapped to the five positioning points |
-| `lab/setup.sql` | Idempotent setup: data + semantic view + Cortex Search + Cortex Agent |
+| `lab/setup.sql` | Idempotent setup: data + semantic view + two Cortex Search services + Cortex Agent |
 | `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/docs/` | 10 real PDFs (marketing playbook/policy corpus) for `SMS_DOCS_SEARCH` |
+| `lab/transcripts/` | 24 synthetic call transcripts + `manifest.csv` for `CALL_TRANSCRIPTS_SEARCH` |
 | `lab/sms-marketing-ai-lab.ipynb` | Hands-on lab notebook (~30 min) |
 | `app/streamlit_app.py` | Optional Streamlit-in-Snowflake chat app over the agent |
 | `agent_optimization/` | /agent-optimization system-of-record: baseline + optimized agent specs, `optimization_log.md`, and `eval_questions.md` |
@@ -63,10 +69,15 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 - A governed document corpus `SMS_DOC_CHUNKS` built from 10 real PDFs (campaign briefs, copy
   library, TCPA/consent, deliverability, segmentation playbook, support macros, quarterly
   performance review, attribution whitepaper, incident postmortem) parsed from the `SMS_DOCS` stage
+- A call-transcript corpus: 24 synthetic transcripts landed on `CALL_TRANSCRIPTS_STAGE` and
+  chunked into `TRANSCRIPT_CHUNKS` (shows stage parse-on-read, COPY-into-table ELT, and
+  Snowpipe-narrated ingestion patterns)
 - Semantic view `SMS_MARKETING_SV` — 7 KPIs defined once, with synonyms, sample values, and
   verified queries
-- Cortex Search service `SMS_DOCS_SEARCH` over the document corpus
-- Cortex Agent `SMS_MARKETING_AGENT` using the semantic view (via Analyst) and Search as tools
+- Two Cortex Search services: `SMS_DOCS_SEARCH` (playbook PDFs) and `CALL_TRANSCRIPTS_SEARCH`
+  (call transcripts, with `call_type`/`brand`/`call_date` attribute filters)
+- Cortex Agent `SMS_MARKETING_AGENT` using the semantic view (via Analyst), the doc corpus, and
+  the call transcripts as three tools
 
 ### Lab Sections
 
@@ -75,7 +86,10 @@ Run `lab/setup.sql` in your Snowflake account. This creates:
 3. Three ways to build it — DDL, YAML/dbt generation, and the no-code Snowsight wizard
 4. Cortex Analyst — five marketer questions as governed SQL
 5. Cortex Search — grounded, cited retrieval over the document corpus
-6. Cortex Agent — blend structured KPIs and unstructured knowledge
+5b. Call transcripts — ingestion patterns (stage parse-on-read, COPY-into-table ELT, Snowpipe
+   narrated), a second Cortex Search service over the transcripts, attribute filtering, and a
+   RAG closer
+6. Cortex Agent — blend structured KPIs and both unstructured corpora
 7. Programmatically build & optimize the agent — deploy a weak baseline, then apply the
    /agent-optimization best practices (tool descriptions, orchestration vs response, boundaries,
    sample questions) to deploy the optimized agent; before→after
@@ -103,18 +117,21 @@ setup needed):
 
 1. Snowsight → **Projects → Workspaces → Create Workspace from Git repository**, pointing at
    `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
-2. Open `sms-marketing-ai/lab/setup.sql` and run it through Section 3 (this creates the `@SMS_DOCS`
-   stage). Then upload the 10 PDFs from `sms-marketing-ai/lab/docs/` to the stage:
-   **Data → Databases → SMS_MARKETING_DEMO → CORE → Stages → SMS_DOCS → + Files**. Run the rest of
-   `setup.sql` (the `PARSE_DOCUMENT` step reads whatever PDFs are on the stage).
+2. Open `sms-marketing-ai/lab/setup.sql` and run it through Section 3b (this creates the `@SMS_DOCS`
+   and `@CALL_TRANSCRIPTS_STAGE` stages). Then upload the corpus files to their stages via
+   **Data → Databases → SMS_MARKETING_DEMO → CORE → Stages**: the 10 PDFs from
+   `sms-marketing-ai/lab/docs/` to `SMS_DOCS`, and the 24 `.txt` files + `manifest.csv` from
+   `sms-marketing-ai/lab/transcripts/` to `CALL_TRANSCRIPTS_STAGE`. Run the rest of `setup.sql`
+   (the `PARSE_DOCUMENT` and `COPY` steps read whatever files are on the stages).
 3. Open `lab/sms-marketing-ai-lab.ipynb` and walk the sections.
 4. Finish by chatting with `SMS_MARKETING_AGENT` in **AI & ML → Agents**.
 
 Running locally instead? First upload the corpus, then run the script:
 
 ```bash
-snow sql -q "CREATE DATABASE IF NOT EXISTS SMS_MARKETING_DEMO; CREATE SCHEMA IF NOT EXISTS SMS_MARKETING_DEMO.CORE; CREATE STAGE IF NOT EXISTS SMS_MARKETING_DEMO.CORE.SMS_DOCS DIRECTORY=(ENABLE=TRUE) ENCRYPTION=(TYPE='SNOWFLAKE_SSE');"
+snow sql -q "CREATE DATABASE IF NOT EXISTS SMS_MARKETING_DEMO; CREATE SCHEMA IF NOT EXISTS SMS_MARKETING_DEMO.CORE; CREATE STAGE IF NOT EXISTS SMS_MARKETING_DEMO.CORE.SMS_DOCS DIRECTORY=(ENABLE=TRUE) ENCRYPTION=(TYPE='SNOWFLAKE_SSE'); CREATE STAGE IF NOT EXISTS SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_STAGE DIRECTORY=(ENABLE=TRUE) ENCRYPTION=(TYPE='SNOWFLAKE_SSE');"
 snow sql -q "PUT 'file://$(pwd)/sms-marketing-ai/lab/docs/*.pdf' @SMS_MARKETING_DEMO.CORE.SMS_DOCS AUTO_COMPRESS=FALSE OVERWRITE=TRUE;"
+snow sql -q "PUT 'file://$(pwd)/sms-marketing-ai/lab/transcripts/*.txt' @SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE; PUT 'file://$(pwd)/sms-marketing-ai/lab/transcripts/manifest.csv' @SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;"
 snow sql -f sms-marketing-ai/lab/setup.sql
 ```
 
@@ -135,6 +152,10 @@ service, plus `SELECT` on the base tables.
   metric layer) + BI tools (render layer).
 - **Governed by default** — RBAC, row-access, masking, tagging, and lineage on the base tables are
   inherited by every consumer.
+- **Ingestion patterns** — the transcript corpus shows several ways in: chunk directly off the
+  stage (no landing table), COPY INTO a durable raw table (ELT, the production path), and Snowpipe
+  / Snowpipe Streaming for continuous or real-time ingestion (narrated). Attribute filters
+  (`call_type`, `brand`, `call_date`) scope retrieval without re-indexing.
 - **Open & portable** — OSI-format, exportable to YAML (`SYSTEM$READ_YAML_FROM_SEMANTIC_VIEW`) into
   Git alongside dbt; importable via `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML`.
 - **Agent optimization** — tool descriptions are the highest-leverage factor in agent quality; the

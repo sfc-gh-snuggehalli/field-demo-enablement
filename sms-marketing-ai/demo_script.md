@@ -101,18 +101,52 @@ SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
 
 ---
 
+## Beat 4b — Cortex Search over call transcripts + ingestion patterns (4 min)
+
+**Positioning: hybrid retrieval wins on the messiest corpus; zero vector infra.**
+
+First, the ingestion story (`setup.sql` §3b) — the same corpus, three ways in:
+
+- **Pattern A — chunk directly off the stage:** reassemble + `SPLIT_TEXT_RECURSIVE_CHARACTER` in
+  one query, nothing persisted.
+- **Pattern B — COPY INTO a raw table (the production path):** bulk-load lines, `LISTAGG` back into
+  whole transcripts, then chunk into `TRANSCRIPT_CHUNKS`.
+- **Pattern C — Snowpipe / Snowpipe Streaming (narrated):** auto-ingest new files, or append live
+  call rows in real time; a Dynamic Table keeps chunks fresh.
+
+Then search the transcripts — and scope with an attribute filter:
+
+```sql
+SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
+  'SMS_MARKETING_DEMO.CORE.CALL_TRANSCRIPTS_SEARCH',
+  '{ "query": "express written consent dispute and STOP opt-out handling",
+     "columns": ["call_id","brand","call_type","chunk_text"],
+     "filter": { "@eq": { "call_type": "compliance" } }, "limit": 3 }'
+))['results'];
+```
+
+> "Call transcripts are the hardest corpus for keyword search — multi-speaker, conversational, no
+> tidy fields. That's exactly where Cortex Search's hybrid vector + keyword retrieval wins, with no
+> vector DB and no embedding pipeline to maintain. I can scope to compliance calls only, or one
+> brand, at retrieval time — RBAC inherited, no re-indexing. And the RAG closer in the notebook
+> feeds the top chunks to `AI_COMPLETE` for a cited answer — no hallucination on *what the customer
+> said*."
+
+---
+
 ## Beat 5 — Cortex Agent: blend structured + unstructured (4 min)
 
 **Positioning: Layered, not "versus" — one assistant over governed objects.**
 
 Chat with `SMS_MARKETING_AGENT` in Snowsight → AI & ML → Agents:
 
-> **"Attributed revenue for the Q3 flash sale came in below plan — what does the incident
-> postmortem say caused the PNW throughput issue, and which campaign brief covered that send?"**
+> **"Trace the brand that had a 10DLC campaign suspension across its support and compliance calls —
+> what did the customer say, and what was the remediation?"**
 
-> "The agent routes the number to Analyst — governed SQL against the view — and the *why* to
-> Search, quoting the PNW throughput postmortem and the Q3 Trailhead Flash Sale brief by title.
-> Same number as the BI dashboard, because both read the same view."
+> "The agent routes to `Call_Transcript_Search`, pulls the Harbor & Pine Home support and compliance
+> calls, and quotes what was actually said — cited by brand and call_id. Ask a blended question and
+> it splits the work three ways: the number from Analyst (governed SQL over the view), our policy
+> from Playbook Search, and the customer's words from Transcript Search."
 
 Then the layering close:
 
