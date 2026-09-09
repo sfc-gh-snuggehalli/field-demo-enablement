@@ -28,6 +28,7 @@ hands-on lab with SQL setup and a notebook.
 | Migrating GTM AI: Claude Code + MCP → Cortex Agents + CoWork | Sales engineers & data/AI teams | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/gtm-agents-migration/presentations/gtm-agents-migration.html) |
 | Semantic Views & the AI-BI Stack on Snowflake | Field SEs, marketing/analytics teams & data engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/sms-marketing-ai/presentations/sms-marketing-ai.html) |
 | Proactive Retail Intelligence with Snowflake Cortex | Data & analytics engineers, ML/platform teams & product leaders | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/proactive-retail-intelligence/presentations/proactive-retail-intelligence.html) |
+| Cortex Search: BYO Embeddings & Cost Optimization | Data engineers, platform teams & solutions architects | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-search-cost/presentations/cortex-search-cost.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -136,6 +137,24 @@ surfaced in Snowflake CoWork / Snowflake Intelligence and via REST `agent:run`.
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `lab/proactive-retail-intelligence-lab.ipynb` | Hands-on lab — detect, explain, query, build + optimize the agent, CoWork climax |
 | `agent_optimization/` | Baseline vs. optimized agent specs and a diff summary |
+### Cortex Search: BYO Embeddings & Cost Optimization
+
+**Location:** `cortex-search-cost/`
+
+Validate the cost behavior of Cortex Search with user-provided (BYO) embeddings. Proves zero
+EMBED_TEXT cost for BYO vectors, demonstrates incremental refresh mechanics with PRIMARY KEY,
+breaks down the serving cost formula (6.3 cr/GB/mo of indexed data), and walks through
+optimization levers (AUTO_SUSPEND, TARGET_LAG, corpus pruning, vector dimension reduction).
+
+| File | Description |
+|------|-------------|
+| `presentations/cortex-search-cost.html` | Slide deck (9 slides) |
+| `presentations/cortex-search-cost-speaker-notes.md` | Speaker notes |
+| `lab/setup.sql` | DB, schema, warehouse, document metadata table |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/data_gen.py` | Generates ~5,000 document chunks with 768-dim embeddings via AI_EMBED |
+| `lab/cortex-search-cost-lab.ipynb` | Hands-on lab — create service, validate incremental refresh, measure cost, test optimization levers |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -219,6 +238,16 @@ field-demo-enablement/
 │       └── versions/
 │           ├── baseline/agent_spec.yaml
 │           └── optimized/agent_spec.yaml
+├── cortex-search-cost/          # Cortex Search: BYO Embeddings & Cost Optimization
+│   ├── README.md
+│   ├── presentations/
+│   │   ├── cortex-search-cost.html
+│   │   └── cortex-search-cost-speaker-notes.md
+│   └── lab/
+│       ├── setup.sql
+│       ├── cleanup.sql
+│       ├── data_gen.py
+│       └── cortex-search-cost-lab.ipynb
 <!-- REPO_TREE_END -->
 ```
 
