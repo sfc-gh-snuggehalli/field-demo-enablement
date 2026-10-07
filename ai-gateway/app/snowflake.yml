@@ -12,7 +12,8 @@ entities:
     external_access_integrations:
       - GATEWAY_LAB_APP_EAI
     # Gateway auth defaults to the container session token (served, not traced in testing).
-    # Optional PAT secret: only works if your network policy allows the container egress IP.
+    # A PAT from the container is rejected by account network policies: the gateway
+    # sees no client IP for container calls, so no IP allowlist can admit them.
     # secrets:
     #   gateway_pat: CORTEX_GATEWAY_LAB.PUBLIC.GATEWAY_PAT_SECRET
     main_file: streamlit_app.py
@@ -20,6 +21,7 @@ entities:
       - streamlit_app.py
       - gateway_client.py
       - trace_queries.py
+      - optimize_config.py
       - pyproject.toml
       - .streamlit/config.toml
       - app_pages/overview.py

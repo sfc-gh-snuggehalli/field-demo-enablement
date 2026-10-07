@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from gateway_client import chat, new_traceparent
+from optimize_config import MODELS, config
 
 st.header("Experiments")
 st.caption(
@@ -16,12 +17,7 @@ conn = st.session_state["conn"]
 session = conn.session()
 
 JUDGE_MODEL = "claude-sonnet-4-5"
-MODELS = ["openai-gpt-5.4", "openai-gpt-5.4-mini", "openai-gpt-5-mini", "openai-gpt-5-nano",
-          "claude-haiku-4-5", "claude-sonnet-4-5"]
-DEFAULT_SYSTEM = (
-    "You are a detailed marketing analyst. Always give comprehensive, thorough "
-    "responses with specific numbers and examples."
-)
+FIELDS = (("model", "m"), ("max_tokens", "t"), ("system_prompt", "s"))
 
 # Facts the model needs; the eval measures answer quality, not retrieval.
 CONTEXT_SQL = """
@@ -47,29 +43,61 @@ def load_context() -> str:
 
 
 eval_df = load_eval()
-seed = st.session_state.get("experiment_seed", {})
+
+# An Advisor seed is applied once: written straight into widget state (so it
+# wins over any values left from an earlier visit), then consumed.
+seed = st.session_state.pop("experiment_seed", None)
 if seed:
-    st.info(f"Seeded from Advisor finding: **{seed.get('finding')}**")
+    for label in ("Baseline", "Candidate"):
+        cfg = seed[label.lower()]
+        for field, suffix in FIELDS:
+            st.session_state[f"{label}_{suffix}"] = cfg[field]
+    st.session_state["exp_finding"] = seed["finding"]
+    st.session_state["exp_seeded_configs"] = {"Baseline": seed["baseline"],
+                                             "Candidate": seed["candidate"]}
+    unknown = {seed["baseline"]["model"], seed["candidate"]["model"]} - set(MODELS)
+    st.session_state["exp_unknown_models"] = sorted(unknown)
+
+for label in ("Baseline", "Candidate"):  # first visit: neutral defaults
+    for field, suffix in FIELDS:
+        st.session_state.setdefault(f"{label}_{suffix}", config()[field])
+
+finding = st.session_state.get("exp_finding")
+if finding:
+    f1, f2 = st.columns([5, 1])
+    f1.info(f"Seeded from Advisor finding: **{finding}**")
+    if f2.button("Clear finding", use_container_width=True):
+        st.session_state.pop("exp_finding", None)
+        st.session_state.pop("exp_seeded_configs", None)
+        st.rerun()
+for m in st.session_state.pop("exp_unknown_models", []):
+    st.warning(f"`{m}` from the traces is not callable through the gateway here; "
+               f"pick a supported model.")
 
 
-def config_form(col, label, defaults):
+def config_form(col, label):
+    for field, suffix in FIELDS:  # fall back if a stale value is no longer valid
+        if field == "model" and st.session_state[f"{label}_{suffix}"] not in MODELS:
+            st.session_state[f"{label}_{suffix}"] = MODELS[0]
     with col.container(border=True):
         st.markdown(f"**{label}**")
-        model = st.selectbox("Model", MODELS, key=f"{label}_m",
-                             index=MODELS.index(defaults["model"]) if defaults["model"] in MODELS else 0)
-        max_tokens = st.number_input("max_tokens", 16, 4096, int(defaults["max_tokens"]),
-                                     step=50, key=f"{label}_t")
-        system = st.text_area("System prompt", defaults["system_prompt"], key=f"{label}_s",
-                              height=110)
+        model = st.selectbox("Model", MODELS, key=f"{label}_m")
+        max_tokens = st.number_input("max_tokens", 16, 4096, step=50, key=f"{label}_t")
+        system = st.text_area("System prompt", key=f"{label}_s", height=110)
     return {"model": model, "max_tokens": int(max_tokens), "system_prompt": system}
 
 
-base_defaults = {"model": "openai-gpt-5.4", "max_tokens": 2048, "system_prompt": DEFAULT_SYSTEM}
-cand_defaults = {**base_defaults, **{k: v for k, v in seed.items() if k != "finding"}}
-
 c1, c2 = st.columns(2)
-baseline = config_form(c1, "Baseline", base_defaults)
-candidate = config_form(c2, "Candidate", cand_defaults)
+baseline = config_form(c1, "Baseline")
+candidate = config_form(c2, "Candidate")
+
+# The finding labels the runs only while the configs are still the ones it seeded.
+seeded = st.session_state.get("exp_seeded_configs")
+if finding and seeded and seeded != {"Baseline": baseline, "Candidate": candidate}:
+    st.caption("Configs edited since seeding: runs will not be tagged with the finding.")
+    finding = None
+if baseline == candidate:
+    st.warning("Baseline and candidate are identical: the experiment cannot show a difference.")
 
 picked = st.multiselect(
     "Eval prompts", eval_df["PROMPT_ID"].tolist(), default=eval_df["PROMPT_ID"].tolist()[:8],
@@ -88,13 +116,15 @@ WHERE r.PROMPT_ID = e.PROMPT_ID AND r.RUN_ID = ? AND r.STATUS = 'OK'
 """
 
 
-def run_config(label: str, cfg: dict, prompts: pd.DataFrame, progress, offset: int, total: int) -> str:
-    run_id = f"{label}-{uuid.uuid4().hex[:8]}"
+def run_config(label: str, cfg: dict, prompts: pd.DataFrame, progress, offset: int, total: int,
+               pair: str) -> str:
+    # Both runs of one experiment share the suffix, which is how Before/After pairs them.
+    run_id = f"{label}-{pair}"
     session.sql(
         "INSERT INTO OPTIMIZATION_RUNS (RUN_ID, LABEL, MODEL, SYSTEM_PROMPT, MAX_TOKENS, SOURCE_FINDING) "
         "VALUES (?, ?, ?, ?, ?, ?)",
         params=[run_id, label, cfg["model"], cfg["system_prompt"], cfg["max_tokens"],
-                seed.get("finding")],
+                finding],
     ).collect()
     context = load_context()
     rows = []
@@ -120,8 +150,9 @@ if st.button(":material/play_arrow: Run experiment", type="primary", disabled=no
     prompts = eval_df[eval_df["PROMPT_ID"].isin(picked)]
     total = 2 * len(prompts)
     bar = st.progress(0.0, "Starting...")
-    b_id = run_config("baseline", baseline, prompts, bar, 0, total)
-    c_id = run_config("candidate", candidate, prompts, bar, len(prompts), total)
+    pair = uuid.uuid4().hex[:8]
+    b_id = run_config("baseline", baseline, prompts, bar, 0, total, pair)
+    c_id = run_config("candidate", candidate, prompts, bar, len(prompts), total, pair)
     bar.empty()
     st.session_state["compare_runs"] = (b_id, c_id)
     st.success(f"Runs complete: `{b_id}` vs `{c_id}`")

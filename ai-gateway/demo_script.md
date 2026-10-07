@@ -1,12 +1,19 @@
 # Demo Script: Cortex AI Gateway
 
-About 20 minutes. Before you present, run `lab/setup.sql`, deploy the app, and run `python lab/generate_traffic.py` once so the dashboards have history.
+About 20 minutes. Before you present, run `lab/setup.sql` and run `python lab/generate_traffic.py` once so the dashboards have history. Run the Trace Analyzer locally: gateway calls are traced only with a PAT from outside Snowflake (see the README section "Where to run the app").
 
 ## Pre-flight (5 min before)
 
-- Terminal: `export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_PAT_FILE=~/.snowflake/ai_gateway_demo.pat`
+- Terminal 1: `export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_PAT_FILE=~/.snowflake/ai_gateway_demo.pat`
+- Terminal 2: start the Trace Analyzer and leave it running:
+  ```bash
+  cd app
+  SNOWFLAKE_DEFAULT_CONNECTION_NAME=<connection> GATEWAY_HOST=<org-account>.snowflakecomputing.com \
+  streamlit run streamlit_app.py
+  ```
+- Check the PAT hasn't expired: send one prompt on the **Live prompt** page and confirm the waterfall appears.
 - Browser tab 1: Snowsight -> **AI & ML -> Cortex AI Gateway**
-- Browser tab 2: Trace Analyzer app (Projects -> Streamlit -> AI_GATEWAY_TRACE_ANALYZER), set lookback to 1 day
+- Browser tab 2: Trace Analyzer at http://localhost:8501, lookback set to 1 day
 - Deck open at the Architecture slide
 
 ## 1. Frame it (deck, 3 min)
@@ -21,6 +28,7 @@ python lab/live_agent.py "What was the ROAS by channel for Q4 2024, and how does
 
 - Point out the single tool call printed (`marketing_agent`) and the `trace_id`. The agent behind the MCP server ran the Analyst SQL and the strategy search itself.
 - "Two gateway calls in one agent turn, all under one trace. The client never got a raw SQL tool, so it can't go around the semantic view."
+- Alternative without the terminal: on the **Live prompt** page, send a prompt, then pick `not-a-real-model` to show an error span.
 
 ## 3. Find it in Snowsight (2 min)
 
@@ -35,9 +43,10 @@ Tab 1, AI Gateway traces. Search the trace_id and open it: the spans, model, tok
 ## 5. Close the loop (6 min)
 
 1. **Advisor**: find the token-bloat or latency finding (the generator's verbose scenario produces one) and click **Test this fix**.
-2. **Experiments**: the candidate is pre-filled (smaller max tokens, concise system prompt; optionally `openai-gpt-5.4-mini`). Keep about 6 prompts selected and click **Run experiment**. It takes about a minute.
-3. **Before / after**: in our validation run the candidate held judge quality (0.98 vs 0.98) with about 60% fewer output tokens and lower p50 latency. Your numbers will vary.
-4. Scroll to **Promote**: client config, the allowlist `ALTER AI GATEWAY`, and a per-user quota. "We ship the evidence, not a hunch."
+2. **Experiments**: both configs are pre-filled. The baseline is the flagged traffic's model at its current settings; the candidate changes only the proposed fix (smaller max tokens and a concise system prompt, or a different model). The banner names the finding. Keep about 6 prompts selected and click **Run experiment**. It takes about a minute.
+3. **Before / after**: opens on the pair you just ran. In our validation run the candidate held judge quality (0.98 vs 0.98) with about 60% fewer output tokens and lower p50 latency. Your numbers will vary.
+4. Every experiment call carries a traceparent: open one in **Trace explorer** to show it in the gateway telemetry.
+5. Scroll to **Promote**: client config, the allowlist `ALTER AI GATEWAY`, and a per-user quota. "We ship the evidence, not a hunch."
 
 ## 6. Governance close (deck, 2 min)
 
@@ -46,6 +55,7 @@ Slides 12-14: USAGE vs MONITOR, the spec replaces as a whole, quotas block withi
 ## Recovery tips
 
 - Trace Analyzer doesn't show the trace yet: traces normally land within a minute; refresh the Trace explorer.
-- Gateway returns 401 locally: the PAT expired or a network policy blocked it. Create a new PAT.
-- Experiments calls return HTTP 401: a PAT secret is bound and the network policy blocks the container's IP. Unset it with `ALTER STREAMLIT ... UNSET SECRETS`.
+- Gateway returns 401 locally: the PAT expired or a network policy blocked it (are you on the VPN?). Create a new PAT.
+- Experiments results show HTTP 401 or no gateway trace: you are on the deployed Snowflake app. Switch to the local app.
+- No **Live prompt** page: it only appears in the local app.
 - `unknown model`: that model isn't available on this account's Chat Completions API, and Claude only works on `/v1/messages`.

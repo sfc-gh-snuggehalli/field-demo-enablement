@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 
+from optimize_config import (CONCISE_MAX_TOKENS, CONCISE_SYSTEM, config, dominant_model,
+                             other_model, proposal)
+
 st.header("Advisor")
 
 df: pd.DataFrame = st.session_state["df"]
@@ -29,17 +32,14 @@ COST_CREDIT_THRESHOLD = 0.5
 recommendations: list[dict] = []
 
 
-CONCISE_SYSTEM = (
-    "You are a concise marketing analyst. Answer in at most 3 short sentences or "
-    "3 bullets. Lead with the number or the direct answer."
-)
-ALT_MODEL = "openai-gpt-5.4-mini"
+CONCISE = {"max_tokens": CONCISE_MAX_TOKENS, "system_prompt": CONCISE_SYSTEM}
 
 
-def add_rec(severity: str, title: str, detail: str, proposal: dict | None = None):
-    """proposal = candidate config overrides that the Experiments page can test."""
+def add_rec(severity: str, title: str, detail: str, fix: dict | None = None,
+            baseline: dict | None = None):
+    """fix = config changes to test; baseline = the config of the flagged traffic."""
     recommendations.append({"severity": severity, "title": title, "detail": detail,
-                            "proposal": proposal})
+                            "proposal": proposal(title, baseline, **fix) if fix else None})
 
 
 # Rule 1: High latency patterns
@@ -52,7 +52,8 @@ for user, avg_ms in user_lat.items():
             "Consider using faster models, reducing prompt length, or adding "
             "max_tokens to limit output size. For interactive workloads, target "
             "sub-5s latency.",
-            {"max_tokens": 300, "system_prompt": CONCISE_SYSTEM},
+            CONCISE,
+            config(dominant_model(df[df["USER_NAME"] == user])),
         )
 
 # Rule 2: Error rate spikes
@@ -68,7 +69,8 @@ for model in total_by_model.index:
             "Check HTTP status codes for patterns (429 = rate limit, 500 = server "
             "error). Consider adding retry logic with exponential backoff or "
             "configuring a fallback model in the Gateway spec.",
-            {"model": "openai-gpt-5.4"},
+            {"model": other_model(model, "openai-gpt-5.4")},
+            config(model),
         )
 
 # Rule 3: Token bloat
@@ -84,7 +86,8 @@ for _, row in bloated.iterrows():
         "Set max_tokens in the API call, use structured output instructions "
         '("respond in JSON", "limit to 3 bullet points"), or add a system '
         "prompt that constrains verbosity.",
-        {"model": row["REQUEST_MODEL"], "max_tokens": 300, "system_prompt": CONCISE_SYSTEM},
+        CONCISE,
+        config(row["REQUEST_MODEL"]),
     )
 
 # Rule 4: Underutilized fast models
@@ -98,12 +101,15 @@ if not slow.empty and not fast.empty:
     slow_vol = slow["VOLUME"].sum()
     fast_vol = fast["VOLUME"].sum()
     if fast_vol > 0 and slow_vol >= 2 * fast_vol:
+        slow_model = slow.sort_values("VOLUME").iloc[-1]["REQUEST_MODEL"]
+        fast_model = fast.sort_values("AVG_LAT").iloc[0]["REQUEST_MODEL"]
         add_rec(
             "MEDIUM",
             f"Slow models handle {slow_vol} requests vs {fast_vol} on fast models",
             "Consider rebalancing workloads: route simpler tasks to faster, "
             "cheaper models and reserve high-latency models for complex reasoning.",
-            {"model": ALT_MODEL},
+            {"model": fast_model},
+            config(slow_model),
         )
 
 # Rule 5: No conversation threading
@@ -130,7 +136,8 @@ if unique_models == 1 and len(df) >= SINGLE_MODEL_MIN_REQUESTS:
         "Consider testing alternative models for cost/latency optimization. "
         "Configure model fallback in the AI Gateway spec so requests "
         "automatically route to a backup when the primary is slow or unavailable.",
-        {"model": ALT_MODEL},
+        {"model": other_model(model_name)},
+        config(model_name),
     )
 
 # Rule 7: Cost optimization
@@ -144,7 +151,8 @@ if not usage_df.empty:
             f"Average input token count is {avg_input:,.0f}. Consider trimming "
             "system prompts, reducing context window size, or using smaller "
             "models for simpler classification/extraction tasks.",
-            {"system_prompt": CONCISE_SYSTEM, "max_tokens": 300},
+            CONCISE,
+            config(dominant_model(df)),
         )
 
 # ---------------------------------------------------------------------------
@@ -165,12 +173,13 @@ else:
         with st.container(border=True):
             st.markdown(f":{color}[**{rec['severity']}**] — {rec['title']}")
             st.caption(rec["detail"])
-            if rec["proposal"]:
-                st.caption("Proposed change: " + ", ".join(
-                    f"`{k}`={str(v)[:40]}" for k, v in rec["proposal"].items()))
+            p = rec["proposal"]
+            if p:
+                changed = {k: v for k, v in p["candidate"].items() if p["baseline"][k] != v}
+                st.caption(f"Baseline `{p['baseline']['model']}`. Proposed change: " + ", ".join(
+                    f"`{k}`={str(v)[:40]}" for k, v in changed.items()))
                 if st.button(":material/science: Test this fix", key=f"exp_{i}"):
-                    st.session_state["experiment_seed"] = {
-                        "finding": rec["title"], **rec["proposal"]}
+                    st.session_state["experiment_seed"] = p
                     st.switch_page("app_pages/experiments.py")
 
 # ---------------------------------------------------------------------------

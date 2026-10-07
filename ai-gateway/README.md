@@ -41,7 +41,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
   ```sql
   ALTER USER <you> ADD PROGRAMMATIC ACCESS TOKEN ai_gateway_demo ROLE_RESTRICTION = 'SYSADMIN' DAYS_TO_EXPIRY = 7;
   ```
-- Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python`
+- Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python streamlit snowflake-snowpark-python requests`
 - Snowflake CLI 3.14+ to deploy the container-runtime app
 
 ### Setup
@@ -58,7 +58,15 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
    ```
 3. Generate background traffic: `python lab/generate_traffic.py`
 4. Run the notebook `lab/ai-gateway-lab.ipynb` top to bottom.
-5. Deploy the app: `cd app && snow streamlit deploy --replace`
+5. Run the app locally (use this for demos; see [Where to run the app](#where-to-run-the-app)):
+   ```bash
+   cd app
+   SNOWFLAKE_DEFAULT_CONNECTION_NAME=<connection in ~/.snowflake/config.toml> \
+   GATEWAY_HOST=<org-account>.snowflakecomputing.com \
+   streamlit run streamlit_app.py
+   ```
+   Gateway calls use `SNOWFLAKE_PAT` or `SNOWFLAKE_PAT_FILE` (default `~/.snowflake/ai_gateway_demo.pat`). Use dashes, not underscores, in the host.
+6. Optional: deploy the app to Snowflake for read-only analysis: `cd app && snow streamlit deploy --replace`
 
 ### Lab Sections
 
@@ -75,13 +83,26 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 
 | Group | Page | What it shows |
 |-------|------|---------------|
+| Act (local only) | Live prompt | Sends one prompt through the gateway and polls until its trace lands, then shows the span waterfall |
 | Observe | Overview, Model performance, User deep dive | KPIs, latency, errors, tokens and credits by model and user |
 | Observe | Trace explorer | One trace: span timeline plus captured system prompt, input and output messages |
 | Optimize | Advisor | Rules over telemetry (latency, error spikes, token bloat, model mix, cost), each with a proposed change and a "Test this fix" button |
 | Optimize | Experiments | Replays EVAL_PROMPTS through the gateway with baseline vs candidate config; scores each answer 0-1 with an AI_COMPLETE judge |
 | Optimize | Before / after | Quality, p50/p95, tokens and error-rate deltas, per-prompt and side-by-side answers, plus the client config, gateway allowlist and quota SQL to promote |
 
-The Experiments page calls the gateway with the app's container session token. The gateway serves those calls, but in testing they were not written to `AGENT_TRACE_TABLE` (results are still stored in OPTIMIZATION_RESULTS). The traced live prompt therefore runs from a laptop with `lab/live_agent.py`; open its trace_id on the Trace explorer page. A PAT secret (`GATEWAY_PAT_SECRET` plus the commented `secrets:` block in `app/snowflake.yml`) only works if your account's network policy allows the app container's egress IP. Otherwise the call fails with HTTP 401, and LOGIN_HISTORY shows `INCOMING_REQUEST_BLOCKED`.
+#### Where to run the app
+
+Run it locally with `streamlit run` for demos. The Experiments and Live prompt pages need gateway calls to be traced, and that works only with a PAT sent from outside Snowflake:
+
+| Where | Gateway credential | Served | Traced |
+|-------|-------------------|--------|--------|
+| Laptop (`streamlit run`) | PAT | Yes | Yes, in about a minute |
+| Streamlit in Snowflake | Container session token | Yes | No (in testing) |
+| Streamlit in Snowflake | PAT secret | No: HTTP 401 `INCOMING_REQUEST_BLOCKED` when the account has a network policy | - |
+
+An IP allowlist does not fix the in-Snowflake PAT case. LOGIN_HISTORY records gateway PAT calls with `CLIENT_IP = 0.0.0.0`, so there is no container address to allow, short of opening the policy to all IPs.
+
+The deployed app still runs the Observe pages, Advisor and Before/After. Its Experiments results land in OPTIMIZATION_RESULTS without gateway traces, and Live prompt is hidden there.
 
 ### Run in Snowflake (Workspaces / Git)
 
@@ -91,7 +112,7 @@ The SQL and the app can run entirely from Snowsight:
 2. Open `ai-gateway/lab/setup.sql` and run it.
 3. Create the Streamlit app from `ai-gateway/app` (container runtime, compute pool `SYSTEM_COMPUTE_POOL_CPU`, integration `GATEWAY_LAB_APP_EAI`).
 
-The LangChain notebook and `live_agent.py` play the external agent, so they run on a laptop with a PAT.
+The LangChain notebook, `live_agent.py` and the traced Experiments play the external client, so they run on a laptop with a PAT.
 
 ## Key Concepts
 

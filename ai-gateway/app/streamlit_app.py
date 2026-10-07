@@ -142,5 +142,10 @@ pages = {
         st.Page("app_pages/compare.py", title="Before / after", icon=":material/compare_arrows:"),
     ],
 }
+# Gateway calls are traced only with a PAT, which works from a laptop but not from
+# the SiS container, so the Live prompt page appears only in a local `streamlit run`.
+if not os.path.exists("/snowflake/session/token"):
+    pages = {"Act": [st.Page("app_pages/live.py", title="Live prompt", icon=":material/send:")],
+             **pages}
 pg = st.navigation(pages)
 pg.run()

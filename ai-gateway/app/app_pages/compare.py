@@ -15,10 +15,39 @@ if runs.empty:
     st.stop()
 
 ids = runs["RUN_ID"].tolist()
+cfg = runs.set_index("RUN_ID")
+
+
+def pair_of(run_id: str) -> str:
+    return run_id.split("-", 1)[-1]
+
+
+# Default to the experiment just run, else the newest complete baseline/candidate pair.
 b_def, c_def = st.session_state.get("compare_runs", (None, None))
+if b_def not in ids or c_def not in ids:
+    b_def = c_def = None
+    for rid in ids:
+        if rid.startswith("candidate-") and f"baseline-{pair_of(rid)}" in ids:
+            b_def, c_def = f"baseline-{pair_of(rid)}", rid
+            break
+
+
+def describe(rid: str) -> str:
+    r = cfg.loc[rid]
+    finding = f" - {r['SOURCE_FINDING'][:40]}" if isinstance(r["SOURCE_FINDING"], str) else ""
+    return f"{rid} | {r['MODEL']} / {r['MAX_TOKENS']} tok{finding}"
+
+
 c1, c2 = st.columns(2)
-b_id = c1.selectbox("Baseline run", ids, index=ids.index(b_def) if b_def in ids else min(1, len(ids) - 1))
-c_id = c2.selectbox("Candidate run", ids, index=ids.index(c_def) if c_def in ids else 0)
+b_id = c1.selectbox("Baseline run", ids, index=ids.index(b_def) if b_def else min(1, len(ids) - 1),
+                    format_func=describe)
+c_id = c2.selectbox("Candidate run", ids, index=ids.index(c_def) if c_def else 0,
+                    format_func=describe)
+if b_id == c_id:
+    st.warning("Pick two different runs to compare.")
+    st.stop()
+if pair_of(b_id) != pair_of(c_id):
+    st.caption("These runs come from different experiments; eval prompts may differ.")
 
 # Gateway-side duration comes from the trace table, joined on the trace_id we sent.
 res = conn.query(
@@ -74,7 +103,6 @@ with st.container(border=True):
                    delta_color="inverse" if key in lower_is_better else "normal",
                    help=f"Baseline: {fmt.format(bv) if not pd.isna(bv) else '-'}")
 
-cfg = runs.set_index("RUN_ID")
 st.caption(
     f"Baseline `{cfg.loc[b_id, 'MODEL']}` / max_tokens {cfg.loc[b_id, 'MAX_TOKENS']}  ->  "
     f"Candidate `{cfg.loc[c_id, 'MODEL']}` / max_tokens {cfg.loc[c_id, 'MAX_TOKENS']}"

@@ -163,7 +163,7 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 **Presenter Notes:**
 - Traces usually appear within 20-40 seconds of the call.
-- Run the traced live prompt from a laptop with a PAT. The app's Experiments page uses the container session token: the gateway serves it, but those calls were not traced in testing. A PAT from inside the container is blocked if the account's network policy doesn't allow the container's egress IP (HTTP 401, INCOMING_REQUEST_BLOCKED).
+- Run the Trace Analyzer from a laptop with a PAT (`streamlit run`): that's where Live prompt and Experiments calls are traced. Inside Snowflake, the container session token is served but not traced in testing, and a PAT from the container is rejected by account network policies (HTTP 401, INCOMING_REQUEST_BLOCKED).
 - See `demo_script.md` for the full run-of-show.
 
 **References:**
