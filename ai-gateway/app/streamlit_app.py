@@ -130,9 +130,6 @@ st.session_state["topic"] = topic
 # Navigation
 # ---------------------------------------------------------------------------
 pages = {
-    "Act": [
-        st.Page("app_pages/live.py", title="Live prompt", icon=":material/send:"),
-    ],
     "Observe": [
         st.Page("app_pages/overview.py", title="Overview", icon=":material/dashboard:"),
         st.Page("app_pages/model_performance.py", title="Model performance", icon=":material/speed:"),

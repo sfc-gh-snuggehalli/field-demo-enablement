@@ -23,7 +23,7 @@ default_id = st.session_state.get("explore_trace_id", "")
 options = [default_id] if default_id else []
 options += [t for t in recent["TRACE_ID"].head(200) if t != default_id]
 if not options:
-    st.info("No traces in the selected window yet. Send one from the Live page.")
+    st.info("No traces in the selected window yet. Run lab/live_agent.py to send one.")
     st.stop()
 
 trace_id = st.selectbox(

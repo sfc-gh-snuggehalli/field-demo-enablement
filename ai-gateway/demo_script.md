@@ -19,8 +19,8 @@ Slides 1-3. One governed endpoint, MCP for data, telemetry you own.
 python lab/live_agent.py "What was the ROAS by channel for Q4 2024, and how does it compare to our Q4 ROAS target?"
 ```
 
-- Point out the tool calls printed (query_campaigns -> execute_sql -> search_strategy_docs) and the `trace_id`.
-- "That was about four gateway calls in one agent turn, all under one trace."
+- Point out the single tool call printed (`marketing_agent`) and the `trace_id`. The agent behind the MCP server ran the Analyst SQL and the strategy search itself.
+- "Two gateway calls in one agent turn, all under one trace. The client never got a raw SQL tool, so it can't go around the semantic view."
 
 ## 3. Find it in Snowsight (2 min)
 
@@ -30,7 +30,6 @@ Tab 1, AI Gateway traces. Search the trace_id and open it: the spans, model, tok
 ## 4. Find it in the Trace Analyzer (3 min)
 
 - **Trace explorer**: pick the trace and show the waterfall and the system prompt, input and output for each span.
-- **Live prompt** page: send the default prompt, then switch the model to `not-a-real-model` and send again. Show the error span landing.
 - **Overview**: the error rate and token charts now include those calls.
 
 ## 5. Close the loop (6 min)
@@ -46,7 +45,7 @@ Slides 12-14: USAGE vs MONITOR, the spec replaces as a whole, quotas block withi
 
 ## Recovery tips
 
-- Live page says the trace isn't visible yet: traces normally land within a minute, so click **Check again**.
+- Trace Analyzer doesn't show the trace yet: traces normally land within a minute; refresh the Trace explorer.
 - Gateway returns 401 locally: the PAT expired or a network policy blocked it. Create a new PAT.
-- App gateway calls fail: bind the PAT secret (see README, Trace Analyzer app).
+- Experiments calls return HTTP 401: a PAT secret is bound and the network policy blocks the container's IP. Unset it with `ALTER STREAMLIT ... UNSET SECRETS`.
 - `unknown model`: that model isn't available on this account's Chat Completions API, and Claude only works on `/v1/messages`.

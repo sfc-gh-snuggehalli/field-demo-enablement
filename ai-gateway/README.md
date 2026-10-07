@@ -2,7 +2,7 @@
 
 [View Presentation](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html)
 
-Cortex AI Gateway gives agents and SDKs one governed inference endpoint. It records every request as an OpenTelemetry span in your own account and attributes and caps spend per user. This module runs a LangChain agent through the gateway with Snowflake MCP tools (Cortex Analyst, Cortex Search, SQL). It then uses a Streamlit Trace Analyzer to close the loop: observe traces, diagnose problems, replay an eval set with a candidate config, compare before and after, and promote the winner.
+Cortex AI Gateway gives agents and SDKs one governed inference endpoint. It records every request as an OpenTelemetry span in your own account and attributes and caps spend per user. This module runs a LangChain agent through the gateway with a Snowflake MCP server that exposes one governed Cortex Agent tool (Cortex Analyst + Cortex Search). It then uses a Streamlit Trace Analyzer to close the loop: observe traces, diagnose problems, replay an eval set with a candidate config, compare before and after, and promote the winner.
 
 ## Audience
 
@@ -11,10 +11,10 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 ## Topics Covered
 
 - **Gateway fundamentals**: auto-provisioned `SNOWFLAKE` gateway, Chat Completions and Messages APIs, model allowlist, logging and payload capture
-- **LangChain + MCP**: `ChatOpenAI` pointed at the gateway; Snowflake MCP server exposing Cortex Analyst, Cortex Search and `execute_sql`
+- **LangChain + MCP**: `ChatOpenAI` pointed at the gateway; Snowflake MCP server exposing one governed tool, a Cortex Agent that runs Cortex Analyst and Cortex Search (no raw SQL tool)
 - **Observability**: `AGENT_TRACE_TABLE('SNOWFLAKE')` spans, W3C `traceparent` grouping, conversation ids, Snowsight AI Gateway page
 - **Optimization loop**: Advisor findings -> eval-set experiments through the gateway -> LLM-judge scoring -> before/after -> promote
-- **Live prompt**: one request visible at the same time in Snowsight and the Trace Analyzer
+- **Live prompt**: `lab/live_agent.py` sends one request that is visible in both Snowsight and the Trace Analyzer
 - **Admin and cost controls**: spec management, USAGE vs MONITOR, `AI_GATEWAY_USAGE_HISTORY`, shared-resource budgets, per-user quotas with block enforcement
 
 ## Contents
@@ -24,7 +24,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 | `presentations/ai-gateway.html` | Slide deck (14 slides) |
 | `presentations/ai-gateway-speaker-notes.md` | Per-slide talking points, presenter notes, and references |
 | `demo_script.md` | Live run-of-show for the demo |
-| `lab/setup.sql` | Database, warehouse, data, semantic view, Cortex Search, MCP server, gateway spec + grants, eval/optimization tables, app access |
+| `lab/setup.sql` | Database, warehouse, data, semantic view, Cortex Search, Cortex Agent, MCP server, gateway spec + grants, eval/optimization tables, app access |
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `lab/ai-gateway-lab.ipynb` | Hands-on notebook: gateway + LangChain + MCP, observability, cost management |
 | `lab/live_agent.py` | CLI: send one live prompt through the agent and print its trace_id |
@@ -50,7 +50,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
    ```bash
    snow sql -f lab/setup.sql
    ```
-   This creates `CORTEX_GATEWAY_LAB` (CAMPAIGN_SPEND, STRATEGY_DOCS, semantic view CMO_ANALYTICS, Cortex Search STRATEGY_SEARCH_SVC, MCP server MARKETING_MCP, EVAL_PROMPTS, OPTIMIZATION_RUNS, OPTIMIZATION_RESULTS), the warehouse `GATEWAY_LAB_WH`, and the integration `GATEWAY_LAB_APP_EAI`. It turns on gateway logging with client telemetry and payload capture, and grants SYSADMIN gateway MONITOR plus the usage, budget and quota roles.
+   This creates `CORTEX_GATEWAY_LAB` (CAMPAIGN_SPEND, STRATEGY_DOCS, semantic view CMO_ANALYTICS, Cortex Search STRATEGY_SEARCH_SVC, Cortex Agent MARKETING_AGENT, MCP server MARKETING_MCP, EVAL_PROMPTS, OPTIMIZATION_RUNS, OPTIMIZATION_RESULTS), the warehouse `GATEWAY_LAB_WH`, and the integration `GATEWAY_LAB_APP_EAI`. It turns on gateway logging with client telemetry and payload capture, and grants SYSADMIN gateway MONITOR plus the usage, budget and quota roles.
 2. Export credentials for the local tools:
    ```bash
    export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_USER=<you>
@@ -67,7 +67,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 3. Gateway LLM with `traceparent`
 4. MCP tools over streamable HTTP
 5. LangChain ReAct agent
-6. Queries: structured (Analyst -> execute_sql), unstructured (Search), hybrid
+6. Queries: structured (agent -> Analyst), unstructured (agent -> Search), hybrid
 7. Observability: recent traces, credit usage, single-trace drill-down, conversation reconstruction
 8. Cost management: spend by user, shared-resource budget, per-user quota
 
@@ -75,14 +75,13 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 
 | Group | Page | What it shows |
 |-------|------|---------------|
-| Act | Live prompt | Send a prompt through the gateway; polls `AGENT_TRACE_TABLE` for its trace_id and draws the span waterfall |
 | Observe | Overview, Model performance, User deep dive | KPIs, latency, errors, tokens and credits by model and user |
 | Observe | Trace explorer | One trace: span timeline plus captured system prompt, input and output messages |
 | Optimize | Advisor | Rules over telemetry (latency, error spikes, token bloat, model mix, cost), each with a proposed change and a "Test this fix" button |
 | Optimize | Experiments | Replays EVAL_PROMPTS through the gateway with baseline vs candidate config; scores each answer 0-1 with an AI_COMPLETE judge |
 | Optimize | Before / after | Quality, p50/p95, tokens and error-rate deltas, per-prompt and side-by-side answers, plus the client config, gateway allowlist and quota SQL to promote |
 
-The app calls the gateway with its container session token. If your account rejects that, put a PAT in `CORTEX_GATEWAY_LAB.PUBLIC.GATEWAY_PAT_SECRET` and uncomment the `secrets:` block in `app/snowflake.yml`.
+The Experiments page calls the gateway with the app's container session token. The gateway serves those calls, but in testing they were not written to `AGENT_TRACE_TABLE` (results are still stored in OPTIMIZATION_RESULTS). The traced live prompt therefore runs from a laptop with `lab/live_agent.py`; open its trace_id on the Trace explorer page. A PAT secret (`GATEWAY_PAT_SECRET` plus the commented `secrets:` block in `app/snowflake.yml`) only works if your account's network policy allows the app container's egress IP. Otherwise the call fails with HTTP 401, and LOGIN_HISTORY shows `INCOMING_REQUEST_BLOCKED`.
 
 ### Run in Snowflake (Workspaces / Git)
 

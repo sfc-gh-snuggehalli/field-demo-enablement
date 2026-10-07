@@ -11,8 +11,8 @@ entities:
     compute_pool: SYSTEM_COMPUTE_POOL_CPU
     external_access_integrations:
       - GATEWAY_LAB_APP_EAI
-    # Optional PAT fallback for gateway calls (default auth is the container session token).
-    # Put a real PAT in CORTEX_GATEWAY_LAB.PUBLIC.GATEWAY_PAT_SECRET, then uncomment:
+    # Gateway auth defaults to the container session token (served, not traced in testing).
+    # Optional PAT secret: only works if your network policy allows the container egress IP.
     # secrets:
     #   gateway_pat: CORTEX_GATEWAY_LAB.PUBLIC.GATEWAY_PAT_SECRET
     main_file: streamlit_app.py
@@ -22,7 +22,6 @@ entities:
       - trace_queries.py
       - pyproject.toml
       - .streamlit/config.toml
-      - app_pages/live.py
       - app_pages/overview.py
       - app_pages/model_performance.py
       - app_pages/user_deep_dive.py

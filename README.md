@@ -160,7 +160,7 @@ optimization levers (AUTO_SUSPEND, TARGET_LAG, corpus pruning, vector dimension 
 
 **Location:** `ai-gateway/`
 
-A LangChain agent reasons through the Cortex AI Gateway and uses Snowflake MCP tools (Analyst, Search, SQL). A Streamlit Trace Analyzer then turns the gateway's traces into a closed optimization loop: diagnose, run an eval-set experiment, compare before and after, and promote.
+A LangChain agent reasons through the Cortex AI Gateway and uses a Snowflake MCP server exposing one governed Cortex Agent tool (Analyst + Search). A Streamlit Trace Analyzer then turns the gateway's traces into a closed optimization loop: diagnose, run an eval-set experiment, compare before and after, and promote.
 
 | File | Description |
 |------|-------------|

@@ -504,7 +504,7 @@
         <div class="arrow">&darr;</div>
         <div class="level">
           <div class="node node-accent">Cortex AI Gateway SNOWFLAKE<br><small>model allowlist, logging, payload capture</small></div>
-          <div class="node node-accent">MCP server MARKETING_MCP<br><small>Cortex Analyst, Cortex Search, execute_sql</small></div>
+          <div class="node node-accent">MCP server MARKETING_MCP<br><small>one tool: Cortex Agent (Analyst + Search)</small></div>
         </div>
         <div class="arrow">&darr;</div>
         <div class="level">
@@ -548,19 +548,16 @@ llm = <span class="function">ChatOpenAI</span>(
 
     <section class="slide" id="mcp">
       <h2>Snowflake as the Tool Provider (MCP)</h2>
-  <h3>A standalone MCP server object, no Cortex Agent wrapper required</h3>
-<pre class="anim-fade"><span class="keyword">CREATE MCP SERVER</span> MARKETING_MCP <span class="keyword">FROM SPECIFICATION</span> $$
+  <h3>One governed tool: a Cortex Agent behind the MCP server</h3>
+<pre class="anim-fade"><span class="keyword">CREATE AGENT</span> MARKETING_AGENT ...        <span class="comment"># Analyst (generates + runs SQL) + Search</span>
+
+<span class="keyword">CREATE MCP SERVER</span> MARKETING_MCP <span class="keyword">FROM SPECIFICATION</span> $$
 tools:
-  - name: query_campaigns          <span class="comment"># natural language -> SQL</span>
-    type: <span class="string">"CORTEX_ANALYST_MESSAGE"</span>
-    identifier: <span class="string">"CORTEX_GATEWAY_LAB.PUBLIC.CMO_ANALYTICS"</span>
-  - name: search_strategy_docs     <span class="comment"># RAG over strategy documents</span>
-    type: <span class="string">"CORTEX_SEARCH_SERVICE_QUERY"</span>
-    identifier: <span class="string">"CORTEX_GATEWAY_LAB.PUBLIC.STRATEGY_SEARCH_SVC"</span>
-  - name: execute_sql              <span class="comment"># runs the generated SQL</span>
-    type: <span class="string">"SYSTEM_EXECUTE_SQL"</span>
+  - name: marketing_agent
+    type: <span class="string">"CORTEX_AGENT_RUN"</span>
+    identifier: <span class="string">"CORTEX_GATEWAY_LAB.PUBLIC.MARKETING_AGENT"</span>
 $$;</pre>
-  <div class="highlight-box anim-fade">Clients connect over streamable HTTP at <code>/api/v2/databases/&lt;db&gt;/schemas/&lt;schema&gt;/mcp-servers/&lt;name&gt;</code> with the same PAT. Tools execute under the caller's role.</div>
+  <div class="highlight-box anim-fade">No raw SQL tool: the client can't bypass the semantic view. Clients connect over streamable HTTP at <code>/api/v2/databases/&lt;db&gt;/schemas/&lt;schema&gt;/mcp-servers/&lt;name&gt;</code> with the same PAT, and tools execute under the caller's role.</div>
     </section>
 
     <section class="slide" id="agent">
@@ -568,15 +565,13 @@ $$;</pre>
   <div class="flow-diagram anim-fade">
     <div class="flow-step active"><div class="step-label">Question</div><div class="step-title">ROAS by channel vs Q4 target?</div></div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step"><div class="step-label">Gateway call 1</div><div class="step-title">query_campaigns</div></div>
+    <div class="flow-step"><div class="step-label">Gateway call 1</div><div class="step-title">Route to marketing_agent</div></div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step"><div class="step-label">Gateway call 2</div><div class="step-title">execute_sql</div></div>
+    <div class="flow-step"><div class="step-label">MCP tool call</div><div class="step-title">Agent: Analyst SQL + Search</div></div>
     <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step"><div class="step-label">Gateway call 3</div><div class="step-title">search_strategy_docs</div></div>
-    <div class="flow-arrow">&rarr;</div>
-    <div class="flow-step active"><div class="step-label">Gateway call 4</div><div class="step-title">Grounded answer</div></div>
+    <div class="flow-step active"><div class="step-label">Gateway call 2</div><div class="step-title">Grounded answer</div></div>
   </div>
-  <div class="context-box anim-fade"><strong>One turn, one trace:</strong> the ReAct agent makes several gateway calls between tool calls. Sending the same <code>traceparent</code> on each groups them under one <code>trace_id</code>, which is what makes the turn debuggable.</div>
+  <div class="context-box anim-fade"><strong>One turn, one trace:</strong> the ReAct agent makes a gateway call before and after each tool call. Sending the same <code>traceparent</code> on each groups them under one <code>trace_id</code>, which is what makes the turn debuggable.</div>
     </section>
 
     <section class="slide" id="observability">
@@ -638,11 +633,11 @@ $$;</pre>
     <section class="slide" id="live">
       <h2>Live Demo: One Prompt, Three Views</h2>
   <div class="card-grid anim-fade">
-    <div class="card" style="border-color: var(--primary)"><h4>1. Send it</h4><p><code>python lab/live_agent.py "..."</code> runs the LangChain + MCP agent and prints its trace_id; or type the prompt on the app's Live prompt page.</p></div>
+    <div class="card" style="border-color: var(--primary)"><h4>1. Send it</h4><p><code>python lab/live_agent.py "..."</code> runs the LangChain + MCP agent from a laptop and prints its trace_id.</p></div>
     <div class="card" style="border-color: var(--accent)"><h4>2. Snowsight</h4><p>AI &amp; ML &rarr; Cortex AI Gateway: find the same trace, its spans, tokens and captured messages.</p></div>
-    <div class="card" style="border-color: var(--green)"><h4>3. Trace Analyzer</h4><p>Live page polls AGENT_TRACE_TABLE for that trace_id and draws the span waterfall; Trace explorer shows the payloads.</p></div>
+    <div class="card" style="border-color: var(--green)"><h4>3. Trace Analyzer</h4><p>Trace explorer loads that trace_id from AGENT_TRACE_TABLE: span waterfall plus the captured system prompt, input and output.</p></div>
   </div>
-  <div class="context-box anim-fade"><strong>Presenter tip:</strong> pick <code>not-a-real-model</code> once on the Live page to show an error span land in seconds, then show it on the Overview error-rate chart.</div>
+  <div class="context-box anim-fade"><strong>Presenter tip:</strong> run <code>live_agent.py --model not-a-real-model</code> once to show an error span land, then show it on the Overview error-rate chart.</div>
     </section>
 
     <section class="slide" id="admin">
@@ -672,7 +667,7 @@ $$;                              <span class="comment">-- replaces the whole spe
       <h2>When to Use What</h2>
   <div class="card-grid anim-fade">
     <div class="card" style="border-color: var(--green)"><h4>AI Gateway</h4><ul><li>External agents, SDKs, coding agents</li><li>Need traces, attribution, quotas</li><li>Standard OpenAI / Anthropic clients</li></ul></div>
-    <div class="card" style="border-color: var(--primary)"><h4>MCP server</h4><ul><li>Give any agent governed Snowflake tools</li><li>Analyst, Search, SQL as tools</li><li>No agent object needed</li></ul></div>
+    <div class="card" style="border-color: var(--primary)"><h4>MCP server</h4><ul><li>Give any agent governed Snowflake tools</li><li>Analyst + Search behind one Cortex Agent tool</li><li>No raw SQL tool to bypass the semantic view</li></ul></div>
     <div class="card" style="border-color: var(--accent)"><h4>Cortex Agents</h4><ul><li>Snowflake-hosted orchestration</li><li>Snowflake Intelligence front end</li><li>Built-in agent monitoring</li></ul></div>
   </div>
     </section>

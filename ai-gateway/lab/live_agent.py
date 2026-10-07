@@ -1,7 +1,8 @@
 """Send one live prompt through the Cortex AI Gateway with a LangChain agent + MCP tools.
 
 The agent's LLM is ChatOpenAI pointed at the gateway; its tools come from the
-Snowflake MCP server MARKETING_MCP (Cortex Analyst, Cortex Search, execute_sql).
+Snowflake MCP server MARKETING_MCP, which exposes one governed tool: the Cortex Agent
+MARKETING_AGENT (Cortex Analyst + Cortex Search; Analyst runs its own SQL).
 Every gateway call the agent makes in this turn carries the same W3C traceparent,
 so the whole turn is one trace_id in AGENT_TRACE_TABLE, in Snowsight
 (AI & ML > Cortex AI Gateway), and on the Trace Analyzer app's Trace explorer page.
@@ -28,15 +29,9 @@ from langgraph.prebuilt import create_react_agent
 
 DATABASE, SCHEMA, MCP_SERVER = "CORTEX_GATEWAY_LAB", "PUBLIC", "MARKETING_MCP"
 
-SYSTEM_PROMPT = """You are a marketing analytics assistant with access to campaign performance
-data and strategy documents via Snowflake. Use the available tools to answer questions:
-
-- For quantitative questions about campaign spend, revenue, ROI, etc.:
-  1. First call query_campaigns to generate the SQL query.
-  2. Extract the SQL statement from the response.
-  3. Then call execute_sql with that SQL to get the actual data rows.
-- For questions about strategy, methodology, or planning, use search_strategy_docs.
-- For questions that need both data and context, use both.
+SYSTEM_PROMPT = """You are a marketing analytics assistant. For any question about campaign
+performance data or marketing strategy, call marketing_agent with the user's question; it
+queries governed Snowflake data and strategy documents and returns the answer.
 
 Always cite specific numbers when available. Express ROI as a multiplier (e.g., 3.2x).
 Round currency to 2 decimal places."""
@@ -88,7 +83,12 @@ async def run(question: str, model: str, max_tokens: int, conversation_id: str |
     print(f"trace_id : {trace_id}")
     print(f"model    : {model}   tools: {[t.name for t in tools]}\n")
     t0 = time.perf_counter()
-    result = await agent.ainvoke({"messages": [{"role": "user", "content": question}]})
+    try:
+        result = await agent.ainvoke({"messages": [{"role": "user", "content": question}]})
+    except Exception as e:  # e.g. unknown model -> HTTP 400; the gateway still records an error span
+        print(f"Gateway error: {str(e)[:300]}")
+        print(f"The error span is still recorded: search trace_id {trace_id}")
+        return trace_id
     elapsed = time.perf_counter() - t0
 
     llm_calls = 0

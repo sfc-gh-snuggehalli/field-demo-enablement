@@ -39,11 +39,11 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 **Talking Points:**
 - Two clients: an external LangChain agent, and the Trace Analyzer app running in Snowflake.
-- Inference goes through the gateway. Data access goes through the MCP server, which exposes Cortex Analyst, Cortex Search and SQL execution as tools.
+- Inference goes through the gateway. Data access goes through the MCP server, which exposes one governed Cortex Agent tool (Cortex Analyst + Cortex Search) and no raw SQL tool.
 - Everything lands in `AGENT_TRACE_TABLE` and `AI_GATEWAY_USAGE_HISTORY`, which feed the optimization loop.
 
 **Presenter Notes:**
-- Both paths authenticate as the same Snowflake user (a PAT locally, the container session token in the app), so RBAC governs tokens and tool calls alike.
+- Both paths authenticate as the same Snowflake user (a PAT for the external agent), so RBAC governs tokens and tool calls alike.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-ai-gateway/observability
@@ -85,8 +85,9 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 ## Slide 6: Snowflake as the Tool Provider (MCP)
 
 **Talking Points:**
-- A Snowflake-managed MCP server is a first-class object. Here it exposes three tools: Analyst for NL-to-SQL, `execute_sql` to run it, and Search for RAG.
-- Any MCP client connects over streamable HTTP; no Cortex Agent object is needed.
+- A Snowflake-managed MCP server is a first-class object. Here it exposes one tool: the Cortex Agent `MARKETING_AGENT`, which orchestrates Analyst (it generates and runs the SQL itself) and Search.
+- There is deliberately no raw SQL tool. Exposed directly, Analyst only returns SQL text, and adding `SYSTEM_EXECUTE_SQL` would let the client run any SQL and bypass the semantic view. Snowflake recommends the agent as the single client-facing tool.
+- Any MCP client connects over streamable HTTP.
 
 **Presenter Notes:**
 - Tools run as the calling role, so the semantic view, search service and warehouse grants control what the agent can see.
@@ -99,7 +100,7 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 ## Slide 7: LangChain Agent in Action
 
 **Talking Points:**
-- One question becomes about four gateway calls interleaved with tool calls. In our live run, "ROAS by channel vs the Q4 target" took 4 gateway calls in about 23 seconds.
+- One question becomes two gateway calls: one to pick the tool, one to write the answer from the agent's result. In our live run, "ROAS by channel for Q4 2024 and how to improve Display" took 2 gateway calls in about 46 seconds, most of it inside the agent.
 - Sending the same `traceparent` header on every call in the turn is what turns those calls into one trace.
 
 **Presenter Notes:**
@@ -161,8 +162,8 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 - Send a prompt, find it in Snowsight, then find it in the app. Same trace_id everywhere.
 
 **Presenter Notes:**
-- Traces usually appear within a minute. The Live page polls for up to a minute, then offers a refresh.
-- The in-app Live page calls the gateway with the container's session token. If your account rejects that, put a PAT in GATEWAY_PAT_SECRET and enable the `secrets:` block in `app/snowflake.yml`.
+- Traces usually appear within 20-40 seconds of the call.
+- Run the traced live prompt from a laptop with a PAT. The app's Experiments page uses the container session token: the gateway serves it, but those calls were not traced in testing. A PAT from inside the container is blocked if the account's network policy doesn't allow the container's egress IP (HTTP 401, INCOMING_REQUEST_BLOCKED).
 - See `demo_script.md` for the full run-of-show.
 
 **References:**
