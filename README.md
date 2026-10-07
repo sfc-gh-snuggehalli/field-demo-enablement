@@ -29,6 +29,7 @@ hands-on lab with SQL setup and a notebook.
 | Semantic Views & the AI-BI Stack on Snowflake | Field SEs, marketing/analytics teams & data engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/sms-marketing-ai/presentations/sms-marketing-ai.html) |
 | Proactive Retail Intelligence with Snowflake Cortex | Data & analytics engineers, ML/platform teams & product leaders | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/proactive-retail-intelligence/presentations/proactive-retail-intelligence.html) |
 | Cortex Search: BYO Embeddings & Cost Optimization | Data engineers, platform teams & solutions architects | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-search-cost/presentations/cortex-search-cost.html) |
+| Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & AI governance teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -155,6 +156,24 @@ optimization levers (AUTO_SUSPEND, TARGET_LAG, corpus pruning, vector dimension 
 | `lab/data_gen.py` | Generates ~5,000 document chunks with 768-dim embeddings via AI_EMBED |
 | `lab/cortex-search-cost-lab.ipynb` | Hands-on lab — create service, validate incremental refresh, measure cost, test optimization levers |
 
+### Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call
+
+**Location:** `ai-gateway/`
+
+A LangChain agent reasons through the Cortex AI Gateway and uses Snowflake MCP tools (Analyst, Search, SQL). A Streamlit Trace Analyzer then turns the gateway's traces into a closed optimization loop: diagnose, run an eval-set experiment, compare before and after, and promote.
+
+| File | Description |
+|------|-------------|
+| `presentations/ai-gateway.html` | Slide deck (14 slides) |
+| `presentations/ai-gateway-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Live run-of-show |
+| `lab/setup.sql` | Data, semantic view, Cortex Search, MCP server, gateway spec + grants, eval/optimization tables, app access |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/ai-gateway-lab.ipynb` | Hands-on notebook: gateway + LangChain + MCP, observability, cost controls |
+| `lab/live_agent.py` | Send one live prompt through the agent; prints the trace_id |
+| `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
+| `app/` | Trace Analyzer (Streamlit in Snowflake): live prompt, trace explorer, advisor, experiments, before/after |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -248,6 +267,24 @@ field-demo-enablement/
 │       ├── cleanup.sql
 │       ├── data_gen.py
 │       └── cortex-search-cost-lab.ipynb
+├── ai-gateway/                  # Cortex AI Gateway: Govern, Observe and Optimize
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── presentations/
+│   │   ├── ai-gateway.html
+│   │   └── ai-gateway-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   ├── ai-gateway-lab.ipynb
+│   │   ├── live_agent.py
+│   │   └── generate_traffic.py
+│   └── app/
+│       ├── streamlit_app.py
+│       ├── gateway_client.py
+│       ├── trace_queries.py
+│       ├── snowflake.yml
+│       └── app_pages/
 <!-- REPO_TREE_END -->
 ```
 

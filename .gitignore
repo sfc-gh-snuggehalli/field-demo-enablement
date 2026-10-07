@@ -7,3 +7,6 @@
 # Cortex Code runtime state — but keep the in-repo skills committed
 .cortex/*
 !.cortex/skills/
+# Python / Snowflake CLI build artifacts
+__pycache__/
+*/app/output/
