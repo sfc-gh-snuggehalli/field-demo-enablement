@@ -24,7 +24,6 @@ TOKEN_BLOAT_MIN_REQUESTS = 3
 SLOW_MODEL_MS = 5000
 FAST_MODEL_MS = 3000
 SINGLE_MODEL_MIN_REQUESTS = 5
-COST_CREDIT_THRESHOLD = 0.5
 
 # ---------------------------------------------------------------------------
 # Recommendation engine
@@ -140,20 +139,51 @@ if unique_models == 1 and len(df) >= SINGLE_MODEL_MIN_REQUESTS:
         config(model_name),
     )
 
-# Rule 7: Cost optimization
-if not usage_df.empty:
-    total_credits = usage_df["CREDITS"].sum()
-    if total_credits > COST_CREDIT_THRESHOLD:
-        avg_input = df["INPUT_TOKENS"].mean()
-        add_rec(
-            "MEDIUM",
-            f"Total credits: {total_credits:.4f} — review prompt efficiency",
-            f"Average input token count is {avg_input:,.0f}. Consider trimming "
-            "system prompts, reducing context window size, or using smaller "
-            "models for simpler classification/extraction tasks.",
-            CONCISE,
-            config(dominant_model(df)),
-        )
+# Rule 7: Spend against per-user quotas (today's spend vs each quota's daily limit)
+QUOTA_WARN_PCT = 80
+
+
+@st.cache_data(ttl="2m", show_spinner=False)
+def quota_pressure() -> pd.DataFrame:
+    """One row per (quota, user) at or above QUOTA_WARN_PCT of the daily limit, or blocked."""
+    session = st.session_state["conn"].session()
+    today = pd.Timestamp.now().date().isoformat()
+    out = []
+    try:
+        quotas = [r["name"] for r in session.sql(
+            "SHOW SNOWFLAKE.CORE.QUOTA IN SCHEMA CORTEX_GATEWAY_LAB.PUBLIC").collect()]
+    except Exception:
+        return pd.DataFrame()
+    for q in quotas:
+        fq = f"CORTEX_GATEWAY_LAB.PUBLIC.{q}"
+        try:
+            limit = session.sql(f"CALL {fq}!GET_CONFIG()").collect()[0].as_dict().get("PER_USER_LIMIT_DAILY")
+            blocked = {r.as_dict().get("USER_NAME") for r in session.sql(f"CALL {fq}!GET_ACTIVE_BLOCKS_V2()").collect()}
+            spend = pd.DataFrame([r.as_dict() for r in session.sql(
+                f"CALL {fq}!GET_SPENDING_DETAILS_BY_USERS(?, ?)", params=[today, today]).collect()])
+        except Exception:
+            continue
+        per_user = (spend.groupby("USER_NAME")["CREDITS_SPEND"].sum() if not spend.empty
+                    else pd.Series(dtype=float))
+        for user in set(per_user.index) | blocked:
+            pct = 100 * float(per_user.get(user, 0)) / float(limit) if limit else None
+            if user in blocked or (pct is not None and pct >= QUOTA_WARN_PCT):
+                out.append({"QUOTA": q, "USER_NAME": user, "PCT": pct, "BLOCKED": user in blocked})
+    return pd.DataFrame(out)
+
+
+for _, row in quota_pressure().iterrows():
+    state = "is blocked" if row["BLOCKED"] else f"is at {row['PCT']:.0f}% of its daily limit"
+    user_df = df[df["USER_NAME"] == row["USER_NAME"]]
+    add_rec(
+        "HIGH" if row["BLOCKED"] else "MEDIUM",
+        f"{row['USER_NAME']} {state} in quota {row['QUOTA']}",
+        "The quota blocks this user's AI requests at the limit. Cut cost per request "
+        "(concise prompts, lower max_tokens, a smaller model), or raise the limit or move "
+        "the user to a higher-tier quota. See the Cost governance page.",
+        CONCISE,
+        config(dominant_model(user_df if not user_df.empty else df)),
+    )
 
 # ---------------------------------------------------------------------------
 # Display recommendations

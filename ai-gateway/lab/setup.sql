@@ -387,6 +387,55 @@ GRANT OWNERSHIP ON SECRET CORTEX_GATEWAY_LAB.PUBLIC.GATEWAY_PAT_SECRET TO ROLE S
 USE ROLE SYSADMIN;
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 10b. COST GOVERNANCE DEMO USER AND QUOTA
+-- ─────────────────────────────────────────────────────────────────────────────
+-- A dedicated service user that the demo drives over a tiny daily quota so the
+-- block can be shown live. Keep real users OUT of this quota: a block applies to
+-- every AI domain the user touches, not just the gateway.
+-- The quota is scoped by tag INTERSECTION, so only users tagged
+-- QUOTA_TIER = 'DEMO' are in it.
+
+CREATE TAG IF NOT EXISTS CORTEX_GATEWAY_LAB.PUBLIC.COST_CENTER
+  COMMENT = 'Cost center for gateway chargeback';
+CREATE TAG IF NOT EXISTS CORTEX_GATEWAY_LAB.PUBLIC.QUOTA_TIER
+  COMMENT = 'Selects which per-user quota a user falls under';
+
+USE ROLE ACCOUNTADMIN;
+
+CREATE ROLE IF NOT EXISTS GATEWAY_COST_DEMO_RL COMMENT = 'Gateway inference only';
+GRANT USAGE ON AI GATEWAY SNOWFLAKE TO ROLE GATEWAY_COST_DEMO_RL;
+GRANT ROLE GATEWAY_COST_DEMO_RL TO ROLE SYSADMIN;
+
+CREATE USER IF NOT EXISTS GATEWAY_COST_DEMO
+  TYPE = SERVICE
+  DEFAULT_ROLE = GATEWAY_COST_DEMO_RL
+  COMMENT = 'AI Gateway lab: driven over its quota to demo block enforcement';
+GRANT ROLE GATEWAY_COST_DEMO_RL TO USER GATEWAY_COST_DEMO;
+ALTER USER GATEWAY_COST_DEMO SET TAG
+  CORTEX_GATEWAY_LAB.PUBLIC.COST_CENTER = 'MARKETING',
+  CORTEX_GATEWAY_LAB.PUBLIC.QUOTA_TIER = 'DEMO';
+
+-- PAT for lab/generate_traffic.py --burst. Copy token_secret from the output into
+-- ~/.snowflake/gateway_cost_demo.pat (chmod 600). Valid 7 days.
+ALTER USER GATEWAY_COST_DEMO ADD PROGRAMMATIC ACCESS TOKEN cost_demo
+  ROLE_RESTRICTION = 'GATEWAY_COST_DEMO_RL' DAYS_TO_EXPIRY = 7;
+
+USE ROLE SYSADMIN;
+USE SCHEMA CORTEX_GATEWAY_LAB.PUBLIC;
+
+CREATE SNOWFLAKE.CORE.QUOTA IF NOT EXISTS GATEWAY_DEMO_QUOTA();
+CALL GATEWAY_DEMO_QUOTA!ADD_SHARED_RESOURCE('AI GATEWAY');
+CALL GATEWAY_DEMO_QUOTA!SET_USER_TAGS(
+  [[(SELECT SYSTEM$REFERENCE('TAG', 'CORTEX_GATEWAY_LAB.PUBLIC.QUOTA_TIER', 'SESSION', 'APPLYBUDGET')), 'DEMO']],
+  'INTERSECTION');
+-- Limits are whole credits; 1/day is the smallest. The burst uses a large model
+-- with long outputs to reach it in a few minutes.
+CALL GATEWAY_DEMO_QUOTA!SET_PER_USER_LIMIT(1, 'DAILY');
+CALL GATEWAY_DEMO_QUOTA!SET_BLOCK_ENFORCEMENT_ENABLED(TRUE, FALSE);
+CALL GATEWAY_DEMO_QUOTA!ADD_NOTIFICATION_THRESHOLD(80, 'ACTUAL', FALSE, 'DAILY');
+CALL GATEWAY_DEMO_QUOTA!GET_CONFIG();
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 11. VERIFY SETUP
 -- ─────────────────────────────────────────────────────────────────────────────
 

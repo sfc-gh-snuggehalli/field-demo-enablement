@@ -1,9 +1,12 @@
 import pandas as pd
 import streamlit as st
 
+from optimize_config import estimate_credits
+
 st.header("Before / after")
 
 conn = st.session_state["conn"]
+rates = st.session_state.get("credit_rates", {})
 
 runs = conn.query(
     "SELECT RUN_ID, LABEL, MODEL, MAX_TOKENS, SYSTEM_PROMPT, SOURCE_FINDING, CREATED_AT "
@@ -75,19 +78,21 @@ for col in ("LATENCY_MS", "INPUT_TOKENS", "OUTPUT_TOKENS", "JUDGE_SCORE", "GATEW
 def summarize(run_id):
     r = res[res["RUN_ID"] == run_id]
     ok = r[r["STATUS"] == "OK"]
+    model = cfg.loc[run_id, "MODEL"]
+    cost = ok.apply(lambda x: estimate_credits(model, x["INPUT_TOKENS"], x["OUTPUT_TOKENS"], rates), axis=1)
     return {
         "Quality (judge)": ok["JUDGE_SCORE"].mean(),
         "p50 latency ms": ok["LATENCY_MS"].median(),
         "p95 latency ms": ok["LATENCY_MS"].quantile(0.95),
         "Avg output tokens": ok["OUTPUT_TOKENS"].mean(),
-        "Avg input tokens": ok["INPUT_TOKENS"].mean(),
+        "Credits / 1k req": 1000 * cost.mean() if len(cost) and cost.notna().all() else None,
         "Error rate %": 100 * (1 - len(ok) / len(r)) if len(r) else None,
     }
 
 
 b, c = summarize(b_id), summarize(c_id)
 lower_is_better = {"p50 latency ms", "p95 latency ms", "Avg output tokens",
-                   "Avg input tokens", "Error rate %"}
+                   "Credits / 1k req", "Error rate %"}
 
 with st.container(border=True):
     cols = st.columns(len(b))
@@ -97,7 +102,7 @@ with st.container(border=True):
             col.metric(key, "-")
             continue
         delta = None if pd.isna(bv) else cv - bv
-        fmt = "{:.2f}" if key == "Quality (judge)" else "{:,.0f}"
+        fmt = "{:.2f}" if key in ("Quality (judge)", "Credits / 1k req") else "{:,.0f}"
         col.metric(key, fmt.format(cv),
                    delta=None if delta is None else fmt.format(delta),
                    delta_color="inverse" if key in lower_is_better else "normal",
@@ -105,8 +110,20 @@ with st.container(border=True):
 
 st.caption(
     f"Baseline `{cfg.loc[b_id, 'MODEL']}` / max_tokens {cfg.loc[b_id, 'MAX_TOKENS']}  ->  "
-    f"Candidate `{cfg.loc[c_id, 'MODEL']}` / max_tokens {cfg.loc[c_id, 'MAX_TOKENS']}"
+    f"Candidate `{cfg.loc[c_id, 'MODEL']}` / max_tokens {cfg.loc[c_id, 'MAX_TOKENS']}. "
+    "Credits use per-model rates fitted from this account's AI_GATEWAY_USAGE_HISTORY."
 )
+
+# Projected saving at the current gateway volume
+usage_df = st.session_state.get("usage_df")
+b_cost, c_cost = b["Credits / 1k req"], c["Credits / 1k req"]
+if usage_df is not None and not usage_df.empty and b_cost and c_cost:
+    span_days = max((usage_df["START_TIME"].max() - usage_df["START_TIME"].min()).days, 1)
+    monthly_req = len(usage_df) / span_days * 30
+    saving = (b_cost - c_cost) / 1000 * monthly_req
+    st.info(f"At the current volume (~{monthly_req:,.0f} gateway requests/month), the candidate "
+            f"{'saves' if saving >= 0 else 'adds'} about **{abs(saving):,.2f} credits/month** "
+            f"({abs(1 - c_cost / b_cost):.0%} {'less' if saving >= 0 else 'more'} per request).")
 
 st.subheader("Per prompt")
 wide = res.pivot_table(index=["PROMPT_ID", "PROMPT"], columns="RUN_ID",
@@ -130,11 +147,14 @@ with st.expander("Response side by side"):
 st.subheader("Promote")
 quality_ok = not pd.isna(c["Quality (judge)"]) and (
     pd.isna(b["Quality (judge)"]) or c["Quality (judge)"] >= b["Quality (judge)"] - 0.05)
-cheaper = not pd.isna(c["Avg output tokens"]) and not pd.isna(b["Avg output tokens"]) \
-    and c["Avg output tokens"] < b["Avg output tokens"]
+if b_cost and c_cost:
+    cheaper = c_cost < b_cost
+else:  # no fitted rate for a model: compare output tokens instead
+    cheaper = not pd.isna(c["Avg output tokens"]) and not pd.isna(b["Avg output tokens"]) \
+        and c["Avg output tokens"] < b["Avg output tokens"]
 
 if quality_ok and cheaper:
-    st.success("Candidate holds quality within 0.05 of baseline while using fewer tokens: promote it.")
+    st.success("Candidate holds quality within 0.05 of baseline at lower cost: promote it.")
 elif quality_ok:
     st.info("Candidate holds quality but is not cheaper. Promote only if latency matters more.")
 else:

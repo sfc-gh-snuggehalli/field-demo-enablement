@@ -146,9 +146,11 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 **Talking Points:**
 - Each lever maps to a telemetry signal, a candidate change and a metric.
+- Promote on cost, gated on quality: in our validation run the candidate held 0.98 judge quality at 76% fewer credits per request.
 - Promotion produces three artifacts: client settings, a pinned gateway allowlist, and a per-user quota.
 
 **Presenter Notes:**
+- Credits per request use per-model rates fitted from this account's AI_GATEWAY_USAGE_HISTORY (credits against input and output tokens). In testing the fit matched billed credits within about 1%.
 - The app only displays the ALTER AI GATEWAY and quota SQL; it does not run them. They need ACCOUNTADMIN or quota privileges, and replacing the gateway spec affects the whole account.
 
 **References:**
@@ -156,14 +158,37 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 ---
 
-## Slide 11: Live Demo: One Prompt, Three Views
+## Slide 11: Governing Spend: Attribute, Cap, Enforce
+
+**Talking Points:**
+- Attribute: every gateway request is billed to the calling user; a COST_CENTER tag on users gives chargeback by team.
+- Cap: budgets for team spend, per-user quotas for individual limits (daily, weekly, monthly) on the AI GATEWAY domain.
+- Enforce: at the limit the platform denies the user's next request with HTTP 403 and tells them when access returns.
+
+**Presenter Notes:**
+- Enforcement is evaluated within minutes of the spend, so a user can overshoot. In testing, the block landed at 1.07 credits on a 1-credit daily limit, and in-flight calls took the user to about 1.46.
+- Blocks clear at the cycle reset (00:00 UTC for daily) or about 5-10 minutes after the limit is raised.
+- One quota applies one limit to all its users. For tiers, tag users (for example QUOTA_TIER) and scope each quota with INTERSECTION.
+- Quota limits are whole credits; 1 credit per day is the smallest.
+- A block covers every AI domain the user touches, not just the gateway, so don't demo it on your own user.
+- Creating quotas needs SNOWFLAKE.QUOTA_CREATOR plus CREATE SNOWFLAKE.CORE.QUOTA on the schema. Budgets need SNOWFLAKE.BUDGET_CREATOR.
+
+**References:**
+- https://docs.snowflake.com/en/user-guide/budgets/per-user-quotas
+- https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-ai-gateway/cost-management
+
+---
+
+## Slide 12: Live Demo: One Prompt, Four Views
 
 **Talking Points:**
 - Send a prompt, find it in Snowsight, then find it in the app. Same trace_id everywhere.
+- Then show the same traffic as spend: cost centers, a user over quota, and the platform's block.
 
 **Presenter Notes:**
 - Traces usually appear within 20-40 seconds of the call.
 - Run the Trace Analyzer from a laptop with a PAT (`streamlit run`): that's where Live prompt and Experiments calls are traced. Inside Snowflake, the container session token is served but not traced in testing, and a PAT from the container is rejected by account network policies (HTTP 401, INCOMING_REQUEST_BLOCKED).
+- Block the cost demo user at least 10 minutes before presenting: `python lab/generate_traffic.py --burst`.
 - See `demo_script.md` for the full run-of-show.
 
 **References:**
@@ -171,15 +196,13 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 ---
 
-## Slide 12: Admin Controls
+## Slide 13: Admin Controls
 
 **Talking Points:**
-- The spec controls which models are exposed and what is logged. Grants control who can call and who can watch. Quotas cap spend per user with automatic blocking.
+- The spec controls which models are exposed and what is logged. Grants control who can call and who can watch. Spend controls are covered in Governing Spend.
 
 **Presenter Notes:**
 - `FROM SPECIFICATION` replaces the whole spec, so always start from `DESCRIBE AI GATEWAY` output.
-- Quota block enforcement is evaluated within minutes, not at request time, so a user can briefly overshoot. Size limits accordingly.
-- Creating quotas needs SNOWFLAKE.QUOTA_CREATOR plus CREATE SNOWFLAKE.CORE.QUOTA on the schema. Budgets need SNOWFLAKE.BUDGET_CREATOR.
 
 **References:**
 - https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-ai-gateway
@@ -187,7 +210,7 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 ---
 
-## Slide 13: When to Use What
+## Slide 14: When to Use What
 
 **Talking Points:**
 - Use the AI Gateway when the agent lives outside Snowflake and you need governance and telemetry.
@@ -202,7 +225,7 @@ Scenario: a marketing analytics team runs a LangChain agent outside Snowflake. I
 
 ---
 
-## Slide 14: Next Steps
+## Slide 15: Next Steps
 
 **Talking Points:**
 - Turn on logging, point one agent at the gateway, run one optimization loop, then add guardrails.

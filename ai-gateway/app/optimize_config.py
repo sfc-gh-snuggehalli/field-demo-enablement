@@ -7,6 +7,7 @@ experiment always isolates the change being tested.
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 MODELS = ["openai-gpt-5.4", "openai-gpt-5.4-mini", "openai-gpt-5-mini", "openai-gpt-5-nano",
@@ -46,3 +47,31 @@ def other_model(model: str, preferred: str = ALT_MODEL) -> str:
 
 def proposal(finding: str, baseline: dict, **changes) -> dict:
     return {"finding": finding, "baseline": baseline, "candidate": {**baseline, **changes}}
+
+
+def fit_credit_rates(usage: pd.DataFrame, min_requests: int = 5) -> dict:
+    """Per-model credits per input and output token, fitted from AI_GATEWAY_USAGE_HISTORY.
+
+    Each usage row is one request on one model, so least squares on
+    credits ~ in_rate * input_tokens + out_rate * output_tokens recovers the rates
+    this account is actually billed, with no hard-coded price table.
+    """
+    rates = {}
+    cols = {"MODEL", "CREDITS", "INPUT_TOKENS", "OUTPUT_TOKENS"}
+    if usage is None or usage.empty or not cols <= set(usage.columns):
+        return rates
+    for model, g in usage.dropna(subset=list(cols)).groupby("MODEL"):
+        if len(g) < min_requests:
+            continue
+        x = g[["INPUT_TOKENS", "OUTPUT_TOKENS"]].to_numpy(dtype=float)
+        (r_in, r_out), *_ = np.linalg.lstsq(x, g["CREDITS"].to_numpy(dtype=float), rcond=None)
+        if r_in >= 0 and r_out > 0:
+            rates[model] = (r_in, r_out)
+    return rates
+
+
+def estimate_credits(model: str, input_tokens, output_tokens, rates: dict):
+    if model not in rates:
+        return None
+    r_in, r_out = rates[model]
+    return r_in * (input_tokens or 0) + r_out * (output_tokens or 0)

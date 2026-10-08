@@ -31,3 +31,4 @@ entities:
       - app_pages/advisor.py
       - app_pages/experiments.py
       - app_pages/compare.py
+      - app_pages/cost_governance.py

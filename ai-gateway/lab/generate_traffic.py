@@ -5,16 +5,24 @@ Usage:
     export SNOWFLAKE_PAT=<pat>               # or SNOWFLAKE_PAT_FILE=<path>
     python generate_traffic.py
 
+    # Cost governance demo: spend as GATEWAY_COST_DEMO until its quota blocks it
+    python generate_traffic.py --burst [--burst-pat-file ~/.snowflake/gateway_cost_demo.pat]
+
 Uses LangChain ChatOpenAI (same as the demo notebook) to make real inference
 calls through the Cortex AI Gateway. Intentionally calls unknown model names
 to generate error traces for dashboard diversity.
 """
 
+import argparse
+import json
 import os
+import sys
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import requests
 from langchain_openai import ChatOpenAI
 
 # ---------------------------------------------------------------------------
@@ -70,6 +78,56 @@ def safe_call(model, prompt, traceparent=None, max_tokens=256, system=None):
         err = str(e)[:80]
         print(f"  ERR {model:35s} | {err}")
         return False
+
+
+# ---------------------------------------------------------------------------
+# Burst mode: drive the quota-demo user past its daily limit
+# ---------------------------------------------------------------------------
+DENIAL_FILE = Path(__file__).resolve().parent.parent / "app" / "output" / "last_quota_denial.json"
+BURST_MODEL = "openai-gpt-5.4"
+BURST_PROMPT = ("Write a detailed 3,000-word marketing plan for 2025 covering every channel, "
+                "with budgets, KPIs, timelines and risks for each.")
+
+
+def burst_call(pat):
+    traceparent, trace_id = make_traceparent()
+    resp = requests.post(
+        f"{BASE_URL}/chat/completions", timeout=300,
+        headers={"Authorization": f"Bearer {pat}", "traceparent": traceparent},
+        json={"model": BURST_MODEL, "max_completion_tokens": 8000,
+              "messages": [{"role": "user", "content": BURST_PROMPT}]},
+    )
+    usage = resp.json().get("usage", {}) if resp.ok else {}
+    return resp.status_code, resp.text[:1000], trace_id, usage.get("completion_tokens")
+
+
+def run_burst(pat, max_rounds, workers=8, pause_s=20):
+    """Spend in rounds until the gateway denies a request (enforcement lands within minutes)."""
+    for rnd in range(1, max_rounds + 1):
+        with ThreadPoolExecutor(workers) as pool:
+            results = list(pool.map(lambda _: burst_call(pat), range(workers)))
+        denied = [r for r in results if r[0] >= 400]
+        print(f"round {rnd}: " + ", ".join(f"{s}:{t or '-'}tok" for s, _, _, t in results))
+        if denied:
+            status, body, trace_id, _ = denied[0]
+            DENIAL_FILE.parent.mkdir(parents=True, exist_ok=True)
+            DENIAL_FILE.write_text(json.dumps({
+                "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "user": "GATEWAY_COST_DEMO",
+                "model": BURST_MODEL, "status": status, "body": body, "trace_id": trace_id}, indent=2))
+            print(f"\nDenied with HTTP {status}: {body[:300]}\nSaved to {DENIAL_FILE}")
+            return 0
+        time.sleep(pause_s)
+    print("No denial yet: usage takes a few minutes to be evaluated. Re-run --burst shortly.")
+    return 1
+
+
+_args = argparse.ArgumentParser()
+_args.add_argument("--burst", action="store_true", help="spend as the quota-demo user until blocked")
+_args.add_argument("--burst-pat-file", default="~/.snowflake/gateway_cost_demo.pat")
+_args.add_argument("--rounds", type=int, default=30)
+ARGS = _args.parse_args()
+if ARGS.burst:
+    sys.exit(run_burst(Path(os.path.expanduser(ARGS.burst_pat_file)).read_text().strip(), ARGS.rounds))
 
 
 # ===================================================================

@@ -624,18 +624,29 @@ $$;</pre>
       <tr><td>Token bloat</td><td>High avg <code>gen_ai.usage.output_tokens</code></td><td>Lower max tokens + concise system prompt</td><td>Avg output tokens, judge score</td></tr>
       <tr><td>Latency</td><td>High span duration per user/model</td><td>Smaller model (e.g. gpt-5.4 &rarr; gpt-5.4-mini)</td><td>p50 / p95 latency</td></tr>
       <tr><td>Errors</td><td><code>STATUS_CODE_ERROR</code>, HTTP 4xx</td><td>Route to an allowed model, fix API choice</td><td>Error rate</td></tr>
-      <tr><td>Cost</td><td>Credits in AI_GATEWAY_USAGE_HISTORY</td><td>Trim context, cheaper model</td><td>Input + output tokens</td></tr>
+      <tr><td>Cost</td><td>Credits in AI_GATEWAY_USAGE_HISTORY</td><td>Trim context, cheaper model</td><td>Credits per 1k requests (rates fitted from billed usage)</td></tr>
     </tbody>
   </table>
-  <div class="highlight-box anim-fade"><strong>Promote = three artifacts:</strong> the new client settings, an <code>ALTER AI GATEWAY ... FROM SPECIFICATION</code> that pins the allowlist, and a per-user quota so the new baseline can't regress silently.</div>
+  <div class="highlight-box anim-fade"><strong>Promote on cost, gated on quality:</strong> the candidate ships only if judge quality holds within 0.05 and credits per request drop. In our validation run: 0.98 vs 0.98 quality at 76% fewer credits per request. Promotion produces the new client settings, an <code>ALTER AI GATEWAY ... FROM SPECIFICATION</code> that pins the allowlist, and a per-user quota.</div>
+    </section>
+
+    <section class="slide" id="governance">
+      <h2>Governing Spend: Attribute, Cap, Enforce</h2>
+  <div class="card-grid anim-fade">
+    <div class="card" style="border-color: var(--primary)"><h4>Attribute</h4><p>Every gateway request lands in <code>AI_GATEWAY_USAGE_HISTORY</code> with its credits, model, tokens and calling user. A <code>COST_CENTER</code> tag on users turns that into chargeback by team.</p></div>
+    <div class="card" style="border-color: var(--accent)"><h4>Cap</h4><p>Budgets track team spend (scoped by the same tag). Per-user quotas set daily, weekly and monthly credit limits on the <code>AI GATEWAY</code> domain, with notifications on actual or projected spend.</p></div>
+    <div class="card" style="border-color: var(--green)"><h4>Enforce</h4><p>With block enforcement on, a user at the limit is denied by the platform: HTTP 403, "exceeded the usage quota limit", with the restore time. The block clears at the cycle reset, or 5-10 minutes after the limit is raised.</p></div>
+  </div>
+  <div class="warning-box anim-fade">Enforcement lands within minutes of the spend, not on each request, so a user can briefly overshoot; size limits with headroom. One limit applies to every user in a quota: use a tier tag and a second quota for heavier users.</div>
     </section>
 
     <section class="slide" id="live">
-      <h2>Live Demo: One Prompt, Three Views</h2>
+      <h2>Live Demo: One Prompt, Four Views</h2>
   <div class="card-grid anim-fade">
     <div class="card" style="border-color: var(--primary)"><h4>1. Send it</h4><p><code>python lab/live_agent.py "..."</code> runs the LangChain + MCP agent from a laptop and prints its trace_id.</p></div>
     <div class="card" style="border-color: var(--accent)"><h4>2. Snowsight</h4><p>AI &amp; ML &rarr; Cortex AI Gateway: find the same trace, its spans, tokens and captured messages.</p></div>
     <div class="card" style="border-color: var(--green)"><h4>3. Trace Analyzer</h4><p>Trace explorer loads that trace_id from AGENT_TRACE_TABLE: span waterfall plus the captured system prompt, input and output.</p></div>
+    <div class="card" style="border-color: var(--primary)"><h4>4. Cost governance</h4><p>The same traffic as credits by cost center, a user over their daily quota, and the platform's block on their next request.</p></div>
   </div>
   <div class="context-box anim-fade"><strong>Presenter tip:</strong> run <code>live_agent.py --model not-a-real-model</code> once to show an error span land, then show it on the Overview error-rate chart.</div>
     </section>
@@ -654,12 +665,8 @@ logging:
 $$;                              <span class="comment">-- replaces the whole spec</span>
 
 <span class="keyword">GRANT USAGE</span>   <span class="keyword">ON AI GATEWAY</span> SNOWFLAKE <span class="keyword">TO ROLE</span> app_team;      <span class="comment">-- send requests</span>
-<span class="keyword">GRANT MONITOR</span> <span class="keyword">ON AI GATEWAY</span> SNOWFLAKE <span class="keyword">TO ROLE</span> platform_ops;  <span class="comment">-- read traces/usage</span>
-
-<span class="keyword">CREATE</span> SNOWFLAKE.CORE.QUOTA gateway_quota();
-<span class="keyword">CALL</span> gateway_quota!<span class="function">ADD_SHARED_RESOURCE</span>(<span class="string">'AI GATEWAY'</span>);
-<span class="keyword">CALL</span> gateway_quota!<span class="function">SET_PER_USER_LIMIT</span>(<span class="string">10</span>, <span class="string">'DAILY'</span>);
-<span class="keyword">CALL</span> gateway_quota!<span class="function">SET_BLOCK_ENFORCEMENT_ENABLED</span>(TRUE, FALSE);</pre>
+<span class="keyword">GRANT MONITOR</span> <span class="keyword">ON AI GATEWAY</span> SNOWFLAKE <span class="keyword">TO ROLE</span> platform_ops;  <span class="comment">-- read traces/usage</span></pre>
+  <div class="context-box anim-fade">Spend controls (budgets, per-user quotas, block enforcement) are covered in <strong>Governing Spend</strong>.</div>
   <div class="warning-box anim-fade">USAGE is granted to PUBLIC by default. Revoke it to restrict who can send traffic; revoking USAGE is also how a budget action can cut a team off.</div>
     </section>
 

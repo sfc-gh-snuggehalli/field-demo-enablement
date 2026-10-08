@@ -15,13 +15,13 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 - **Observability**: `AGENT_TRACE_TABLE('SNOWFLAKE')` spans, W3C `traceparent` grouping, conversation ids, Snowsight AI Gateway page
 - **Optimization loop**: Advisor findings -> eval-set experiments through the gateway -> LLM-judge scoring -> before/after -> promote
 - **Live prompt**: `lab/live_agent.py` sends one request that is visible in both Snowsight and the Trace Analyzer
-- **Admin and cost controls**: spec management, USAGE vs MONITOR, `AI_GATEWAY_USAGE_HISTORY`, shared-resource budgets, per-user quotas with block enforcement
+- **Admin and cost controls**: spec management, USAGE vs MONITOR, `AI_GATEWAY_USAGE_HISTORY`, chargeback by cost-center tag, shared-resource budgets, per-user quotas with a live block on a demo user
 
 ## Contents
 
 | File | Description |
 |------|-------------|
-| `presentations/ai-gateway.html` | Slide deck (14 slides) |
+| `presentations/ai-gateway.html` | Slide deck (15 slides) |
 | `presentations/ai-gateway-speaker-notes.md` | Per-slide talking points, presenter notes, and references |
 | `demo_script.md` | Live run-of-show for the demo |
 | `lab/setup.sql` | Database, warehouse, data, semantic view, Cortex Search, Cortex Agent, MCP server, gateway spec + grants, eval/optimization tables, app access |
@@ -67,6 +67,11 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
    ```
    Gateway calls use `SNOWFLAKE_PAT` or `SNOWFLAKE_PAT_FILE` (default `~/.snowflake/ai_gateway_demo.pat`). Use dashes, not underscores, in the host.
 6. Optional: deploy the app to Snowflake for read-only analysis: `cd app && snow streamlit deploy --replace`
+7. Before a demo, block the cost demo user so Cost governance has something to enforce:
+   ```bash
+   python lab/generate_traffic.py --burst   # uses ~/.snowflake/gateway_cost_demo.pat
+   ```
+   Section 10b of `setup.sql` creates `GATEWAY_COST_DEMO`, a service user tagged `COST_CENTER = 'MARKETING'` and `QUOTA_TIER = 'DEMO'`, and `GATEWAY_DEMO_QUOTA`: 1 credit per day, block enforcement on, scoped to that tag only. The burst spends about 1.5 credits until the gateway returns HTTP 403 ("exceeded the usage quota limit"), and saves the response to `app/output/last_quota_denial.json`. The block lasts until 00:00 UTC. Keep real users out of this quota: a block covers every AI domain the user touches.
 
 ### Lab Sections
 
@@ -88,7 +93,8 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 | Observe | Trace explorer | One trace: span timeline plus captured system prompt, input and output messages |
 | Optimize | Advisor | Rules over telemetry (latency, error spikes, token bloat, model mix, cost), each with a proposed change and a "Test this fix" button |
 | Optimize | Experiments | Replays EVAL_PROMPTS through the gateway with baseline vs candidate config; scores each answer 0-1 with an AI_COMPLETE judge |
-| Optimize | Before / after | Quality, p50/p95, tokens and error-rate deltas, per-prompt and side-by-side answers, plus the client config, gateway allowlist and quota SQL to promote |
+| Optimize | Before / after | Quality, p50/p95, tokens, credits per 1k requests (rates fitted from billed usage) and error-rate deltas, projected monthly saving, per-prompt and side-by-side answers, plus the client config, gateway allowlist and quota SQL to promote |
+| Govern | Cost governance | Month-to-date gateway credits, spend by `COST_CENTER` tag, budget limit, per-user spend against quota limits, active blocks, block history and the last captured gateway denial |
 
 #### Where to run the app
 

@@ -2,6 +2,8 @@ import os
 import streamlit as st
 import pandas as pd
 
+from optimize_config import fit_credit_rates
+
 st.set_page_config(
     page_title="AI Gateway Trace Analyzer",
     page_icon=":material/monitoring:",
@@ -123,6 +125,8 @@ with st.sidebar:
 st.session_state["df"] = filtered
 st.session_state["raw_df"] = raw_df
 st.session_state["usage_df"] = usage_df
+# Credits per token by model, fitted from billed usage (used for experiment cost estimates)
+st.session_state["credit_rates"] = fit_credit_rates(usage_df)
 st.session_state["conn"] = conn
 st.session_state["topic"] = topic
 
@@ -140,6 +144,9 @@ pages = {
         st.Page("app_pages/advisor.py", title="Advisor", icon=":material/lightbulb:"),
         st.Page("app_pages/experiments.py", title="Experiments", icon=":material/science:"),
         st.Page("app_pages/compare.py", title="Before / after", icon=":material/compare_arrows:"),
+    ],
+    "Govern": [
+        st.Page("app_pages/cost_governance.py", title="Cost governance", icon=":material/savings:"),
     ],
 }
 # Gateway calls are traced only with a PAT, which works from a laptop but not from

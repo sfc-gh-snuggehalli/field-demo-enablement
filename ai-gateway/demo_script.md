@@ -1,6 +1,6 @@
 # Demo Script: Cortex AI Gateway
 
-About 20 minutes. Before you present, run `lab/setup.sql` and run `python lab/generate_traffic.py` once so the dashboards have history. Run the Trace Analyzer locally: gateway calls are traced only with a PAT from outside Snowflake (see the README section "Where to run the app").
+About 23 minutes. Before you present, run `lab/setup.sql` and run `python lab/generate_traffic.py` once so the dashboards have history. Run the Trace Analyzer locally: gateway calls are traced only with a PAT from outside Snowflake (see the README section "Where to run the app").
 
 ## Pre-flight (5 min before)
 
@@ -12,6 +12,7 @@ About 20 minutes. Before you present, run `lab/setup.sql` and run `python lab/ge
   streamlit run streamlit_app.py
   ```
 - Check the PAT hasn't expired: send one prompt on the **Live prompt** page and confirm the waterfall appears.
+- At least 10 minutes before, block the cost demo user: `python lab/generate_traffic.py --burst`. It spends about 1.5 credits as `GATEWAY_COST_DEMO` until the gateway returns HTTP 403, then saves the denial. Confirm **Cost governance** shows 1 user blocked. The block lasts until 00:00 UTC.
 - Browser tab 1: Snowsight -> **AI & ML -> Cortex AI Gateway**
 - Browser tab 2: Trace Analyzer at http://localhost:8501, lookback set to 1 day
 - Deck open at the Architecture slide
@@ -44,13 +45,23 @@ Tab 1, AI Gateway traces. Search the trace_id and open it: the spans, model, tok
 
 1. **Advisor**: find the token-bloat or latency finding (the generator's verbose scenario produces one) and click **Test this fix**.
 2. **Experiments**: both configs are pre-filled. The baseline is the flagged traffic's model at its current settings; the candidate changes only the proposed fix (smaller max tokens and a concise system prompt, or a different model). The banner names the finding. Keep about 6 prompts selected and click **Run experiment**. It takes about a minute.
-3. **Before / after**: opens on the pair you just ran. In our validation run the candidate held judge quality (0.98 vs 0.98) with about 60% fewer output tokens and lower p50 latency. Your numbers will vary.
+3. **Before / after**: opens on the pair you just ran. Lead with cost: credits per 1,000 requests and the projected monthly saving at current volume. Credits use per-model rates fitted from this account's own billed usage. In our validation run the candidate held judge quality (0.98 vs 0.98) at 76% fewer credits per request. Your numbers will vary.
 4. Every experiment call carries a traceparent: open one in **Trace explorer** to show it in the gateway telemetry.
 5. Scroll to **Promote**: client config, the allowlist `ALTER AI GATEWAY`, and a per-user quota. "We ship the evidence, not a hunch."
 
-## 6. Governance close (deck, 2 min)
+## 6. Govern spend (3 min)
 
-Slides 12-14: USAGE vs MONITOR, the spec replaces as a whole, quotas block within minutes. Then next steps.
+On **Cost governance** (Govern group):
+
+1. **Attribute**: spend by cost center. Users carry a `COST_CENTER` tag, and the same tag scopes the budget. "Chargeback without a ticket: every gateway call lands on a user, and every user on a cost center."
+2. **Cap**: pick `GATEWAY_DEMO_QUOTA`. `GATEWAY_COST_DEMO` is over its 1-credit daily limit. Point out it went past 100%: the block lands within minutes of the spend, not on each request, so size limits with headroom.
+3. **Enforce**: the user is blocked until 00:00 UTC. Open **Last gateway denial**: HTTP 403, code 391936, "exceeded the usage quota limit defined by your administrator", with the restore time. "The platform enforces it. The client didn't have to implement anything."
+4. **Advisor** now leads with a HIGH finding for the blocked user, which feeds back into the optimization loop.
+5. Optional: open the **Raise the limit** expander and explain that raising the limit clears the block in about 5-10 minutes. One limit applies to everyone in a quota; tag users into a second quota for a higher tier.
+
+## 7. Governance close (deck, 2 min)
+
+Slides 13-15: USAGE vs MONITOR, the spec replaces as a whole. Then next steps.
 
 ## Recovery tips
 
@@ -58,4 +69,6 @@ Slides 12-14: USAGE vs MONITOR, the spec replaces as a whole, quotas block withi
 - Gateway returns 401 locally: the PAT expired or a network policy blocked it (are you on the VPN?). Create a new PAT.
 - Experiments results show HTTP 401 or no gateway trace: you are on the deployed Snowflake app. Switch to the local app.
 - No **Live prompt** page: it only appears in the local app.
+- **Cost governance** shows no block: enforcement can take a few minutes after the burst. Re-run `--burst`, or show the saved denial and block history. After 00:00 UTC the block has reset, so run the burst again before the demo.
+- Spend by cost center looks low: `AI_GATEWAY_USAGE_HISTORY` lags behind the quota figures by a few minutes to hours. The per-user quota table is the up-to-date view.
 - `unknown model`: that model isn't available on this account's Chat Completions API, and Claude only works on `/v1/messages`.
