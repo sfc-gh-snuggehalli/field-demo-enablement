@@ -170,12 +170,16 @@ st.code(
 )
 st.markdown("**2. Gateway guardrail** - pin the allowlist to the promoted model "
             "(run as ACCOUNTADMIN; the spec is replaced as a whole):")
+# Keep the baseline model allowed during rollout only if it differs from the promoted one
+allow = f"  - name: '{model}'"
+base_model = cfg.loc[b_id, "MODEL"]
+if base_model != model:
+    allow += f"\n  - name: '{base_model}'   # baseline: remove after rollout"
 st.code(
     f"""ALTER AI GATEWAY SNOWFLAKE FROM SPECIFICATION $$
 schema_version: 1
 models:
-  - name: '{model}'
-  - name: '{cfg.loc[b_id, "MODEL"]}'
+{allow}
 logging:
   enabled: true
   enable_client_telemetry: true
