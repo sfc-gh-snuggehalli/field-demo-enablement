@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 MODELS = ["openai-gpt-5.4", "openai-gpt-5.4-mini", "openai-gpt-5-mini", "openai-gpt-5-nano",
-          "claude-haiku-4-5", "claude-sonnet-4-5"]
+          "claude-haiku-4-5", "claude-sonnet-4-5", "kimi-k3", "deepseek-v4-flash"]
 DEFAULT_MODEL = "openai-gpt-5.4"
 # Traces do not record the client's max_tokens, so the baseline uses the
 # unconstrained default the lab traffic was generated with.

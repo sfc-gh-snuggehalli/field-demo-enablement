@@ -15,7 +15,7 @@ st.caption(
 conn = st.session_state["conn"]
 
 MODELS = ["openai-gpt-5.4", "openai-gpt-5.4-mini", "openai-gpt-5-mini", "openai-gpt-5-nano",
-          "claude-haiku-4-5", "claude-sonnet-4-5", "not-a-real-model"]
+          "claude-haiku-4-5", "claude-sonnet-4-5", "kimi-k3", "deepseek-v4-flash", "not-a-real-model"]
 
 with st.form("live_prompt"):
     prompt = st.text_area(

@@ -38,9 +38,22 @@ BASE_URL = f"https://{SF_HOST}/api/v2/aigateways/SNOWFLAKE/v1"
 PRIMARY_MODEL = "openai-gpt-5.4"
 # Smaller model used for part of the simple traffic so model comparisons have data
 SECONDARY_MODEL = "openai-gpt-5.4-mini"
-# Not served on the Chat Completions API -> error spans for the error-rate charts
-# (unknown name, and a Claude model, which is only served on /v1/messages)
+# Claude models are served on the Anthropic-compatible /v1/messages API
+CLAUDE_MODELS = ["claude-sonnet-4-5", "claude-haiku-4-5"]
+# Open-weight models served on /v1/chat/completions
+OPEN_WEIGHT_MODELS = ["kimi-k3", "deepseek-v4-flash"]
+# kimi-k3 reasons before answering; with a small cap it returns no content
+REASONING_MIN_TOKENS = {"kimi-k3": 1500}
+# Rotated through the scenarios so model comparisons have data on every family
+MODEL_MIX = [PRIMARY_MODEL, "claude-sonnet-4-5", "kimi-k3", SECONDARY_MODEL,
+             "claude-haiku-4-5", "deepseek-v4-flash"]
+# Error spans for the error-rate charts: an unknown model, and a Claude model sent
+# to /v1/chat/completions (the classic wrong-endpoint mistake)
 ERROR_MODELS = ["not-a-real-model", "claude-sonnet-4-5"]
+
+
+def mix(i):
+    return MODEL_MIX[i % len(MODEL_MIX)]
 
 
 def make_traceparent():
@@ -63,8 +76,33 @@ def make_llm(model=PRIMARY_MODEL, traceparent=None, max_tokens=256):
     )
 
 
-def safe_call(model, prompt, traceparent=None, max_tokens=256, system=None):
-    """Call the gateway, print result, swallow errors (they still produce traces)."""
+def claude_call(model, prompt, traceparent=None, max_tokens=256, system=None):
+    headers = {"Authorization": f"Bearer {PAT}", "Content-Type": "application/json"}
+    if traceparent:
+        headers["traceparent"] = traceparent
+    body = {"model": model, "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}]}
+    if system:
+        body["system"] = system
+    resp = requests.post(f"{BASE_URL}/messages", headers=headers, json=body, timeout=180)
+    resp.raise_for_status()
+    return "".join(b.get("text", "") for b in resp.json().get("content", []))
+
+
+def safe_call(model, prompt, traceparent=None, max_tokens=256, system=None, endpoint="auto"):
+    """Call the gateway, print result, swallow errors (they still produce traces).
+
+    endpoint="auto" sends Claude to /v1/messages; "chat" forces /v1/chat/completions.
+    """
+    max_tokens = max(max_tokens, REASONING_MIN_TOKENS.get(model, 0))
+    if model.startswith("claude") and endpoint == "auto":
+        try:
+            text = claude_call(model, prompt, traceparent, max_tokens, system)
+            print(f"  OK  {model:35s} | {text[:70]}...")
+            return True
+        except Exception as e:
+            print(f"  ERR {model:35s} | {str(e)[:80]}")
+            return False
     try:
         llm = make_llm(model=model, traceparent=traceparent, max_tokens=max_tokens)
         messages = []
@@ -149,7 +187,7 @@ simple_prompts = [
 ]
 
 for i, prompt in enumerate(simple_prompts):
-    safe_call(PRIMARY_MODEL if i % 2 == 0 else SECONDARY_MODEL, prompt, max_tokens=100)
+    safe_call(mix(i), prompt, max_tokens=100)
     time.sleep(0.3)
 
 # ===================================================================
@@ -181,11 +219,12 @@ agent_conversations = [
     ],
 ]
 
-for convo in agent_conversations:
+for n, convo in enumerate(agent_conversations):
     traceparent, trace_id = make_traceparent()
+    convo_model = mix(n)
     print(f"\n  Trace {trace_id[:12]}... ({len(convo)} turns)")
     for msg in convo:
-        safe_call(PRIMARY_MODEL, msg, traceparent=traceparent, max_tokens=300)
+        safe_call(convo_model, msg, traceparent=traceparent, max_tokens=300)
         time.sleep(0.3)
 
 # ===================================================================
@@ -198,9 +237,9 @@ verbose_prompts = [
     "Write an extensive competitive analysis of digital marketing channels comparing Paid Search, Social Media, Email, and Display across cost efficiency, reach, conversion, and brand impact.",
 ]
 
-for prompt in verbose_prompts:
+for i, prompt in enumerate(verbose_prompts):
     safe_call(
-        PRIMARY_MODEL,
+        PRIMARY_MODEL if i % 2 == 0 else "claude-sonnet-4-5",
         prompt,
         max_tokens=2048,
         system="You are a detailed marketing analyst. Always give comprehensive, thorough responses with specific numbers and examples.",
@@ -225,7 +264,7 @@ error_prompts = [
 
 for i, prompt in enumerate(error_prompts):
     model = ERROR_MODELS[i % len(ERROR_MODELS)]
-    safe_call(model, prompt, max_tokens=100)
+    safe_call(model, prompt, max_tokens=100, endpoint="chat")
     time.sleep(0.3)
 
 # ===================================================================
@@ -241,7 +280,7 @@ mixed_traces = [
 for q1, q2 in mixed_traces:
     traceparent, trace_id = make_traceparent()
     print(f"\n  Mixed trace {trace_id[:12]}...")
-    safe_call(PRIMARY_MODEL, q1, traceparent=traceparent, max_tokens=400)
+    safe_call("claude-sonnet-4-5", q1, traceparent=traceparent, max_tokens=400)
     time.sleep(0.3)
     safe_call(ERROR_MODELS[0], q2, traceparent=traceparent, max_tokens=200)
     time.sleep(0.5)
@@ -261,11 +300,11 @@ variety_prompts = [
     ("What is a marketing funnel and how does it relate to customer journey mapping? Provide a detailed explanation.", 600),
 ]
 
-for prompt, max_tok in variety_prompts:
-    safe_call(PRIMARY_MODEL, prompt, max_tokens=max_tok)
+for i, (prompt, max_tok) in enumerate(variety_prompts):
+    safe_call(mix(i), prompt, max_tokens=max_tok)
     time.sleep(0.3)
 
 # ===================================================================
 print("\n=== Done ===")
-print(f"Models: {PRIMARY_MODEL}, {SECONDARY_MODEL} (success), {ERROR_MODELS} (errors)")
+print(f"Models: {MODEL_MIX} (success), {ERROR_MODELS} on /chat/completions (errors)")
 print("Traces should appear in AGENT_TRACE_TABLE within seconds.")
