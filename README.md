@@ -30,6 +30,7 @@ hands-on lab with SQL setup and a notebook.
 | Proactive Retail Intelligence with Snowflake Cortex | Data & analytics engineers, ML/platform teams & product leaders | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/proactive-retail-intelligence/presentations/proactive-retail-intelligence.html) |
 | Cortex Search: BYO Embeddings & Cost Optimization | Data engineers, platform teams & solutions architects | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-search-cost/presentations/cortex-search-cost.html) |
 | Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & AI governance teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html) |
+| Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & retail analytics teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-retail/presentations/ai-gateway.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -174,6 +175,24 @@ A LangChain agent reasons through the Cortex AI Gateway and uses a Snowflake MCP
 | `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
 | `app/` | Trace Analyzer (Streamlit in Snowflake): live prompt, trace explorer, advisor, experiments, before/after |
 
+### Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call
+
+**Location:** `ai-gateway-retail/`
+
+The same gateway, MCP, Trace Analyzer and cost-governance flow on athletic apparel retail data. A LangChain agent reasons through the Cortex AI Gateway and calls one governed Cortex Agent tool with two Cortex Analyst tools (customer + churn, executive KPIs). An XGBoost churn model is trained, logged to the Model Registry, batch-scored in the warehouse and monitored; the agent answers from its scores with no client change.
+
+| File | Description |
+|------|-------------|
+| `presentations/ai-gateway.html` | Slide deck (15 slides) |
+| `presentations/ai-gateway-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Live run-of-show |
+| `lab/setup.sql` | Retail data (13 tables), two semantic views, churn predictions, Cortex Agent, MCP server, gateway spec + grants, eval set, app access, cost demo quota |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/ai-gateway-lab.ipynb` | Hands-on notebook: gateway + LangChain + MCP, churn model, observability, cost controls |
+| `lab/live_agent.py` | Send one live prompt through the agent; prints the trace_id |
+| `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
+| `app/` | Trace Analyzer: live prompt, trace explorer, advisor, experiments, before/after, cost governance |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -285,6 +304,17 @@ field-demo-enablement/
 │       ├── trace_queries.py
 │       ├── snowflake.yml
 │       └── app_pages/
+├── ai-gateway-retail/           # AI Gateway on retail data + churn model
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── presentations/
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   ├── ai-gateway-lab.ipynb
+│   │   ├── live_agent.py
+│   │   └── generate_traffic.py
+│   └── app/
 <!-- REPO_TREE_END -->
 ```
 
