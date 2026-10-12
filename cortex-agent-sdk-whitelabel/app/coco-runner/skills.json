@@ -1,0 +1,76 @@
+{
+  "generated": "npm run gen:skills (from shared/skills.ts)",
+  "intents": [
+    {
+      "id": "sql",
+      "pattern": "\\b(sql|query|data|table|sales|orders|inventory|region)\\b",
+      "skills": [
+        "sql-author"
+      ]
+    },
+    {
+      "id": "streamlit",
+      "pattern": "\\bstreamlit|dashboard app|data app\\b",
+      "skills": [
+        "developing-with-streamlit-in-snowflake"
+      ]
+    },
+    {
+      "id": "html",
+      "pattern": "\\bhtml|web report\\b",
+      "skills": [
+        "html-authoring"
+      ]
+    },
+    {
+      "id": "publish",
+      "pattern": "\\bpublish|share (the )?report\\b",
+      "skills": [
+        "snowflake-publish-report"
+      ]
+    },
+    {
+      "id": "semantic",
+      "pattern": "\\bsemantic (view|model)|cortex analyst\\b",
+      "skills": [
+        "agent-studio"
+      ]
+    },
+    {
+      "id": "snowpark",
+      "pattern": "\\bsnowpark|udf|stored procedure\\b",
+      "skills": [
+        "snowpark-python"
+      ]
+    },
+    {
+      "id": "cost",
+      "pattern": "\\b(cost|credits|spend)\\b",
+      "skills": [
+        "cost-intelligence"
+      ]
+    },
+    {
+      "id": "xlsx",
+      "pattern": "\\b(xlsx|excel|spreadsheet)\\b",
+      "skills": [],
+      "note": "openpyxl in the runner image"
+    },
+    {
+      "id": "pdf",
+      "pattern": "\\bpdf\\b",
+      "skills": [],
+      "note": "reportlab + matplotlib in the runner image"
+    }
+  ],
+  "bundledSkills": [
+    "sql-author",
+    "developing-with-streamlit-in-snowflake",
+    "html-authoring",
+    "snowflake-publish-report",
+    "agent-studio",
+    "snowpark-python",
+    "cost-intelligence"
+  ],
+  "policy": "bundled skills only; never auto-install catalog skills"
+}

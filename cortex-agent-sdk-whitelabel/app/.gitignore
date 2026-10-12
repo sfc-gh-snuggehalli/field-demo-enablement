@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+*.pat
+*.p8
+.data/
+coco-runner/node_modules/
+coco-runner/dist/
+app-runtime/node_modules/
+app-runtime/.next/
+app-runtime/acme/
+app-runtime/public/brand/
+app-runtime/public/icon.svg

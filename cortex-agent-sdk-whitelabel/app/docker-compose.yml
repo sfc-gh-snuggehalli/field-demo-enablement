@@ -1,0 +1,36 @@
+# Local container run: docker compose up  ->  http://localhost:8080
+# The PAT is mounted as a read-only file (never an image layer or build arg).
+# Studio (optional): STUDIO=http://coco-runner:8790 docker compose --profile coco up
+services:
+  acme-assist:
+    build: .
+    ports: ["8080:8080"]
+    env_file: .env
+    environment:
+      SNOWFLAKE_PAT_FILE: /run/secrets/snowflake_pat
+      COCO_RUNNER_URL: ${STUDIO:-}
+      PORT: "8080"
+    volumes:
+      - ${SNOWFLAKE_PAT_HOST_FILE:-./token.pat}:/run/secrets/snowflake_pat:ro
+      - acme-data:/app/.data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+
+  coco-runner:
+    profiles: ["coco"]
+    build:
+      context: .
+      dockerfile: coco-runner/Dockerfile
+    environment:
+      WORK_ROOT: /work
+      STUDIO_ROLE: ACME_STUDIO_ROLE
+      SNOWFLAKE_CONNECTION: ${STUDIO_CONNECTION:-studio}
+    volumes:
+      - coco-work:/work
+      # Read-only Snowflake CLI/Cortex Code config with a STUDIO_ROLE connection.
+      - ${SNOWFLAKE_CONFIG_DIR:-~/.snowflake}:/home/runner/.snowflake:ro
+
+volumes:
+  acme-data:
+  coco-work:

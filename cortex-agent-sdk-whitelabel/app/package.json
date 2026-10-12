@@ -1,0 +1,59 @@
+{
+  "name": "acme-assist",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c auto \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "dev:server": "tsx watch server/express.ts",
+    "build": "vite build && node scripts/chunk-report.mjs",
+    "start": "NODE_ENV=production tsx server/express.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit && npm --prefix coco-runner run typecheck && npm --prefix app-runtime run typecheck",
+    "typecheck:client": "tsc -p tsconfig.json --noEmit",
+    "typecheck:server": "tsc -p tsconfig.server.json --noEmit",
+    "gen:seed": "node scripts/gen-seed.mjs",
+    "gen:skills": "tsx scripts/gen-skills.ts",
+    "spike": "tsx scripts/spike-client-tool.ts",
+    "test:scenarios": "tsx scripts/scenario-test.ts",
+    "check:identity": "tsx scripts/check-identity.ts",
+    "sync": "node scripts/sync-app-runtime.mjs",
+    "deploy:spcs": "bash snowflake/spcs/deploy.sh",
+    "deploy:sar": "npm run sync && cd app-runtime && snow app deploy --verbose",
+    "probe:power": "tsx scripts/power-probe.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:resume": "tsx scripts/resume-test.ts",
+    "test:mcp": "tsx scripts/mcp-e2e.ts",
+    "test:history": "tsx scripts/history-test.ts",
+    "test:power": "tsx scripts/power-files-test.ts",
+    "test:studio": "tsx scripts/studio-test.ts",
+    "test:next": "npm run sync && tsx scripts/next-test.ts"
+  },
+  "dependencies": {
+    "@snowflake/cortex-agent-sdk": "0.0.1",
+    "express": "^5.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.18.4",
+    "remark-gfm": "^4.0.1",
+    "vega": "^6.4.0",
+    "vega-embed": "^7.3.0",
+    "vega-lite": "^6.5.0",
+    "vega-interpreter": "^2.3.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}

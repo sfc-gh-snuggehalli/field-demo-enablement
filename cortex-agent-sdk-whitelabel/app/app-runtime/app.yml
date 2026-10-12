@@ -1,0 +1,67 @@
+# App Runtime manifest (app.yml version 2). Build phases are merged from the bundled
+# snowflake-apps Next.js template. Deploy only after confirming the target connection:
+#   npm run deploy:sar   (from app/: sync, then `snow app deploy --verbose`)
+# Prerequisite: ACME_ASSIST_DEMO.APP exists (../lab/history.sql creates it).
+# Hand-written equivalent of `snow app setup --app-name=acme_assist` output (setup was not
+# run from this build); re-run setup if your CLI version emits additional keys.
+version: 2
+name: ACME_ASSIST
+database: ACME_ASSIST_DEMO
+schema: APP
+query_warehouse: ACME_ASSIST_WH
+label: ACME Assist
+description: ACME Retail store-operations assistant (Cortex Agents) with the Store Ops simulator.
+icon: public/icon.svg
+min_instances: 1
+max_instances: 1
+ignore:
+  - node_modules
+  - .next
+  - .git
+  - "*.log"
+  - "*.tsbuildinfo"
+  - output
+install:
+  commands:
+    - ["npm", "install", "--include=dev"]
+build:
+  commands:
+    # `next build` directly: the npm `prebuild` hook runs ../scripts/sync-app-runtime.mjs,
+    # which is outside the uploaded bundle (sync already ran locally via deploy:sar).
+    - ["npx", "next", "build"]
+    - ["cp", "-r", ".next/static", ".next/standalone/.next/static"]
+    - ["cp", "-r", "public", ".next/standalone/public"]
+    - ["rm", "-rf", "node_modules"]
+run:
+  command: ["node", ".next/standalone/server.js"]
+environment_variables:
+  # Runs resume from Snowflake's run stream after a restart (records under RUN_STORE_DIR).
+  # max_instances stays 1 until RUN_STORE=snowflake is enabled (see README "Scaling out").
+  - name: RUN_STORE_DIR
+    value: /tmp/acme/runs
+  - name: FILES_DIR
+    value: /tmp/acme/files
+  - name: SEMANTIC_VIEW
+    value: ACME_ASSIST_DEMO.DATA.ACME_SEMANTIC_VIEW
+  - name: SNOWFLAKE_WAREHOUSE
+    value: ACME_ASSIST_WH
+  - name: POWER_MODE_ENABLED
+    value: "false"
+  - name: SQL_READONLY_ROLE
+    value: ACME_DEMO_ROLE
+  - name: CALLERS_RIGHTS
+    value: "true"
+  - name: HISTORY_STORE
+    value: snowflake
+  - name: HISTORY_ROLE
+    value: ACME_HISTORY_ROLE
+  - name: NEXT_PUBLIC_BRAND
+    value: acme
+  - name: AGENT_DATABASE
+    value: ACME_ASSIST_DEMO
+  - name: AGENT_SCHEMA
+    value: DATA
+  - name: AGENT_NAME
+    value: ACME_ASSIST_AGENT
+  - name: POWER_AGENT_NAME
+    value: ACME_POWER_AGENT

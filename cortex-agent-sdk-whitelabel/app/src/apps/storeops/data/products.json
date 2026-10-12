@@ -1,0 +1,227 @@
+[
+ {
+  "sku": "SKU-TRL-RUN-01",
+  "name": "Trail Runner Shoe",
+  "category": "Footwear",
+  "subcategory": "Running",
+  "brand": "ACME Trail",
+  "unit_cost": 42,
+  "list_price": 119
+ },
+ {
+  "sku": "SKU-RD-RUN-02",
+  "name": "Road Runner Shoe",
+  "category": "Footwear",
+  "subcategory": "Running",
+  "brand": "ACME Trail",
+  "unit_cost": 38,
+  "list_price": 109
+ },
+ {
+  "sku": "SKU-HK-BOT-03",
+  "name": "Summit Hiking Boot",
+  "category": "Footwear",
+  "subcategory": "Hiking",
+  "brand": "ACME Trail",
+  "unit_cost": 55,
+  "list_price": 159
+ },
+ {
+  "sku": "SKU-SL-SND-04",
+  "name": "Everyday Slide Sandal",
+  "category": "Footwear",
+  "subcategory": "Casual",
+  "brand": "ACME Basics",
+  "unit_cost": 9,
+  "list_price": 29
+ },
+ {
+  "sku": "SKU-AP-TEE-05",
+  "name": "Organic Cotton Tee",
+  "category": "Apparel",
+  "subcategory": "Tops",
+  "brand": "ACME Basics",
+  "unit_cost": 6,
+  "list_price": 24
+ },
+ {
+  "sku": "SKU-AP-HOD-06",
+  "name": "Fleece Hoodie",
+  "category": "Apparel",
+  "subcategory": "Tops",
+  "brand": "ACME Basics",
+  "unit_cost": 18,
+  "list_price": 59
+ },
+ {
+  "sku": "SKU-AP-JKT-07",
+  "name": "Packable Rain Jacket",
+  "category": "Apparel",
+  "subcategory": "Outerwear",
+  "brand": "ACME Trail",
+  "unit_cost": 34,
+  "list_price": 99
+ },
+ {
+  "sku": "SKU-AP-LEG-08",
+  "name": "Performance Legging",
+  "category": "Apparel",
+  "subcategory": "Bottoms",
+  "brand": "ACME Active",
+  "unit_cost": 14,
+  "list_price": 54
+ },
+ {
+  "sku": "SKU-AP-SHT-09",
+  "name": "Training Short",
+  "category": "Apparel",
+  "subcategory": "Bottoms",
+  "brand": "ACME Active",
+  "unit_cost": 9,
+  "list_price": 34
+ },
+ {
+  "sku": "SKU-AP-SOK-10",
+  "name": "Merino Sock 3-Pack",
+  "category": "Apparel",
+  "subcategory": "Accessories",
+  "brand": "ACME Trail",
+  "unit_cost": 7,
+  "list_price": 26
+ },
+ {
+  "sku": "SKU-HM-KTL-02",
+  "name": "Electric Kettle",
+  "category": "Home",
+  "subcategory": "Kitchen",
+  "brand": "ACME Home",
+  "unit_cost": 16,
+  "list_price": 49
+ },
+ {
+  "sku": "SKU-HM-CFM-12",
+  "name": "Pour-Over Coffee Maker",
+  "category": "Home",
+  "subcategory": "Kitchen",
+  "brand": "ACME Home",
+  "unit_cost": 12,
+  "list_price": 39
+ },
+ {
+  "sku": "SKU-HM-PAN-13",
+  "name": "Nonstick Skillet 10in",
+  "category": "Home",
+  "subcategory": "Kitchen",
+  "brand": "ACME Home",
+  "unit_cost": 14,
+  "list_price": 44
+ },
+ {
+  "sku": "SKU-HM-TWL-14",
+  "name": "Bath Towel Set",
+  "category": "Home",
+  "subcategory": "Bath",
+  "brand": "ACME Home",
+  "unit_cost": 11,
+  "list_price": 39
+ },
+ {
+  "sku": "SKU-HM-LMP-15",
+  "name": "LED Desk Lamp",
+  "category": "Home",
+  "subcategory": "Lighting",
+  "brand": "ACME Home",
+  "unit_cost": 13,
+  "list_price": 45
+ },
+ {
+  "sku": "SKU-EL-EAR-16",
+  "name": "Wireless Earbuds",
+  "category": "Electronics",
+  "subcategory": "Audio",
+  "brand": "ACME Tech",
+  "unit_cost": 28,
+  "list_price": 89
+ },
+ {
+  "sku": "SKU-EL-SPK-17",
+  "name": "Portable Speaker",
+  "category": "Electronics",
+  "subcategory": "Audio",
+  "brand": "ACME Tech",
+  "unit_cost": 24,
+  "list_price": 79
+ },
+ {
+  "sku": "SKU-EL-WCH-18",
+  "name": "Fitness Watch",
+  "category": "Electronics",
+  "subcategory": "Wearables",
+  "brand": "ACME Tech",
+  "unit_cost": 52,
+  "list_price": 149
+ },
+ {
+  "sku": "SKU-EL-CHG-19",
+  "name": "Fast Charger 65W",
+  "category": "Electronics",
+  "subcategory": "Accessories",
+  "brand": "ACME Tech",
+  "unit_cost": 11,
+  "list_price": 39
+ },
+ {
+  "sku": "SKU-EL-PWR-20",
+  "name": "Power Bank 20k",
+  "category": "Electronics",
+  "subcategory": "Accessories",
+  "brand": "ACME Tech",
+  "unit_cost": 15,
+  "list_price": 49
+ },
+ {
+  "sku": "SKU-OD-TNT-21",
+  "name": "2-Person Tent",
+  "category": "Outdoor",
+  "subcategory": "Camping",
+  "brand": "ACME Trail",
+  "unit_cost": 64,
+  "list_price": 189
+ },
+ {
+  "sku": "SKU-OD-BAG-22",
+  "name": "Daypack 24L",
+  "category": "Outdoor",
+  "subcategory": "Bags",
+  "brand": "ACME Trail",
+  "unit_cost": 22,
+  "list_price": 69
+ },
+ {
+  "sku": "SKU-OD-BTL-23",
+  "name": "Insulated Bottle 32oz",
+  "category": "Outdoor",
+  "subcategory": "Hydration",
+  "brand": "ACME Trail",
+  "unit_cost": 8,
+  "list_price": 32
+ },
+ {
+  "sku": "SKU-OD-CHR-24",
+  "name": "Folding Camp Chair",
+  "category": "Outdoor",
+  "subcategory": "Camping",
+  "brand": "ACME Trail",
+  "unit_cost": 17,
+  "list_price": 54
+ },
+ {
+  "sku": "SKU-OD-LTN-25",
+  "name": "Rechargeable Lantern",
+  "category": "Outdoor",
+  "subcategory": "Camping",
+  "brand": "ACME Trail",
+  "unit_cost": 12,
+  "list_price": 39
+ }
+]

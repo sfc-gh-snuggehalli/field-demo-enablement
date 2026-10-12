@@ -1,0 +1,33 @@
+{
+  "name": "acme-assist-app-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "sync": "node ../scripts/sync-app-runtime.mjs",
+    "predev": "npm run sync",
+    "dev": "next dev -p 3000",
+    "prebuild": "npm run sync",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "npm run sync && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@snowflake/cortex-agent-sdk": "0.0.1",
+    "next": "^16.3.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.9.0",
+    "remark-gfm": "^4.0.1",
+    "vega": "^6.2.0",
+    "vega-embed": "^7.0.0",
+    "vega-lite": "^6.4.0",
+    "vega-interpreter": "^2.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}

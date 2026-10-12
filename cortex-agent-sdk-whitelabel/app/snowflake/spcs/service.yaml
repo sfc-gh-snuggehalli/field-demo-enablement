@@ -1,0 +1,41 @@
+# ACME Assist SPCS service specification. deploy.sh substitutes ${IMAGE}.
+# Single instance: resumable runs are buffered in-process.
+spec:
+  containers:
+    - name: acme-assist
+      image: ${IMAGE}
+      env:
+        PORT: "8080"
+        AGENT_DATABASE: ACME_ASSIST_DEMO
+        AGENT_SCHEMA: DATA
+        AGENT_NAME: ACME_ASSIST_AGENT
+        POWER_AGENT_NAME: ACME_POWER_AGENT
+        SEMANTIC_VIEW: ACME_ASSIST_DEMO.DATA.ACME_SEMANTIC_VIEW
+        SNOWFLAKE_WAREHOUSE: ACME_ASSIST_WH
+        POWER_MODE_ENABLED: "false"
+        CALLERS_RIGHTS: "true"
+        HISTORY_STORE: snowflake
+        HISTORY_ROLE: ACME_HISTORY_ROLE
+        HISTORY_TABLE: ACME_ASSIST_DEMO.APP.CONVERSATIONS
+        REQUIRE_AUTH: "true"
+        VITE_BRAND: acme
+      resources:
+        requests:
+          cpu: 0.5
+          memory: 1Gi
+        limits:
+          cpu: 1
+          memory: 2Gi
+      readinessProbe:
+        port: 8080
+        path: /api/health
+  endpoints:
+    - name: app
+      port: 8080
+      public: true
+capabilities:
+  securityContext:
+    executeAsCaller: true
+serviceRoles:
+  - name: ALL_ENDPOINTS_USAGE
+    endpoints: [app]

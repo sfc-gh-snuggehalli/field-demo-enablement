@@ -1,0 +1,42 @@
+[
+ {
+  "region_id": "RG-001",
+  "stockout_rate_pct": 13.3,
+  "stockout_threshold_pct": 6,
+  "stockout_breach": true,
+  "gross_margin_pct": 65.9,
+  "sales_7d": 14518377.22,
+  "sales_vs_target_pct": 1001.3,
+  "sales_breach": false
+ },
+ {
+  "region_id": "RG-002",
+  "stockout_rate_pct": 0,
+  "stockout_threshold_pct": 6,
+  "stockout_breach": false,
+  "gross_margin_pct": 66.4,
+  "sales_7d": 9586467.52,
+  "sales_vs_target_pct": 855.9,
+  "sales_breach": false
+ },
+ {
+  "region_id": "RG-003",
+  "stockout_rate_pct": 0,
+  "stockout_threshold_pct": 7,
+  "stockout_breach": false,
+  "gross_margin_pct": 66,
+  "sales_7d": 11822760.64,
+  "sales_vs_target_pct": 961.2,
+  "sales_breach": false
+ },
+ {
+  "region_id": "RG-004",
+  "stockout_rate_pct": 6.7,
+  "stockout_threshold_pct": 5,
+  "stockout_breach": true,
+  "gross_margin_pct": 64.1,
+  "sales_7d": 13484065.54,
+  "sales_vs_target_pct": 1029.3,
+  "sales_breach": false
+ }
+]

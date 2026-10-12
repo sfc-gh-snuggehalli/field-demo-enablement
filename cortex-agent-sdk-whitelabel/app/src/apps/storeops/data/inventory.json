@@ -1,0 +1,602 @@
+[
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-TRL-RUN-01",
+  "on_hand": 0,
+  "on_order": 397,
+  "daily_run_rate": 15.4,
+  "weeks_of_cover": 0,
+  "inventory_value": 0,
+  "stockout_flag": true
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-RD-RUN-02",
+  "on_hand": 0,
+  "on_order": 418,
+  "daily_run_rate": 21.3,
+  "weeks_of_cover": 0,
+  "inventory_value": 0,
+  "stockout_flag": true
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HK-BOT-03",
+  "on_hand": 794,
+  "on_order": 169,
+  "daily_run_rate": 14.3,
+  "weeks_of_cover": 7.9,
+  "inventory_value": 43670,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-SL-SND-04",
+  "on_hand": 168,
+  "on_order": 257,
+  "daily_run_rate": 7.7,
+  "weeks_of_cover": 3.1,
+  "inventory_value": 1512,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-TEE-05",
+  "on_hand": 218,
+  "on_order": 148,
+  "daily_run_rate": 27.3,
+  "weeks_of_cover": 1.1,
+  "inventory_value": 1308,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-HOD-06",
+  "on_hand": 804,
+  "on_order": 397,
+  "daily_run_rate": 29.5,
+  "weeks_of_cover": 3.9,
+  "inventory_value": 14472,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-JKT-07",
+  "on_hand": 665,
+  "on_order": 208,
+  "daily_run_rate": 14.5,
+  "weeks_of_cover": 6.6,
+  "inventory_value": 22610,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-LEG-08",
+  "on_hand": 338,
+  "on_order": 214,
+  "daily_run_rate": 24.9,
+  "weeks_of_cover": 1.9,
+  "inventory_value": 4732,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-SHT-09",
+  "on_hand": 518,
+  "on_order": 333,
+  "daily_run_rate": 17.8,
+  "weeks_of_cover": 4.2,
+  "inventory_value": 4662,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-AP-SOK-10",
+  "on_hand": 585,
+  "on_order": 153,
+  "daily_run_rate": 9.8,
+  "weeks_of_cover": 8.5,
+  "inventory_value": 4095,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HM-KTL-02",
+  "on_hand": 775,
+  "on_order": 366,
+  "daily_run_rate": 21.4,
+  "weeks_of_cover": 5.2,
+  "inventory_value": 12400,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HM-CFM-12",
+  "on_hand": 517,
+  "on_order": 82,
+  "daily_run_rate": 17.8,
+  "weeks_of_cover": 4.1,
+  "inventory_value": 6204,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HM-PAN-13",
+  "on_hand": 728,
+  "on_order": 125,
+  "daily_run_rate": 21.1,
+  "weeks_of_cover": 4.9,
+  "inventory_value": 10192,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HM-TWL-14",
+  "on_hand": 133,
+  "on_order": 8,
+  "daily_run_rate": 16.5,
+  "weeks_of_cover": 1.2,
+  "inventory_value": 1463,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-001",
+  "sku": "SKU-HM-LMP-15",
+  "on_hand": 424,
+  "on_order": 13,
+  "daily_run_rate": 12.7,
+  "weeks_of_cover": 4.8,
+  "inventory_value": 5512,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-AP-HOD-06",
+  "on_hand": 229,
+  "on_order": 147,
+  "daily_run_rate": 13.9,
+  "weeks_of_cover": 2.4,
+  "inventory_value": 4122,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-AP-JKT-07",
+  "on_hand": 517,
+  "on_order": 315,
+  "daily_run_rate": 8.3,
+  "weeks_of_cover": 8.9,
+  "inventory_value": 17578,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-AP-LEG-08",
+  "on_hand": 759,
+  "on_order": 388,
+  "daily_run_rate": 13.6,
+  "weeks_of_cover": 8,
+  "inventory_value": 10626,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-AP-SHT-09",
+  "on_hand": 155,
+  "on_order": 155,
+  "daily_run_rate": 27.8,
+  "weeks_of_cover": 0.8,
+  "inventory_value": 1395,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-AP-SOK-10",
+  "on_hand": 841,
+  "on_order": 33,
+  "daily_run_rate": 21.2,
+  "weeks_of_cover": 5.7,
+  "inventory_value": 5887,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-HM-KTL-02",
+  "on_hand": 502,
+  "on_order": 188,
+  "daily_run_rate": 9.4,
+  "weeks_of_cover": 7.6,
+  "inventory_value": 8032,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-HM-CFM-12",
+  "on_hand": 402,
+  "on_order": 7,
+  "daily_run_rate": 14,
+  "weeks_of_cover": 4.1,
+  "inventory_value": 4824,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-HM-PAN-13",
+  "on_hand": 465,
+  "on_order": 246,
+  "daily_run_rate": 5.1,
+  "weeks_of_cover": 13,
+  "inventory_value": 6510,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-HM-TWL-14",
+  "on_hand": 684,
+  "on_order": 29,
+  "daily_run_rate": 13.5,
+  "weeks_of_cover": 7.2,
+  "inventory_value": 7524,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-HM-LMP-15",
+  "on_hand": 179,
+  "on_order": 328,
+  "daily_run_rate": 7.9,
+  "weeks_of_cover": 3.2,
+  "inventory_value": 2327,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-EL-EAR-16",
+  "on_hand": 803,
+  "on_order": 309,
+  "daily_run_rate": 15.6,
+  "weeks_of_cover": 7.4,
+  "inventory_value": 22484,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-EL-SPK-17",
+  "on_hand": 866,
+  "on_order": 165,
+  "daily_run_rate": 29.7,
+  "weeks_of_cover": 4.2,
+  "inventory_value": 20784,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-EL-WCH-18",
+  "on_hand": 775,
+  "on_order": 379,
+  "daily_run_rate": 23.2,
+  "weeks_of_cover": 4.8,
+  "inventory_value": 40300,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-EL-CHG-19",
+  "on_hand": 400,
+  "on_order": 276,
+  "daily_run_rate": 6.5,
+  "weeks_of_cover": 8.8,
+  "inventory_value": 4400,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-002",
+  "sku": "SKU-EL-PWR-20",
+  "on_hand": 495,
+  "on_order": 141,
+  "daily_run_rate": 6.5,
+  "weeks_of_cover": 10.9,
+  "inventory_value": 7425,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-HM-KTL-02",
+  "on_hand": 432,
+  "on_order": 93,
+  "daily_run_rate": 15.3,
+  "weeks_of_cover": 4,
+  "inventory_value": 6912,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-HM-CFM-12",
+  "on_hand": 723,
+  "on_order": 160,
+  "daily_run_rate": 8.2,
+  "weeks_of_cover": 12.6,
+  "inventory_value": 8676,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-HM-PAN-13",
+  "on_hand": 852,
+  "on_order": 257,
+  "daily_run_rate": 20.5,
+  "weeks_of_cover": 5.9,
+  "inventory_value": 11928,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-HM-TWL-14",
+  "on_hand": 651,
+  "on_order": 193,
+  "daily_run_rate": 9.9,
+  "weeks_of_cover": 9.4,
+  "inventory_value": 7161,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-HM-LMP-15",
+  "on_hand": 280,
+  "on_order": 333,
+  "daily_run_rate": 9.6,
+  "weeks_of_cover": 4.2,
+  "inventory_value": 3640,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-EL-EAR-16",
+  "on_hand": 701,
+  "on_order": 286,
+  "daily_run_rate": 23.6,
+  "weeks_of_cover": 4.2,
+  "inventory_value": 19628,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-EL-SPK-17",
+  "on_hand": 455,
+  "on_order": 261,
+  "daily_run_rate": 21.1,
+  "weeks_of_cover": 3.1,
+  "inventory_value": 10920,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-EL-WCH-18",
+  "on_hand": 174,
+  "on_order": 334,
+  "daily_run_rate": 12.4,
+  "weeks_of_cover": 2,
+  "inventory_value": 9048,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-EL-CHG-19",
+  "on_hand": 78,
+  "on_order": 21,
+  "daily_run_rate": 5.1,
+  "weeks_of_cover": 2.2,
+  "inventory_value": 858,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-EL-PWR-20",
+  "on_hand": 658,
+  "on_order": 19,
+  "daily_run_rate": 14.7,
+  "weeks_of_cover": 6.4,
+  "inventory_value": 9870,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-OD-TNT-21",
+  "on_hand": 162,
+  "on_order": 268,
+  "daily_run_rate": 13,
+  "weeks_of_cover": 1.8,
+  "inventory_value": 10368,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-OD-BAG-22",
+  "on_hand": 589,
+  "on_order": 319,
+  "daily_run_rate": 18.3,
+  "weeks_of_cover": 4.6,
+  "inventory_value": 12958,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-OD-BTL-23",
+  "on_hand": 663,
+  "on_order": 173,
+  "daily_run_rate": 14.4,
+  "weeks_of_cover": 6.6,
+  "inventory_value": 5304,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-OD-CHR-24",
+  "on_hand": 212,
+  "on_order": 148,
+  "daily_run_rate": 8.2,
+  "weeks_of_cover": 3.7,
+  "inventory_value": 3604,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-003",
+  "sku": "SKU-OD-LTN-25",
+  "on_hand": 134,
+  "on_order": 324,
+  "daily_run_rate": 21.6,
+  "weeks_of_cover": 0.9,
+  "inventory_value": 1608,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-EL-EAR-16",
+  "on_hand": 0,
+  "on_order": 237,
+  "daily_run_rate": 10.1,
+  "weeks_of_cover": 0,
+  "inventory_value": 0,
+  "stockout_flag": true
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-EL-SPK-17",
+  "on_hand": 125,
+  "on_order": 204,
+  "daily_run_rate": 8.5,
+  "weeks_of_cover": 2.1,
+  "inventory_value": 3000,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-EL-WCH-18",
+  "on_hand": 260,
+  "on_order": 14,
+  "daily_run_rate": 30,
+  "weeks_of_cover": 1.2,
+  "inventory_value": 13520,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-EL-CHG-19",
+  "on_hand": 702,
+  "on_order": 43,
+  "daily_run_rate": 7.2,
+  "weeks_of_cover": 13.9,
+  "inventory_value": 7722,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-EL-PWR-20",
+  "on_hand": 831,
+  "on_order": 39,
+  "daily_run_rate": 17.3,
+  "weeks_of_cover": 6.9,
+  "inventory_value": 12465,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-OD-TNT-21",
+  "on_hand": 162,
+  "on_order": 372,
+  "daily_run_rate": 20.6,
+  "weeks_of_cover": 1.1,
+  "inventory_value": 10368,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-OD-BAG-22",
+  "on_hand": 724,
+  "on_order": 138,
+  "daily_run_rate": 21.7,
+  "weeks_of_cover": 4.8,
+  "inventory_value": 15928,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-OD-BTL-23",
+  "on_hand": 369,
+  "on_order": 51,
+  "daily_run_rate": 12,
+  "weeks_of_cover": 4.4,
+  "inventory_value": 2952,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-OD-CHR-24",
+  "on_hand": 814,
+  "on_order": 69,
+  "daily_run_rate": 9.1,
+  "weeks_of_cover": 12.8,
+  "inventory_value": 13838,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-OD-LTN-25",
+  "on_hand": 174,
+  "on_order": 281,
+  "daily_run_rate": 27.2,
+  "weeks_of_cover": 0.9,
+  "inventory_value": 2088,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-TRL-RUN-01",
+  "on_hand": 210,
+  "on_order": 240,
+  "daily_run_rate": 6.3,
+  "weeks_of_cover": 4.8,
+  "inventory_value": 8820,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-RD-RUN-02",
+  "on_hand": 683,
+  "on_order": 343,
+  "daily_run_rate": 24.6,
+  "weeks_of_cover": 4,
+  "inventory_value": 25954,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-HK-BOT-03",
+  "on_hand": 515,
+  "on_order": 81,
+  "daily_run_rate": 9.4,
+  "weeks_of_cover": 7.8,
+  "inventory_value": 28325,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-SL-SND-04",
+  "on_hand": 640,
+  "on_order": 101,
+  "daily_run_rate": 28.2,
+  "weeks_of_cover": 3.2,
+  "inventory_value": 5760,
+  "stockout_flag": false
+ },
+ {
+  "region_id": "RG-004",
+  "sku": "SKU-AP-TEE-05",
+  "on_hand": 166,
+  "on_order": 183,
+  "daily_run_rate": 6.9,
+  "weeks_of_cover": 3.4,
+  "inventory_value": 996,
+  "stockout_flag": false
+ }
+]

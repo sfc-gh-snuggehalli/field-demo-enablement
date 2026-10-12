@@ -1,0 +1,98 @@
+[
+ {
+  "exception_id": "EX-5001",
+  "order_id": "ORD-100001",
+  "reason": "Address mismatch",
+  "age_hours": 6,
+  "assignee": null,
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5002",
+  "order_id": "ORD-100003",
+  "reason": "Qty short",
+  "age_hours": 74,
+  "assignee": "A. Patel",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5003",
+  "order_id": "ORD-100006",
+  "reason": "Late pick",
+  "age_hours": 31,
+  "assignee": "R. Silva",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5004",
+  "order_id": "ORD-100007",
+  "reason": "Carrier delay",
+  "age_hours": 12,
+  "assignee": null,
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5005",
+  "order_id": "ORD-100010",
+  "reason": "Address mismatch",
+  "age_hours": 49,
+  "assignee": "R. Silva",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5006",
+  "order_id": "ORD-100012",
+  "reason": "Qty short",
+  "age_hours": 3,
+  "assignee": "A. Patel",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5007",
+  "order_id": "ORD-100013",
+  "reason": "Late pick",
+  "age_hours": 96,
+  "assignee": null,
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5008",
+  "order_id": "ORD-100014",
+  "reason": "Carrier delay",
+  "age_hours": 18,
+  "assignee": "R. Silva",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5009",
+  "order_id": "ORD-100015",
+  "reason": "Address mismatch",
+  "age_hours": 27,
+  "assignee": "R. Silva",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5010",
+  "order_id": "ORD-100023",
+  "reason": "Qty short",
+  "age_hours": 55,
+  "assignee": null,
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5011",
+  "order_id": "ORD-100024",
+  "reason": "Late pick",
+  "age_hours": 8,
+  "assignee": "A. Patel",
+  "status": "OPEN"
+ },
+ {
+  "exception_id": "EX-5012",
+  "order_id": "ORD-100025",
+  "reason": "Carrier delay",
+  "age_hours": 40,
+  "assignee": "J. Kim",
+  "status": "OPEN"
+ }
+]

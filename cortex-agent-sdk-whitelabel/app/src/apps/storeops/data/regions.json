@@ -1,0 +1,38 @@
+[
+ {
+  "id": "RG-001",
+  "name": "West",
+  "manager": "Dana Ortiz",
+  "store_count": 42,
+  "currency": "USD",
+  "weekly_sales_target": 1450000,
+  "stockout_threshold_pct": 6
+ },
+ {
+  "id": "RG-002",
+  "name": "Central",
+  "manager": "Marcus Lee",
+  "store_count": 35,
+  "currency": "USD",
+  "weekly_sales_target": 1120000,
+  "stockout_threshold_pct": 6
+ },
+ {
+  "id": "RG-003",
+  "name": "South",
+  "manager": "Priya Nair",
+  "store_count": 38,
+  "currency": "USD",
+  "weekly_sales_target": 1230000,
+  "stockout_threshold_pct": 7
+ },
+ {
+  "id": "RG-004",
+  "name": "Northeast",
+  "manager": "Tom Becker",
+  "store_count": 31,
+  "currency": "USD",
+  "weekly_sales_target": 1310000,
+  "stockout_threshold_pct": 5
+ }
+]

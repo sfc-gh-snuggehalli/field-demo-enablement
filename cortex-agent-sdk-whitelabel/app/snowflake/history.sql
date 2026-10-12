@@ -1,0 +1,9 @@
+-- ACME Assist: server-side conversation history (HISTORY_STORE=snowflake).
+-- Pointer to the canonical script (not a copy):
+--   ../../lab/history.sql   ACME_ASSIST_DEMO.APP schema, APP.CONVERSATIONS table,
+--                           ACME_HISTORY_ROLE with SELECT/INSERT/UPDATE/DELETE
+-- Run once as an admin after setup.sql:
+--   snow sql -c <connection> -f ../lab/history.sql
+-- Or in a snowsql session:  !source ../../lab/history.sql
+-- Then GRANT ROLE ACME_HISTORY_ROLE TO USER <app_user>; (local PAT) or to ACME_APP_ROLE (SPCS).
+-- Teardown for everything: ../../lab/cleanup.sql
