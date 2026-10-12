@@ -47,7 +47,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 
 ### Setup
 
-1. Edit the account host in `lab/setup.sql` section 10 (`GATEWAY_APP_EGRESS`), then run it:
+1. In `lab/setup.sql` section 9 (network rule `GATEWAY_APP_EGRESS`), replace the placeholder `<org>-<account>.snowflakecomputing.com` with your account host (hyphens, not underscores; `SELECT LOWER(REPLACE(CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME(), '_', '-')) || '.snowflakecomputing.com';` returns it). Then run the script:
    ```bash
    snow sql -f lab/setup.sql
    ```
