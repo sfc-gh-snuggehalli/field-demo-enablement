@@ -54,7 +54,17 @@ Solution engineers, architects and app developers who want to ship a branded age
 
 ### Setup
 
-Run in order with a SYSADMIN connection:
+**Quick start:** after cloning, run one script. It checks prerequisites, creates and seeds the Snowflake objects, grants the demo role to your user, writes `app/.env`, runs `npm install` and runs the client-side tool smoke test:
+
+```bash
+cd cortex-agent-sdk-whitelabel
+./setup.sh                 # prompts for a Snowflake CLI connection and a PAT file
+cd app && npm run dev      # http://localhost:5173
+```
+
+Flags: `-c <connection> -p <pat-file>` (non-interactive), `--history` (Snowflake history store), `--skip-npm`, `--force-env`, `--teardown`. The connection's user needs SYSADMIN and ACCOUNTADMIN.
+
+**Manual setup:** run in order with a SYSADMIN connection:
 
 ```bash
 snow sql -f lab/setup.sql        # objects + semantic view + agents (re-run after seeding if first time)
