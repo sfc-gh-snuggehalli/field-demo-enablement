@@ -31,6 +31,7 @@ hands-on lab with SQL setup and a notebook.
 | Cortex Search: BYO Embeddings & Cost Optimization | Data engineers, platform teams & solutions architects | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-search-cost/presentations/cortex-search-cost.html) |
 | Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & AI governance teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html) |
 | Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & retail analytics teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-retail/presentations/ai-gateway.html) |
+| Building Agentic AI Applications on the Cortex Agent SDK | SEs, architects & app developers | Presentation + Meta-Prompt + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-agent-sdk-whitelabel/presentations/cortex-agent-sdk-whitelabel.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -193,6 +194,22 @@ The same gateway, MCP, Trace Analyzer and cost-governance flow on athletic appar
 | `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
 | `app/` | Trace Analyzer: live prompt, trace explorer, advisor, experiments, before/after, cost governance |
 
+### Building Agentic AI Applications on the Cortex Agent SDK
+
+**Location:** `cortex-agent-sdk-whitelabel/`
+
+How to build a fully branded, CoWork-style agent app (ACME Assist for the fictional ACME Retail) on `@snowflake/cortex-agent-sdk`, generated from one meta-prompt in Cortex Code. It covers config-driven branding with an animated logo, an embedded browser the agent drives through client-side tools, approval cards, Power Mode (`code_toolset_all`), a Studio runner, resumable runs and SSO identity, and deploys to Docker, SPCS and Snowflake App Runtime.
+
+| File | Description |
+|------|-------------|
+| `presentations/cortex-agent-sdk-whitelabel.html` | Slide deck (12 slides) |
+| `presentations/cortex-agent-sdk-whitelabel-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Run-of-show (live one-shot or pre-built walkthrough) |
+| `META_PROMPT.md` / `PROMPT.md` | Seed prompt + clarifying Q&A, and the full build spec |
+| `lab/setup.sql`, `lab/seed_data.sql`, `lab/history.sql` | Retail ops data, semantic view, two agents, roles, history table |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `app/` | Reference build: React/Vite client, Express proxy, Next.js App Runtime variant, Store Ops simulator, CoCo runner |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -315,6 +332,20 @@ field-demo-enablement/
 │   │   ├── live_agent.py
 │   │   └── generate_traffic.py
 │   └── app/
+├── cortex-agent-sdk-whitelabel/  # Branded agentic app on the Cortex Agent SDK (meta-prompt)
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── META_PROMPT.md
+│   ├── PROMPT.md
+│   ├── presentations/
+│   │   ├── cortex-agent-sdk-whitelabel.html
+│   │   └── cortex-agent-sdk-whitelabel-speaker-notes.md
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── seed_data.sql
+│   │   ├── history.sql
+│   │   └── cleanup.sql
+│   └── app/                     # React/Vite + Express, app-runtime/ (Next.js), coco-runner/
 <!-- REPO_TREE_END -->
 ```
 
