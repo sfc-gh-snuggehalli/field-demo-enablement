@@ -8,7 +8,9 @@
 -- Takes about 2 minutes on an XS warehouse (data generation).
 --
 -- Prerequisites:
---   - ACCOUNTADMIN or a role with CREATE DATABASE, CREATE WAREHOUSE
+--   - ACCOUNTADMIN, plus SYSADMIN granted to your user. Lab objects are created
+--     as SYSADMIN (so the lab, notebook and app can own and extend them); the
+--     gateway, grants, integration and service user steps switch to ACCOUNTADMIN.
 --   - Cross-region inference enabled (for Claude model access)
 --   - SNOWFLAKE.CORTEX_USER database role granted to your role
 -- =============================================================================
@@ -16,6 +18,10 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. DATABASE AND SCHEMA
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- SYSADMIN must own the database: later sections and the notebook create views,
+-- tables, tags, models and the app as SYSADMIN.
+USE ROLE SYSADMIN;
 
 CREATE DATABASE IF NOT EXISTS CORTEX_GATEWAY_RETAIL_LAB;
 USE DATABASE CORTEX_GATEWAY_RETAIL_LAB;

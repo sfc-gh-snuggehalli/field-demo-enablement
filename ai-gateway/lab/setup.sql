@@ -6,7 +6,9 @@
 --          and AI Gateway route configuration.
 --
 -- Prerequisites:
---   - ACCOUNTADMIN or a role with CREATE DATABASE, CREATE WAREHOUSE
+--   - ACCOUNTADMIN, plus SYSADMIN granted to your user. Lab objects are created
+--     as SYSADMIN (so the lab, notebook and app can own and extend them); the
+--     gateway, grants and integration steps switch to ACCOUNTADMIN.
 --   - Cross-region inference enabled (for Claude model access)
 --   - SNOWFLAKE.CORTEX_USER database role granted to your role
 -- =============================================================================
@@ -14,6 +16,10 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1. DATABASE AND SCHEMA
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- SYSADMIN must own the database: later sections and the notebook create
+-- objects as SYSADMIN.
+USE ROLE SYSADMIN;
 
 CREATE DATABASE IF NOT EXISTS CORTEX_GATEWAY_LAB;
 USE DATABASE CORTEX_GATEWAY_LAB;
