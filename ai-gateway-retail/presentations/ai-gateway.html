@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call</title>
+  <title>AI on Snowflake, Governed End to End</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -452,20 +452,29 @@
   </a>
   <div class="progress-bar"></div>
   <nav class="sidebar">
-    <h2>Cortex AI Gateway</h2>
+    <h2>AI on Snowflake</h2>
     <!-- NAV_LINKS_START -->
     <a href="#hero">Overview</a>
-    <a href="#problem">The Problem</a>
+    <a href="#act1">Part 1: AI in Snowflake</a>
+    <a href="#use-case">Use Case &amp; Data Model</a>
+    <a href="#stack">The Snowflake AI Stack</a>
+    <a href="#semantic">Semantic Views</a>
+    <a href="#ml">ML: Churn Model</a>
+    <a href="#agent-architecture">Cortex Agents</a>
+    <a href="#actions">Agents That Take Action</a>
+    <a href="#act2">Part 2: Control Plane</a>
+    <a href="#problem">Why a Control Plane</a>
     <a href="#architecture">Architecture</a>
+    <a href="#mcp">Publishing via MCP</a>
     <a href="#what-is">What is Cortex AI Gateway?</a>
-    <a href="#inference">One Endpoint, Two Standard APIs</a>
-    <a href="#mcp">Snowflake as the Tool Provider (MCP)</a>
+    <a href="#inference">One Endpoint, Two APIs</a>
     <a href="#agent">LangChain Agent in Action</a>
     <a href="#observability">Every Call is Traced</a>
-    <a href="#optimization-loop">From Telemetry to a Better Agent</a>
-    <a href="#experiments">Before / After: Proving the Fix</a>
-    <a href="#live">Live Demo: One Prompt, Three Views</a>
+    <a href="#optimization-loop">Telemetry to a Better Agent</a>
+    <a href="#experiments">Before / After</a>
+    <a href="#governance">Governing Spend</a>
     <a href="#admin">Admin Controls</a>
+    <a href="#live">Live Demo</a>
     <a href="#benefits">When to Use What</a>
     <a href="#closing">Next Steps</a>
     <!-- NAV_LINKS_END -->
@@ -475,17 +484,171 @@
 
     <!-- SLIDES_START -->
     <section class="slide" id="hero">
-      <h1>Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call</h1>
-      <p>One governed endpoint for agents and SDKs, OpenTelemetry traces for every request, and a closed loop that turns telemetry into cheaper, faster prompts.</p>
-      <div class="stat-grid anim-fade" style="margin-top: 2rem;">
-        <div class="stat-card"><div class="value">1</div><div class="label">Gateway object per account, auto-provisioned</div></div>
-        <div class="stat-card"><div class="value">2</div><div class="label">Industry APIs: Chat Completions + Messages</div></div>
-        <div class="stat-card"><div class="value">100%</div><div class="label">Requests traced into your own event table</div></div>
-        <div class="stat-card"><div class="value">0</div><div class="label">Data leaving the Snowflake perimeter</div></div>
+      <h1>AI on Snowflake, Governed End to End: From Cortex Agents to a Central AI Control Plane</h1>
+      <p>Build governed AI where the retail data lives, then make Snowflake the single control point for every model call and tool call, including agents that run outside Snowflake.</p>
+      <div class="two-col anim-fade" style="margin-top: 2rem;">
+        <div class="card" style="border-color: var(--primary)"><h4>Part 1: AI capabilities in Snowflake</h4><p>Semantic views, an ML churn model in the Model Registry, and a Cortex Agent that answers and acts over sales, customer and campaign data.</p></div>
+        <div class="card" style="border-color: var(--accent)"><h4>Part 2: Snowflake as the control plane</h4><p>Publish that agent over MCP, route external LLM calls through Cortex AI Gateway, and trace, optimize and cap every request.</p></div>
       </div>
     </section>
+
+    <section class="slide" id="act1">
+      <span class="badge-blue">Part 1</span>
+      <h1 style="margin-top:1rem;">AI Capabilities in Snowflake</h1>
+      <p>Everything an agent needs, built next to the data and governed by the same RBAC: business semantics, ML, LLM functions, agents and actions.</p>
+    </section>
+
+    <section class="slide" id="use-case">
+      <h2>The Use Case: A Retail Analytics Agent</h2>
+      <h3>An athletic apparel brand wants merchandising, marketing and CX teams to ask questions in plain language and get governed, numeric answers</h3>
+      <div class="card-grid anim-fade">
+        <div class="card" style="border-color: var(--primary)"><h4>Goal</h4><p>Answer "which channels drive margin?", "which campaigns pay back?" and "which segments will churn?" from one agent, using certified metrics and a real churn model, then act on the answer.</p></div>
+        <div class="card" style="border-color: var(--accent)"><h4>Who uses it</h4><p>Business users in Snowflake Intelligence, and external agents (LangChain, coding agents) over MCP, all under their own roles.</p></div>
+      </div>
+      <table class="anim-fade">
+        <thead><tr><th>Domain</th><th>Tables (rows)</th><th>Semantic view</th></tr></thead>
+        <tbody>
+          <tr><td>Sales &amp; KPIs</td><td><code>FACT_DAILY_SALES</code> (47k), <code>FACT_DAILY_KPI</code> (4.5k), <code>DIM_PRODUCT</code> (500), <code>DIM_STORE</code> (25)</td><td><span class="badge-purple">CONVERSATIONAL_BI_SV</span></td></tr>
+          <tr><td>Customers &amp; campaigns</td><td><code>DIM_CUSTOMER</code> (5k), <code>FACT_CUSTOMER_INTERACTIONS</code> (20k), <code>DIM_MARKETING_CAMPAIGN</code> (40), <code>FACT_CAMPAIGN_PERFORMANCE</code> (1.2k)</td><td><span class="badge-blue">CUSTOMER_INTERACTIONS_SV</span></td></tr>
+          <tr><td>ML</td><td><code>ML_CUSTOMER_FEATURES</code> (5k) &rarr; churn model &rarr; <code>CHURN_PREDICTIONS</code> (5k)</td><td><span class="badge-blue">CUSTOMER_INTERACTIONS_SV</span></td></tr>
+        </tbody>
+      </table>
+      <div class="context-box anim-fade"><strong>Star schema, October 2024 to September 2025:</strong> facts join to product, store and customer dimensions on their keys. Each semantic view covers one domain, and the agent picks the view (via its Analyst tool) that fits the question, or uses both.</div>
+    </section>
+
+    <section class="slide" id="stack">
+      <h2>The Snowflake AI Stack</h2>
+      <h3>Each layer builds on the one below it, and all of it runs under your roles and grants</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">Snowflake Intelligence</div>
+          <div class="node">Agent REST API</div>
+          <div class="node node-accent">Managed MCP server</div>
+        </div>
+        <div class="arrow">&uarr; consumed by</div>
+        <div class="level"><div class="node node-primary"><strong>Cortex Agents</strong><br><small>orchestration, planning, tool use, custom tools (procedures)</small></div></div>
+        <div class="arrow">&uarr; tools</div>
+        <div class="level">
+          <div class="node">Cortex Analyst<br><small>text-to-SQL on semantic views</small></div>
+          <div class="node">Cortex Search<br><small>retrieval over unstructured text</small></div>
+          <div class="node">AI Functions<br><small>AI_COMPLETE, AI_CLASSIFY, ...</small></div>
+        </div>
+        <div class="arrow">&uarr; grounded in</div>
+        <div class="level">
+          <div class="node">Semantic views<br><small>business metrics + joins</small></div>
+          <div class="node">ML: Model Registry<br><small>train, register, batch-score</small></div>
+        </div>
+        <div class="arrow">&uarr;</div>
+        <div class="level"><div class="node">Governed data: sales, products, stores, customers, campaigns</div></div>
+      </div>
+      <div class="context-box anim-fade"><strong>In this demo:</strong> two semantic views, an XGBoost churn model, and one Cortex Agent with two Analyst tools. AI_COMPLETE is also the quality judge in Part 2. Cortex Search fits the same pattern for documents but isn't used here.</div>
+    </section>
+
+    <section class="slide" id="semantic">
+      <h2>Semantic Views: The Business Layer for AI</h2>
+      <h3>Define tables, joins, metrics and synonyms once; every agent and BI tool reuses them</h3>
+<pre class="anim-fade"><span class="keyword">CREATE SEMANTIC VIEW</span> CUSTOMER_INTERACTIONS_SV
+  <span class="keyword">TABLES</span> (
+    customers   <span class="keyword">AS</span> DIM_CUSTOMER <span class="keyword">PRIMARY KEY</span> (CUSTOMER_ID),
+    interactions <span class="keyword">AS</span> FACT_CUSTOMER_INTERACTIONS ...,
+    churn_preds <span class="keyword">AS</span> CHURN_PREDICTIONS          <span class="comment">-- scores from the registered model</span>
+      <span class="keyword">COMMENT</span> = <span class="string">'Churn scores from CHURN_PREDICTION_MODEL'</span> ...)
+  <span class="keyword">RELATIONSHIPS</span> (interaction_to_customer <span class="keyword">AS</span> interactions(CUSTOMER_ID) <span class="keyword">REFERENCES</span> customers, ...)
+  <span class="keyword">METRICS</span> (...)                                <span class="comment">-- e.g. avg model churn score, predicted churners</span></pre>
+      <div class="two-col anim-fade">
+        <div class="card" style="border-color: var(--primary)"><h4>CUSTOMER_INTERACTIONS_SV</h4><p>Customer behaviour, segments, campaigns, CLV and churn scores.</p></div>
+        <div class="card" style="border-color: var(--accent)"><h4>CONVERSATIONAL_BI_SV</h4><p>Revenue, orders, margins, stores, marketing efficiency and executive KPIs.</p></div>
+      </div>
+      <div class="highlight-box anim-fade"><strong>Why it matters for governance:</strong> Cortex Analyst only writes SQL against what the semantic view exposes, and the SQL runs under the caller's role. The semantic view is the boundary the agent can't step outside.</div>
+    </section>
+
+    <section class="slide" id="ml">
+      <h2>ML in the Same Platform: Churn Model to Agent Answer</h2>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step active"><div class="step-label">1. Train</div><div class="step-title">XGBoost on ML_CUSTOMER_FEATURES</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">2. Register</div><div class="step-title">Model Registry: CHURN_PREDICTION_MODEL/V1</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">3. Score</div><div class="step-title">Batch inference in the warehouse</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">4. Monitor</div><div class="step-title">CHURN_MODEL_MONITOR</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">5. Serve</div><div class="step-title">CHURN_PREDICTIONS in the semantic view</div></div>
+      </div>
+<pre class="anim-fade"><span class="keyword">from</span> snowflake.ml.registry <span class="keyword">import</span> Registry
+reg = <span class="function">Registry</span>(session=session, database_name=DATABASE, schema_name=SCHEMA)
+mv  = reg.<span class="function">log_model</span>(model, model_name=<span class="string">"CHURN_PREDICTION_MODEL"</span>, version_name=<span class="string">"V1"</span>, ...)
+mv.<span class="function">run</span>(session.table(<span class="string">"CHURN_FEATURES_V"</span>), function_name=<span class="string">"predict_proba"</span>)   <span class="comment"># scored where the data lives</span></pre>
+      <div class="context-box anim-fade"><strong>The payoff:</strong> a business user asks "which segments will churn?" and the agent answers from model scores, not a hand-written rule, with no model endpoint or feature export outside Snowflake.</div>
+    </section>
+
+    <section class="slide" id="agent-architecture">
+      <h2>Cortex Agents: Orchestration Over Governed Tools</h2>
+      <h3>RETAIL_ANALYTICS_AGENT: instructions route each question to the right tool</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node node-primary"><strong>Cortex Agent: orchestration (auto model)</strong><br><small>instructions route each question to a tool, plan multi-step, write the answer</small></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">customer_interactions_analyst<br><small>CUSTOMER_INTERACTIONS_SV + CHURN_PREDICTIONS</small></div>
+          <div class="node">business_kpi_analyst<br><small>CONVERSATIONAL_BI_SV</small></div>
+          <div class="node">data_to_chart<br><small>visualizations</small></div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node">GATEWAY_RETAIL_WH runs the generated SQL under RBAC</div>
+        </div>
+      </div>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>The agent is the contract</h4><p>Tools, tool descriptions and orchestration instructions live in one <code>CREATE AGENT</code> spec. Add or change a tool there and every front end picks it up; no client code changes.</p></div>
+        <div class="card"><h4>Many front ends, one agent</h4><p>The same agent serves Snowflake Intelligence, the Agent REST API, and (Part 2) external clients over MCP. Built-in agent monitoring records each run.</p></div>
+      </div>
+      
+    </section>
+
+    <section class="slide" id="actions">
+      <h2>Beyond Answers: Agents That Take Action</h2>
+      <h3>Actions are stored procedures exposed as tools, governed the same way as reads</h3>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step active"><div class="step-label">1. Find</div><div class="step-title">Analyst: high churn-risk Gold members</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">2. Propose</div><div class="step-title">Agent drafts offer + audience</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step"><div class="step-label">3. Act</div><div class="step-title">CREATE_RETENTION_CAMPAIGN proc</div></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step active"><div class="step-label">4. Notify</div><div class="step-title">Email / Slack / ticket to owner</div></div>
+      </div>
+<pre class="anim-fade"><span class="comment">-- Illustrative: not deployed by lab/setup.sql</span>
+<span class="keyword">CREATE PROCEDURE</span> CREATE_RETENTION_CAMPAIGN(segment STRING, offer STRING, max_customers INT)
+  <span class="keyword">RETURNS</span> VARIANT <span class="keyword">LANGUAGE</span> SQL <span class="keyword">EXECUTE AS OWNER</span> ...  <span class="comment">-- validates inputs, INSERTs rows with STATUS='PENDING_APPROVAL'</span>
+
+<span class="comment"># Agent spec: same proc as a custom tool        # MCP spec: or expose it directly to MCP clients</span>
+- tool_spec: { type: generic,                    - name: create_retention_campaign
+    name: create_retention_campaign, ... }         type: <span class="string">"GENERIC"</span>
+tool_resources:                                    identifier: <span class="string">"...PUBLIC.CREATE_RETENTION_CAMPAIGN"</span>
+  create_retention_campaign:                       config: { type: <span class="string">"procedure"</span>, input_schema: ... }
+    type: procedure, identifier: ...</pre>
+      <div class="card-grid anim-fade">
+        <div class="card" style="border-color: var(--primary)"><h4>Write back in Snowflake</h4><p>Queue a retention offer, flag customers for outreach, open a case row, refresh a segment. The proc owns the write; the agent never gets raw DML.</p></div>
+        <div class="card" style="border-color: var(--accent)"><h4>Reach outside Snowflake</h4><p>The same proc can send email through a notification integration (<code>SYSTEM$SEND_EMAIL</code>) or call Slack, ServiceNow or a marketing platform through an external access integration.</p></div>
+        <div class="card" style="border-color: var(--green)"><h4>Keep a human in the loop</h4><p>Write to a <code>PENDING_APPROVAL</code> state and let a person or a downstream task release it. Return the campaign id so the agent can report what it did.</p></div>
+      </div>
+      <div class="warning-box anim-fade"><strong>Guardrails:</strong> grant <code>USAGE</code> on the procedure only to roles allowed to act; validate and cap every argument inside the proc (prompt injection can shape inputs); put write tools on the agent rather than adding <code>SYSTEM_EXECUTE_SQL</code>; log each action to an audit table from inside the proc.</div>
+    </section>
+
+    <section class="slide" id="act2">
+      <span class="badge-purple">Part 2</span>
+      <h1 style="margin-top:1rem;">Snowflake as the Central AI Control Plane</h1>
+      <p>Not every agent will run inside Snowflake. Teams build in LangChain, coding agents and vendor copilots. The goal is one place that governs the data those agents touch and the models they call.</p>
+      <div class="two-col anim-fade" style="margin-top: 2rem;">
+        <div class="card" style="border-color: var(--accent)"><h4>Tools: MCP server</h4><p>Publish the governed Cortex Agent to any MCP client. Data access stays behind semantic views and RBAC.</p></div>
+        <div class="card" style="border-color: var(--primary)"><h4>Models: Cortex AI Gateway</h4><p>One endpoint for every LLM call, with traces, cost attribution, model allowlists and per-user quotas.</p></div>
+      </div>
+    </section>
+
     <section class="slide" id="problem">
-      <h2>Why Teams Need an AI Gateway</h2>
+      <h2>Why External Agents Need a Control Plane</h2>
       <div class="card-grid anim-fade">
         <div class="card"><h4>Sprawl of keys and endpoints</h4><p>Every team wires its own provider keys into agents, notebooks and apps. Nobody can say which models are in use or who is calling them.</p></div>
         <div class="card"><h4>No visibility into agent behaviour</h4><p>A single agent turn fans out into several model calls and tool calls. Without traces, slow or failing turns are guesswork.</p></div>
@@ -493,8 +656,9 @@
         <div class="card"><h4>Optimization without evidence</h4><p>Prompt and model choices are made by intuition. Teams need a repeatable way to prove a cheaper config keeps answer quality.</p></div>
       </div>
     </section>
+
     <section class="slide" id="architecture">
-      <h2>Architecture</h2>
+      <h2>The Control Plane Architecture</h2>
       <h3>External agent, Snowflake-native tools, one governed inference path</h3>
       <div class="arch-diagram anim-fade">
         <div class="level">
@@ -516,7 +680,22 @@
       </div>
     </section>
 
-        <section class="slide" id="what-is">
+    <section class="slide" id="mcp">
+      <h2>Publishing the Agent to Any Client (MCP)</h2>
+  <h3>One governed tool: a Cortex Agent behind the MCP server</h3>
+<pre class="anim-fade"><span class="keyword">CREATE AGENT</span> RETAIL_ANALYTICS_AGENT ...        <span class="comment"># 2 Analyst tools: customer + churn, executive KPIs</span>
+
+<span class="keyword">CREATE MCP SERVER</span> RETAIL_MCP <span class="keyword">FROM SPECIFICATION</span> $$
+tools:
+  - name: retail_analytics_agent
+    type: <span class="string">"CORTEX_AGENT_RUN"</span>
+    identifier: <span class="string">"CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.RETAIL_ANALYTICS_AGENT"</span>
+$$;</pre>
+  <div class="highlight-box anim-fade">No raw SQL tool: the client can't bypass the semantic views. Churn scores from the registered XGBoost model reach the client through the same tool. Clients connect over streamable HTTP at <code>/api/v2/databases/&lt;db&gt;/schemas/&lt;schema&gt;/mcp-servers/&lt;name&gt;</code> with the same PAT, and tools execute under the caller's role.</div>
+      <div class="context-box anim-fade"><strong>Two layers of orchestration:</strong> the external agent decides <em>whether</em> to ask Snowflake; the Cortex Agent decides <em>how</em> to answer. The gateway traces the first; Cortex Agent monitoring covers the second.</div>
+    </section>
+
+    <section class="slide" id="what-is">
       <h2>What is Cortex AI Gateway?</h2>
   <h3>A governed inference endpoint that Snowflake provisions for you</h3>
   <div class="card-grid anim-fade">
@@ -544,20 +723,6 @@ llm = <span class="function">ChatOpenAI</span>(
     default_headers={<span class="string">"traceparent"</span>: traceparent},   <span class="comment"># groups one agent turn</span>
 )</pre>
   <div class="warning-box anim-fade"><strong>Gotchas seen in the lab:</strong> hostnames must use hyphens, not underscores; GPT-5 models reject <code>max_tokens</code>; Claude sent to <code>/chat/completions</code> returns 400.</div>
-    </section>
-
-    <section class="slide" id="mcp">
-      <h2>Snowflake as the Tool Provider (MCP)</h2>
-  <h3>One governed tool: a Cortex Agent behind the MCP server</h3>
-<pre class="anim-fade"><span class="keyword">CREATE AGENT</span> RETAIL_ANALYTICS_AGENT ...        <span class="comment"># 2 Analyst tools: customer + churn, executive KPIs</span>
-
-<span class="keyword">CREATE MCP SERVER</span> RETAIL_MCP <span class="keyword">FROM SPECIFICATION</span> $$
-tools:
-  - name: retail_analytics_agent
-    type: <span class="string">"CORTEX_AGENT_RUN"</span>
-    identifier: <span class="string">"CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.RETAIL_ANALYTICS_AGENT"</span>
-$$;</pre>
-  <div class="highlight-box anim-fade">No raw SQL tool: the client can't bypass the semantic views. Churn scores from the registered XGBoost model reach the client through the same tool. Clients connect over streamable HTTP at <code>/api/v2/databases/&lt;db&gt;/schemas/&lt;schema&gt;/mcp-servers/&lt;name&gt;</code> with the same PAT, and tools execute under the caller's role.</div>
     </section>
 
     <section class="slide" id="agent">
@@ -640,17 +805,6 @@ $$;</pre>
   <div class="warning-box anim-fade">Enforcement lands within minutes of the spend, not on each request, so a user can briefly overshoot; size limits with headroom. One limit applies to every user in a quota: use a tier tag and a second quota for heavier users.</div>
     </section>
 
-    <section class="slide" id="live">
-      <h2>Live Demo: One Prompt, Four Views</h2>
-  <div class="card-grid anim-fade">
-    <div class="card" style="border-color: var(--primary)"><h4>1. Send it</h4><p><code>python lab/live_agent.py "..."</code> runs the LangChain + MCP agent from a laptop and prints its trace_id.</p></div>
-    <div class="card" style="border-color: var(--accent)"><h4>2. Snowsight</h4><p>AI &amp; ML &rarr; Cortex AI Gateway: find the same trace, its spans, tokens and captured messages.</p></div>
-    <div class="card" style="border-color: var(--green)"><h4>3. Trace Analyzer</h4><p>Trace explorer loads that trace_id from AGENT_TRACE_TABLE: span waterfall plus the captured system prompt, input and output.</p></div>
-    <div class="card" style="border-color: var(--primary)"><h4>4. Cost governance</h4><p>The same traffic as credits by cost center, a user over their daily quota, and the platform's block on their next request.</p></div>
-  </div>
-  <div class="context-box anim-fade"><strong>Presenter tip:</strong> run <code>live_agent.py --model not-a-real-model</code> once to show an error span land, then show it on the Overview error-rate chart.</div>
-    </section>
-
     <section class="slide" id="admin">
       <h2>Admin Controls</h2>
 <pre class="anim-fade"><span class="keyword">ALTER AI GATEWAY</span> SNOWFLAKE <span class="keyword">FROM SPECIFICATION</span> $$
@@ -670,6 +824,17 @@ $$;                              <span class="comment">-- replaces the whole spe
   <div class="warning-box anim-fade">USAGE is granted to PUBLIC by default. Revoke it to restrict who can send traffic; revoking USAGE is also how a budget action can cut a team off.</div>
     </section>
 
+    <section class="slide" id="live">
+      <h2>Live Demo: One Prompt, Four Views</h2>
+  <div class="card-grid anim-fade">
+    <div class="card" style="border-color: var(--primary)"><h4>1. Send it</h4><p><code>python lab/live_agent.py "..."</code> runs the LangChain + MCP agent from a laptop and prints its trace_id.</p></div>
+    <div class="card" style="border-color: var(--accent)"><h4>2. Snowsight</h4><p>AI &amp; ML &rarr; Cortex AI Gateway: find the same trace, its spans, tokens and captured messages.</p></div>
+    <div class="card" style="border-color: var(--green)"><h4>3. Trace Analyzer</h4><p>Trace explorer loads that trace_id from AGENT_TRACE_TABLE: span waterfall plus the captured system prompt, input and output.</p></div>
+    <div class="card" style="border-color: var(--primary)"><h4>4. Cost governance</h4><p>The same traffic as credits by cost center, a user over their daily quota, and the platform's block on their next request.</p></div>
+  </div>
+  <div class="context-box anim-fade"><strong>Presenter tip:</strong> run <code>live_agent.py --model not-a-real-model</code> once to show an error span land, then show it on the Overview error-rate chart.</div>
+    </section>
+
     <section class="slide" id="benefits">
       <h2>When to Use What</h2>
   <div class="card-grid anim-fade">
@@ -678,6 +843,7 @@ $$;                              <span class="comment">-- replaces the whole spe
     <div class="card" style="border-color: var(--accent)"><h4>Cortex Agents</h4><ul><li>Snowflake-hosted orchestration</li><li>Snowflake Intelligence front end</li><li>Built-in agent monitoring</li></ul></div>
   </div>
     </section>
+
     <section class="slide" id="closing">
       <h2>Next Steps</h2>
       <div class="card-grid anim-fade">

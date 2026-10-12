@@ -22,7 +22,7 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 
 | File | Description |
 |------|-------------|
-| `presentations/ai-gateway.html` | Slide deck (15 slides) |
+| `presentations/ai-gateway.html` | Slide deck (23 slides: AI in Snowflake, then Snowflake as the AI control plane) |
 | `presentations/ai-gateway-speaker-notes.md` | Per-slide talking points, presenter notes, and references |
 | `demo_script.md` | Live run-of-show for the demo |
 | `lab/setup.sql` | Database, warehouse, retail data (13 tables, Oct 2024 - Sep 2025), two semantic views, churn predictions table, Cortex Agent, MCP server, gateway spec + grants, eval/optimization tables, app access |
