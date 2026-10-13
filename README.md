@@ -20,6 +20,12 @@ This repository contains enablement modules covering Snowflake features. Each mo
 includes an HTML slide deck, companion speaker notes, and (where applicable) a
 hands-on lab with SQL setup and a notebook.
 
+Some modules set themselves up in one step, and their README has a prompt to paste
+into Cortex Code that does it for you. The Cortex AI Gateway modules: install
+[uv](https://docs.astral.sh/uv/) (`brew install uv`), then run `./demo.sh setup` in the
+module folder (`./demo.sh --help` lists the other commands). The Cortex Agent SDK
+module: run `./setup.sh`, then `cd app && npm run dev`.
+
 <!-- MODULE_TABLE_START -->
 | Module | Audience | Format | Presentation |
 |--------|----------|--------|--------------|

@@ -12,7 +12,7 @@
     "\n",
     "{{LAB_LEARNING_OBJECTIVES}}\n",
     "\n",
-    "**Prerequisite:** Run `lab/setup.sql` before starting this notebook."
+    "**Prerequisite:** Run `./demo.sh setup` (or `lab/setup.sql`) before starting this notebook."
    ]
   },
   {
@@ -29,9 +29,19 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "from snowflake.snowpark.context import get_active_session\n",
+    "import os\n",
     "\n",
-    "session = get_active_session()\n",
+    "try:\n",
+    "    # Snowflake Notebooks / Workspaces: the session already exists\n",
+    "    from snowflake.snowpark.context import get_active_session\n",
+    "    session = get_active_session()\n",
+    "except Exception:\n",
+    "    # Local (./demo.sh notebook): the connection saved in .env by ./demo.sh setup\n",
+    "    from snowflake.snowpark import Session\n",
+    "    session = Session.builder.config(\n",
+    "        \"connection_name\", os.environ.get(\"SNOWFLAKE_DEFAULT_CONNECTION_NAME\", \"default\")\n",
+    "    ).create()\n",
+    "\n",
     "session.sql(\"USE DATABASE {{DB_NAME}}\").collect()\n",
     "session.sql(\"USE SCHEMA {{SCHEMA_NAME}}\").collect()\n",
     "session.sql(\"USE WAREHOUSE {{WH_NAME}}\").collect()\n",

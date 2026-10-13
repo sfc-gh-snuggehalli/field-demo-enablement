@@ -1,0 +1,23 @@
+# Local environment for the lab: notebook, lab scripts, Trace Analyzer app and
+# Snowflake CLI. `./demo.sh setup` runs `uv sync` against this file.
+# app/pyproject.toml is separate: it is the manifest for the deployed
+# Streamlit-in-Snowflake app.
+[project]
+name = "ai-gateway-lab"
+version = "0.1.0"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "snowflake-connector-python>=3.3.0",
+    "snowflake-cli>=3.10",
+    "streamlit[snowflake]>=1.54.0",
+    "requests>=2.31",
+    "langchain-openai>=0.3",
+    "langchain-mcp-adapters>=0.1",
+    "langgraph>=0.3",
+    "jupyterlab>=4.2",
+    "ipykernel>=6.29",
+    "nbconvert>=7.16",
+]
+
+[tool.uv]
+package = false

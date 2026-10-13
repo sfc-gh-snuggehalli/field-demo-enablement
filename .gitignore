@@ -10,3 +10,7 @@
 # Python / Snowflake CLI build artifacts
 __pycache__/
 */app/output/
+# Per-module uv environment and demo.sh-written credentials config
+.venv/
+.env
+.logs/

@@ -1,0 +1,17 @@
+# Local environment for the lab: notebook, lab scripts and Snowflake CLI.
+# `./demo.sh setup` runs `uv sync` against this file; commit uv.lock with it.
+[project]
+name = "{{SLUG}}-lab"
+version = "0.1.0"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "snowflake-snowpark-python>=1.20",
+    "snowflake-cli>=3.10",
+    "pandas",
+    "jupyterlab>=4.2",
+    "ipykernel>=6.29",
+    # {{EXTRA_DEPENDENCIES}}
+]
+
+[tool.uv]
+package = false

@@ -1,6 +1,6 @@
 ---
 name: create-demo
-description: "Generate a complete Snowflake enablement/demo module that mirrors the demos-enablement kit: a dark-themed HTML slide deck, per-slide speaker notes, lab/setup.sql, and a hands-on lab notebook, then register it in the root README index. Use whenever the user wants a new demo, lab, or presentation for a Snowflake feature (e.g. AI Functions, AI Function Studio, Cortex Search, semantic views, ML). Triggers: create demo, new demo, build a demo, make a presentation, new lab, add a module, demo for <feature>, presentation for <feature>, scaffold a demo. Requires the repo to be initialized with init-demo-repo first."
+description: "Generate a complete Snowflake enablement/demo module that mirrors the demos-enablement kit: a dark-themed HTML slide deck, per-slide speaker notes, lab/setup.sql, a hands-on lab notebook, and a uv-packaged ./demo.sh that sets the lab up in one command (also from a Cortex Code prompt in the README), then register it in the root README index. Use whenever the user wants a new demo, lab, or presentation for a Snowflake feature (e.g. AI Functions, AI Function Studio, Cortex Search, semantic views, ML). Triggers: create demo, new demo, build a demo, make a presentation, new lab, add a module, demo for <feature>, presentation for <feature>, scaffold a demo. Requires the repo to be initialized with init-demo-repo first."
 ---
 
 # Create Demo Module
@@ -32,7 +32,7 @@ Ask the user (question tool) for anything not already clear from their request:
 - **Slug** — kebab-case folder name (e.g. `ai-functions`). Propose one from the feature name.
 - **Deck title** — human title (e.g. "AI Functions on Snowflake").
 - **Audience** — who it's for (data & analytics teams, data engineers, etc.).
-- **Include lab?** — default YES (deck + notes + setup.sql + notebook). If NO, skip the
+- **Include lab?** — default YES (deck + notes + setup.sql + notebook + `demo.sh`/uv packaging). If NO, skip the
   `lab/` artifacts and their README rows.
 - **Generate data?** — default YES when the lab needs unstructured free text (chats,
   transcripts, tickets, reviews). Adds `lab/data_gen.py`. Skip for structured-only labs.
@@ -146,12 +146,65 @@ account-level drops; the alternative is the object-by-object block. Validate the
 compiles (`snowflake_sql_execute` with `only_compile: true` against dummy names) — do NOT run the
 real drops here (they would delete the user's demo).
 
+### Step 5e: Package the lab with uv + demo.sh (skip if include-lab = NO)
+
+Every lab ships a one-command local setup that a person or an agent (Cortex Code) can run.
+Package for the lab's own stack, and add no wrapper around commands that already exist:
+a Node/npm app keeps its `package.json` (no `pyproject.toml`/`uv.lock`) and gets a single
+`setup.sh` (setup + `--teardown`) with the same agent-safe contract below; after setup,
+the README points at the npm scripts instead of re-wrapping them in subcommands. The
+uv + `demo.sh` layout below is for Python labs (notebooks, Streamlit, lab scripts).
+
+1. **pyproject.toml** - Copy `templates/pyproject.toml` to `<slug>/pyproject.toml`. Fill
+   `{{SLUG}}` and replace the `{{EXTRA_DEPENDENCIES}}` comment with every package the notebook,
+   `data_gen.py` and any lab script import (e.g. `snowflake-ml-python`, `xgboost`,
+   `scikit-learn`, `streamlit[snowflake]`, `langchain-openai`). The notebook must NOT carry a
+   `%pip install` cell; its first section says dependencies come from `./demo.sh setup`.
+   If `app/` has its own `pyproject.toml` (the Streamlit-in-Snowflake manifest), leave it and
+   run app commands with `uv run --project <module>` so uv does not pick up the app's file.
+2. **Lock it**: `echo 3.11 > <slug>/.python-version`, then `(cd <slug> && uv lock && uv sync --frozen)`,
+   and import every top-level package once with `uv run --frozen python -c "import ..."`.
+   Commit `uv.lock`. `.venv/` and `.env` are gitignored at the repo root.
+3. **demo.sh** - Copy `templates/demo.sh` to `<slug>/demo.sh` (`chmod +x`). Fill `{{DECK_TITLE}}`,
+   `{{SLUG}}`, `{{DB_NAME}}`. Add a subcommand per extra lab entry point (`app`, `traffic`, ...),
+   each `need_uv; load_env; run <cmd>`, and list it in the header comment and `usage()` range.
+   Keep the agent-safe contract (Cortex Code runs it with no terminal):
+   - every prompt goes through `ask <var> <prompt> <flag-hint>`, never a bare `read`: for a
+     person at a terminal it prompts; otherwise it stops and names the flag that answers it.
+     A TTY check alone is not enough: Cortex Code Desktop runs commands in a real terminal
+     (sets `COCO_AGENT=1`), so a bare `read` hangs it. `ask` also treats `COCO_AGENT`/`CI` as
+     non-interactive, and the README prompt tells the agent to add `</dev/null`
+   - every interactive answer has a flag (`-c`, `-p`, `--create-pat`, `--yes` ...)
+   - destructive or credit-spending commands (teardown, load bursts, deploy) need an explicit
+     subcommand or `--yes`, never a default
+   - run SQL files through `sql_file` (output to `.logs/<file>.log`, tail shown on failure,
+     `DEMO_VERBOSE=1` streams it): `snow sql -f` echoes every statement, and hundreds of lines
+     of SQL bury the `==>` progress lines an agent reads and get truncated by its tools
+   - `usage()` reads `"$HERE/demo.sh"` (the script `cd`s to its folder), not `$0`
+4. **setup.sql must survive re-runs**: `snow sql -f` stops at the first failing statement, so
+   anything that errors on a second run (`ALTER USER ... ADD PROGRAMMATIC ACCESS TOKEN`, plain
+   `CREATE` of an existing object) breaks `./demo.sh setup`. Use `CREATE OR REPLACE` / `IF NOT
+   EXISTS`, and move PAT issuance into `demo.sh` (SHOW, then ROTATE if present else ADD; parse
+   `token_secret` from `--format json`; write the file with umask 077). Account-specific values
+   (e.g. an egress host) go in as `<% name %>` placeholders filled with `snow sql -D name=value`;
+   `demo.sh` derives them from the connection. Document the placeholder for Snowsight runs.
+5. **Credentials**: `demo.sh setup` writes `<slug>/.env` (connection name plus whatever the lab
+   scripts read) and every subcommand loads it, so nobody exports variables by hand. The
+   notebook template's connect cell falls back to `SNOWFLAKE_DEFAULT_CONNECTION_NAME` when there
+   is no active session.
+6. **Validate**: `bash -n <slug>/demo.sh`; `./demo.sh --help` from another directory; and
+   `./demo.sh setup </dev/null` must stop with the `-c` message, not hang or exit silently.
+   Running real setup is the user's call (it writes to their account); offer it.
+
 ### Step 6: Generate the module README
 
 Copy `templates/module-README.md` to `<slug>/README.md` and fill all placeholders
 (`{{MODULE_DESCRIPTION}}`, `{{AUDIENCE}}`, `{{TOPICS_LIST}}`, `{{SLIDE_COUNT}}`,
 `{{LAB_*}}`, `{{PREREQUISITES_LIST}}`, `{{SETUP_CREATES_LIST}}`, `{{LAB_SECTIONS_LIST}}`,
-`{{KEY_CONCEPTS_LIST}}`, `{{REFERENCES_LIST}}`). If no lab, drop the lab rows/sections.
+`{{KEY_CONCEPTS_LIST}}`, `{{REFERENCES_LIST}}`). If no lab, drop the lab rows/sections and the
+Quick start / Set up with Cortex Code / Manual setup headings. The Cortex Code prompt block
+names the module's real subcommands and flags; add a line for each extra step (e.g. start the
+app in the background and give the URL) and list every command it must not run unprompted.
 
 ### Step 7: Register the module in the root README
 
@@ -169,8 +222,10 @@ Preserve all marker comments so future runs can append again.
 ### Step 8: Report
 
 List every file created, the local path to open the deck, and the published Pages URL.
-Remind the user of the run order (`setup.sql` → `python lab/data_gen.py` if present →
-notebook), that `lab/cleanup.sql` tears the demo down to start fresh, and to `git add`/commit/push
+Remind the user of the run order (`./demo.sh setup` → `./demo.sh notebook`; by hand: `setup.sql`
+→ `python lab/data_gen.py` if present → notebook), that `./demo.sh teardown` (or
+`lab/cleanup.sql`) tears the demo down to start fresh, that the README's "Set up with Cortex
+Code" prompt lets a new user set it up by pasting it into Cortex Code, and to `git add`/commit/push
 to publish via GitHub Pages.
 
 **Best demo path (recommend this to the user):** run the lab inside Snowsight via
@@ -179,8 +234,10 @@ works with no local auth, and `data_gen.py` runs as a notebook cell (no `--conne
 module README already includes a "Run in Snowflake (Workspaces / Git)" section. For agent/Analyst
 demos, finish in **AI & ML → Agents** (or Snowflake Intelligence) as the closing moment.
 
-**Running locally / validating:** the Python connector can't drive `oauth_authorization_code`
-(needs a client_id), so prefer the notebook path for `data_gen.py`. `snow sql -f setup.sql` works
+**Running locally / validating:** `./demo.sh` runs everything through the module's uv
+environment. With an `oauth_authorization_code` connection, each new process (snow CLI,
+notebook kernel, app) may open a browser sign-in; for headless or repeated runs use a PAT
+connection. `snow sql -f setup.sql` works
 with a connection whose **role can CREATE** the objects and use a warehouse. Gotcha: if a warehouse
 named in setup.sql already exists under a different owner, `CREATE WAREHOUSE IF NOT EXISTS` won't
 re-own it and Cortex Search reports the warehouse as "missing" — grant your role `USAGE, OPERATE`
@@ -191,6 +248,8 @@ on that warehouse first.
 ```
 <slug>/
 ├── README.md
+├── demo.sh                   (omitted if include-lab = NO)
+├── pyproject.toml, uv.lock, .python-version   (omitted if include-lab = NO)
 ├── presentations/
 │   ├── <slug>.html
 │   └── <slug>-speaker-notes.md
@@ -225,6 +284,10 @@ Plus updated root `README.md` (table row + section + tree node).
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
 - setup.sql DDL compiles; notebook is valid JSON and is NOT executed here.
+- **demo.sh + uv packaging is REQUIRED whenever include-lab = YES** (Step 5e): `uv.lock` resolves,
+  every notebook/script import is a declared dependency, no `%pip install` cell, no bare `read`
+  prompts, `./demo.sh setup </dev/null` stops with a flag message, setup.sql re-runs cleanly,
+  and the README carries the Quick start and "Set up with Cortex Code" prompt.
 - **cleanup.sql is REQUIRED whenever include-lab = YES** — every module ships a `lab/cleanup.sql`
   that tears down the full demo. It MUST cover objects created in the notebook(s), not just
   setup.sql, and MUST drop the account-level objects `DROP DATABASE` does not cascade (extra

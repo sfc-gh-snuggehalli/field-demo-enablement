@@ -24,6 +24,8 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 | `presentations/ai-gateway.html` | Slide deck (15 slides) |
 | `presentations/ai-gateway-speaker-notes.md` | Per-slide talking points, presenter notes, and references |
 | `demo_script.md` | Live run-of-show for the demo |
+| `demo.sh` | One script for setup, traffic, notebook, app, deploy and teardown |
+| `pyproject.toml`, `uv.lock` | Local Python environment (lab, notebook, app, Snowflake CLI), managed by uv |
 | `lab/setup.sql` | Database, warehouse, data, semantic view, Cortex Search, Cortex Agent, MCP server, gateway spec + grants, eval/optimization tables, app access |
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `lab/ai-gateway-lab.ipynb` | Hands-on notebook: gateway + LangChain + MCP, observability, cost management |
@@ -37,20 +39,58 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 
 - AWS commercial region account (Cortex AI Gateway is in preview, AWS-only)
 - ACCOUNTADMIN for setup (gateway spec, grants, integration); the lab objects are owned by SYSADMIN
-- A programmatic access token (PAT) for the local notebook and scripts. PATs follow your account's network and authentication policies.
-  ```sql
-  ALTER USER <you> ADD PROGRAMMATIC ACCESS TOKEN ai_gateway_demo ROLE_RESTRICTION = 'SYSADMIN' DAYS_TO_EXPIRY = 7;
-  ```
-- Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python streamlit snowflake-snowpark-python requests`
-- Snowflake CLI 3.14+ to deploy the container-runtime app
+- A programmatic access token (PAT) for the local notebook and scripts. `demo.sh setup` offers to create one. PATs follow your account's network and authentication policies.
+- [uv](https://docs.astral.sh/uv/) (`brew install uv`). uv installs Python 3.11, the lab dependencies and the Snowflake CLI into `.venv`.
+- A Snowflake CLI connection for your user (`snow connection add`, or any entry in `~/.snowflake/config.toml`)
 
-### Setup
+### Quick start
 
-1. Edit the account host in `lab/setup.sql` section 10 (`GATEWAY_APP_EGRESS`), then run it:
+```bash
+./demo.sh setup        # prompts for a connection; creates the objects, PATs and .env, runs one live prompt
+./demo.sh traffic      # background traces for the Trace Analyzer
+./demo.sh notebook     # the lab notebook, with the .venv kernel and .env loaded
+./demo.sh app          # Trace Analyzer at http://localhost:8501
+./demo.sh burst        # before a demo: drive the cost demo user over its quota
+./demo.sh teardown     # drop everything
+```
+
+`setup` is safe to re-run. Non-interactive: `./demo.sh setup -c <connection> -p <pat-file>`. It writes `.env` (connection, account, user, PAT file, gateway host); every other command loads it. `./demo.sh ask "..."` sends one prompt and prints its trace_id; `./demo.sh deploy` deploys the app to Streamlit in Snowflake.
+
+### Set up with Cortex Code
+
+Open this repository in Cortex Code and paste:
+
+```text
+Set up the Cortex AI Gateway lab in the ai-gateway folder on my Snowflake account.
+1. If uv is not installed, ask me before installing it (brew install uv).
+2. Run ./demo.sh --help, then ./demo.sh setup. Add </dev/null to every demo.sh command
+   so it never waits for typed input. When it stops and names a flag (-c <connection>,
+   -p <pat-file> or --create-pat), show me the options it printed (point out the
+   connection marked is_default), ask me which to use, and re-run with that flag.
+   If I have no Snowflake CLI connection, help me create one with snow connection add.
+   The connection's user needs the ACCOUNTADMIN and SYSADMIN roles.
+3. Judge progress by the lines starting with ==> or ERROR:. If it says "Using your PAT
+   at ...", tell me which file. If it seems stuck on sign-in, tell me to finish the
+   browser sign-in, then re-run the same command.
+4. When setup prints Done, run ./demo.sh traffic (the ERR / HTTP 400 lines in its
+   error scenarios are deliberate). Then start ./demo.sh app in the background and give
+   me the Local URL (ignore Streamlit's watchdog install hint). Tell me how to open the
+   notebook (./demo.sh notebook).
+Do not run teardown, burst or deploy unless I ask.
+```
+
+### Manual setup
+
+Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python streamlit requests`, and Snowflake CLI 3.14+.
+
+1. Run the setup script with your account host (hyphens, not underscores):
    ```bash
-   snow sql -f lab/setup.sql
+   snow sql -f lab/setup.sql -D gateway_host=<org-account>.snowflakecomputing.com
    ```
-   This creates `CORTEX_GATEWAY_LAB` (CAMPAIGN_SPEND, STRATEGY_DOCS, semantic view CMO_ANALYTICS, Cortex Search STRATEGY_SEARCH_SVC, Cortex Agent MARKETING_AGENT, MCP server MARKETING_MCP, EVAL_PROMPTS, OPTIMIZATION_RUNS, OPTIMIZATION_RESULTS), the warehouse `GATEWAY_LAB_WH`, and the integration `GATEWAY_LAB_APP_EAI`. It turns on gateway logging with client telemetry and payload capture, and grants SYSADMIN gateway MONITOR plus the usage, budget and quota roles.
+   This creates `CORTEX_GATEWAY_LAB` (CAMPAIGN_SPEND, STRATEGY_DOCS, semantic view CMO_ANALYTICS, Cortex Search STRATEGY_SEARCH_SVC, Cortex Agent MARKETING_AGENT, MCP server MARKETING_MCP, EVAL_PROMPTS, OPTIMIZATION_RUNS, OPTIMIZATION_RESULTS), the warehouse `GATEWAY_LAB_WH`, and the integration `GATEWAY_LAB_APP_EAI`. It turns on gateway logging with client telemetry and payload capture, and grants SYSADMIN gateway MONITOR plus the usage, budget and quota roles. Create the cost demo PAT once with the commented `ALTER USER GATEWAY_COST_DEMO ADD PROGRAMMATIC ACCESS TOKEN` in section 10b, and create your own:
+   ```sql
+   ALTER USER <you> ADD PROGRAMMATIC ACCESS TOKEN ai_gateway_demo ROLE_RESTRICTION = 'SYSADMIN' DAYS_TO_EXPIRY = 7;
+   ```
 2. Export credentials for the local tools:
    ```bash
    export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_USER=<you>
@@ -115,7 +155,7 @@ The deployed app still runs the Observe pages, Advisor and Before/After. Its Exp
 The SQL and the app can run entirely from Snowsight:
 
 1. Snowsight -> **Projects -> Workspaces -> Create Workspace from Git repository**, pointing at `https://github.com/sfc-gh-snuggehalli/field-demo-enablement`.
-2. Open `ai-gateway/lab/setup.sql` and run it.
+2. Open `ai-gateway/lab/setup.sql`, replace `<% gateway_host %>` in section 10 with your account host (`<org-account>.snowflakecomputing.com`, hyphens not underscores), and run it.
 3. Create the Streamlit app from `ai-gateway/app` (container runtime, compute pool `SYSTEM_COMPUTE_POOL_CPU`, integration `GATEWAY_LAB_APP_EAI`).
 
 The LangChain notebook, `live_agent.py` and the traced Experiments play the external client, so they run on a laptop with a PAT.

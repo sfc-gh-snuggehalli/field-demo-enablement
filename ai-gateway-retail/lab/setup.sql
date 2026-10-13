@@ -1405,8 +1405,9 @@ CREATE OR REPLACE NETWORK RULE CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.GATEWAY_APP_EGRE
   TYPE = HOST_PORT
   MODE = EGRESS
   VALUE_LIST = ('pypi.org', 'pypi.python.org', 'pythonhosted.org', 'files.pythonhosted.org',
-                '<org>-<account>.snowflakecomputing.com');
--- ^ replace the last host with your account host (hyphens, not underscores)
+                '<% gateway_host %>');
+-- ^ your account host, hyphens not underscores. ./demo.sh setup fills it in;
+--   by hand: snow sql -f lab/setup.sql -D gateway_host=myorg-myaccount.snowflakecomputing.com
 
 CREATE SECRET IF NOT EXISTS CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.GATEWAY_PAT_SECRET
   TYPE = GENERIC_STRING
@@ -1452,10 +1453,12 @@ ALTER USER GATEWAY_RETAIL_COST_DEMO SET TAG
   CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.COST_CENTER = 'MERCHANDISING',
   CORTEX_GATEWAY_RETAIL_LAB.PUBLIC.QUOTA_TIER = 'RETAIL_DEMO';
 
--- PAT for lab/generate_traffic.py --burst. Copy token_secret from the output into
--- ~/.snowflake/gateway_retail_cost.pat (chmod 600). Valid 7 days.
-ALTER USER GATEWAY_RETAIL_COST_DEMO ADD PROGRAMMATIC ACCESS TOKEN cost_demo
-  ROLE_RESTRICTION = 'GATEWAY_RETAIL_COST_RL' DAYS_TO_EXPIRY = 7;
+-- PAT for lab/generate_traffic.py --burst. ./demo.sh setup creates (or rotates)
+-- it and saves it to ~/.snowflake/gateway_retail_cost.pat. It is not created
+-- here because ADD fails once the token exists, which would stop a re-run. By
+-- hand, run this once and copy token_secret into that file (chmod 600):
+--   ALTER USER GATEWAY_RETAIL_COST_DEMO ADD PROGRAMMATIC ACCESS TOKEN cost_demo
+--     ROLE_RESTRICTION = 'GATEWAY_RETAIL_COST_RL' DAYS_TO_EXPIRY = 7;
 
 USE ROLE SYSADMIN;
 USE SCHEMA CORTEX_GATEWAY_RETAIL_LAB.PUBLIC;
