@@ -53,10 +53,11 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 ./demo.sh notebook     # the lab notebook, with the .venv kernel and .env loaded
 ./demo.sh app          # Trace Analyzer at http://localhost:8501
 ./demo.sh burst        # before a demo: drive the cost demo user over its quota
+./demo.sh pat          # reissue the demo PATs when they expire
 ./demo.sh teardown     # drop everything
 ```
 
-`setup` is safe to re-run. Non-interactive: `./demo.sh setup -c <connection> -p <pat-file>`. It writes `.env` (connection, account, user, PAT file, gateway host); every other command loads it. `./demo.sh ask "..."` sends one prompt and prints its trace_id; `./demo.sh deploy` deploys the app to Streamlit in Snowflake.
+`setup` is safe to re-run. Non-interactive: `./demo.sh setup -c <connection> -p <pat-file>`. It writes `.env` (connection, account, user, PAT file and expiry, gateway host); every other command loads it. The demo PATs last 7 days: commands that need one warn in its last day and stop once it has expired (unless you passed your own PAT with `-p`), and `./demo.sh pat` reissues them without rerunning setup (it rewrites `.env`). `./demo.sh ask "..."` sends one prompt and prints its trace_id; `./demo.sh deploy` deploys the app to Streamlit in Snowflake.
 
 ### Set up with Cortex Code
 
@@ -84,7 +85,7 @@ Do not run teardown, burst or deploy unless I ask.
 
 ### Manual setup
 
-Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python snowflake-snowpark-python snowflake-ml-python xgboost scikit-learn pandas streamlit requests`, and Snowflake CLI 3.14+.
+Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters langgraph snowflake-connector-python snowflake-snowpark-python snowflake-ml-python xgboost scikit-learn pandas streamlit requests`, and Snowflake CLI 3.14+. The commands below use `python3`, because macOS has no `python` command outside a virtual environment. If you have uv, use the [Quick start](#quick-start) instead: `./demo.sh ask "..."` replaces `python3 lab/live_agent.py "..."`.
 
 1. Run the setup script with your account host (hyphens, not underscores; `SELECT LOWER(REPLACE(CURRENT_ORGANIZATION_NAME() || '-' || CURRENT_ACCOUNT_NAME(), '_', '-')) || '.snowflakecomputing.com';` returns it):
    ```bash
@@ -99,7 +100,7 @@ Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters l
    export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_USER=<you>
    export SNOWFLAKE_PAT=<pat>          # or SNOWFLAKE_PAT_FILE=~/.snowflake/ai_gateway_retail.pat
    ```
-3. Generate background traffic: `python lab/generate_traffic.py`
+3. Generate background traffic: `python3 lab/generate_traffic.py`
 4. Run the notebook `lab/ai-gateway-lab.ipynb` top to bottom.
 5. Run the app locally (use this for demos; see [Where to run the app](#where-to-run-the-app)):
    ```bash
@@ -112,7 +113,7 @@ Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters l
 6. Optional: deploy the app to Snowflake for read-only analysis: `cd app && snow streamlit deploy --replace`
 7. Before a demo, block the cost demo user so Cost governance has something to enforce:
    ```bash
-   python lab/generate_traffic.py --burst   # uses ~/.snowflake/gateway_retail_cost.pat
+   python3 lab/generate_traffic.py --burst   # uses ~/.snowflake/gateway_retail_cost.pat
    ```
    Section 9b of `setup.sql` creates `GATEWAY_RETAIL_COST_DEMO`, a service user tagged `COST_CENTER = 'MERCHANDISING'` and `QUOTA_TIER = 'RETAIL_DEMO'`, and `GATEWAY_RETAIL_QUOTA`: 1 credit per day, block enforcement on, scoped to that tag only. The burst spends about 1.5 credits until the gateway returns HTTP 403 ("exceeded the usage quota limit"), and saves the response to `app/output/last_quota_denial.json`. The block lasts until 00:00 UTC. Keep real users out of this quota: a block covers every AI domain the user touches.
 
@@ -142,11 +143,11 @@ Without uv, install Python 3.11+ with `langchain-openai langchain-mcp-adapters l
 
 #### Where to run the app
 
-Run it locally with `streamlit run` for demos. The Experiments and Live prompt pages need gateway calls to be traced, and that works only with a PAT sent from outside Snowflake:
+Run it locally (`./demo.sh app`) for demos. The Experiments and Live prompt pages need gateway calls to be traced, and that works only with a PAT sent from outside Snowflake:
 
 | Where | Gateway credential | Served | Traced |
 |-------|-------------------|--------|--------|
-| Laptop (`streamlit run`) | PAT | Yes | Yes, in about a minute |
+| Laptop (`./demo.sh app`) | PAT | Yes | Yes, in about a minute |
 | Streamlit in Snowflake | Container session token | Yes | No (in testing) |
 | Streamlit in Snowflake | PAT secret | No: HTTP 401 `INCOMING_REQUEST_BLOCKED` when the account has a network policy | - |
 

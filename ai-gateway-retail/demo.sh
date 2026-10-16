@@ -10,6 +10,7 @@
 #   ./demo.sh app        run the Trace Analyzer locally (http://localhost:8501)
 #   ./demo.sh ask "..."  send one prompt through the agent and print its trace_id
 #   ./demo.sh deploy     deploy the Trace Analyzer to Streamlit in Snowflake
+#   ./demo.sh pat        reissue the demo PATs (they last 7 days) without rerunning setup
 #   ./demo.sh teardown [-c <conn>] [--yes]
 #                        drop everything (lab/cleanup.sql)
 #
@@ -40,7 +41,7 @@ cd "$HERE"
 step() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[33mWARNING:\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
-usage() { sed -n '2,22p' "$HERE/demo.sh"; }
+usage() { sed -n '2,23p' "$HERE/demo.sh"; }
 
 # Prompt a person at a terminal; otherwise stop and name the flag that answers it.
 # Agent shells (Cortex Code sets COCO_AGENT) and CI can have a TTY nobody types in.
@@ -81,29 +82,68 @@ load_env() {
 # One query, CSV output, last row only.
 sf_value() { sf --format csv -q "$1" | tail -n 1; }
 
-# Create (or rotate, if it exists) a PAT and save its secret to a file.
-#   issue_pat <user> <token-name> <role-restriction> <file>
-issue_pat() {
-  local user="$1" name="$2" role="$3" file="$4" stmt
-  if sf --format csv -q "SHOW USER PROGRAMMATIC ACCESS TOKENS FOR USER \"$user\"" \
-       | cut -d, -f1 | grep -qix "$name"; then
-    stmt="ALTER USER \"$user\" ROTATE PROGRAMMATIC ACCESS TOKEN $name EXPIRE_ROTATED_TOKEN_AFTER_HOURS = 0"
-  else
-    stmt="ALTER USER \"$user\" ADD PROGRAMMATIC ACCESS TOKEN $name ROLE_RESTRICTION = '$role' DAYS_TO_EXPIRY = 7"
-  fi
-  mkdir -p "$(dirname "$file")"
-  ( umask 077
-    sf --format json -q "USE ROLE ACCOUNTADMIN; $stmt" | run python -c '
-import json, sys
+# Reads `snow sql --format json` output on stdin and prints "<status> <expiry>"
+# for the named PAT (expiry in epoch seconds; "NONE -" if there is no such PAT).
+# With a file argument it also writes the output's token_secret there (mode 600).
+PAT_PY='
+import json, os, sys
+from datetime import datetime
 def rows(x):
     if isinstance(x, dict): yield x
     elif isinstance(x, list):
         for y in x: yield from rows(y)
-secret = next((r["token_secret"] for r in rows(json.load(sys.stdin)) if r.get("token_secret")), "")
-if not secret: sys.exit("no token_secret in the output")
-print(secret)' > "$file" ) || die "Could not create a PAT for $user."
-  chmod 600 "$file"
+try: out = list(rows(json.load(sys.stdin)))
+except ValueError: sys.exit("snow sql returned no JSON; see its error above")
+if len(sys.argv) > 2:
+    secret = next((r["token_secret"] for r in out if r.get("token_secret")), "")
+    if not secret: sys.exit("no token_secret in the output")
+    fd = os.open(sys.argv[2], os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f: f.write(secret + "\n")
+pat = next((r for r in out if str(r.get("name", "")).upper() == sys.argv[1].upper()), None)
+if pat is None: print("NONE -")
+else: print(pat["status"], int(datetime.fromisoformat(pat["expires_at"]).timestamp()))'
+
+# "<status> <expiry>" of a user's PAT, as PAT_PY prints it.
+#   pat_status <user> <token-name>
+pat_status() {
+  sf --format json -q "USE ROLE ACCOUNTADMIN; SHOW USER PROGRAMMATIC ACCESS TOKENS FOR USER \"$1\"" \
+    | run python -c "$PAT_PY" "$2"
 }
+
+# Create a PAT, or rotate it if it is active, and save its secret to a file.
+# An expired or disabled PAT is replaced instead: rotation is documented only
+# for a live secret. Prints the new expiry (epoch seconds).
+#   issue_pat <user> <token-name> <role-restriction> <file>
+issue_pat() {
+  local user="$1" name="$2" role="$3" file="$4" status add stmt info
+  status="$(pat_status "$user" "$name")" || die "Could not list the PATs of $user."
+  add="ALTER USER \"$user\" ADD PROGRAMMATIC ACCESS TOKEN $name ROLE_RESTRICTION = '$role' DAYS_TO_EXPIRY = 7"
+  case "${status%% *}" in
+    NONE)   stmt="$add" ;;
+    ACTIVE) stmt="ALTER USER \"$user\" ROTATE PROGRAMMATIC ACCESS TOKEN $name EXPIRE_ROTATED_TOKEN_AFTER_HOURS = 0" ;;
+    *)      stmt="ALTER USER \"$user\" REMOVE PROGRAMMATIC ACCESS TOKEN $name; $add" ;;
+  esac
+  mkdir -p "$(dirname "$file")" || die "Could not create $(dirname "$file")."
+  sf --format json -q "USE ROLE ACCOUNTADMIN; $stmt" | run python -c "$PAT_PY" "$name" "$file" >/dev/null \
+    || die "Could not create a PAT for $user."
+  chmod 600 "$file" || die "Could not restrict $file to mode 600."
+  info="$(pat_status "$user" "$name")" || die "Saved the PAT to $file, but could not read its expiry."
+  [[ "${info##* }" =~ ^[0-9]+$ ]] || die "Saved the PAT to $file, but SHOW lists no $name for $user."
+  echo "${info##* }"
+}
+
+fmt_time() { date -r "$1" '+%Y-%m-%d %H:%M %Z' 2>/dev/null || date -d "@$1" '+%Y-%m-%d %H:%M %Z'; }
+
+# Stop before a command that needs a PAT if .env says it has expired, and warn
+# in its last day. Silent when the expiry is unknown (a PAT passed with -p).
+#   check_pat <expiry> <description>
+check_pat() {
+  [[ "${1:-}" =~ ^[0-9]+$ ]] || return 0
+  local left=$(( $1 - $(date +%s) ))
+  (( left > 0 )) || die "$2 expired on $(fmt_time "$1"). Run ./demo.sh pat to reissue it."
+  (( left > 86400 )) || warn "$2 expires on $(fmt_time "$1"). Run ./demo.sh pat to reissue it."
+}
+need_pat() { check_pat "${PAT_EXPIRES_AT:-}" "Your PAT (${SNOWFLAKE_PAT_FILE:-})"; }
 
 write_env() {
   ( umask 077
@@ -115,13 +155,16 @@ SNOWFLAKE_USER=$SF_USER
 SNOWFLAKE_PAT_FILE=$PAT_FILE
 GATEWAY_HOST=$GATEWAY_HOST
 BURST_PAT_FILE=$DEFAULT_BURST_PAT_FILE
+# PAT expiry in epoch seconds; empty when unknown (a PAT you passed with -p)
+PAT_EXPIRES_AT=${PAT_EXPIRES_AT:-}
+BURST_PAT_EXPIRES_AT=${BURST_PAT_EXPIRES_AT:-}
 EOF
   )
 }
 
 cmd_setup() {
-  local pat_arg="" skip_smoke=0 create_pat=0
-  CONN=""
+  local pat_arg="" skip_smoke=0 create_pat=0 status
+  CONN="" PAT_EXPIRES_AT="" BURST_PAT_EXPIRES_AT=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -c|--connection) CONN="$2"; shift 2 ;;
@@ -156,20 +199,31 @@ cmd_setup() {
   sql_file lab/setup.sql -D "gateway_host=$GATEWAY_HOST"
 
   step "Programmatic access tokens"
-  PAT_FILE="${pat_arg:-${SNOWFLAKE_PAT_FILE:-$DEFAULT_PAT_FILE}}"
+  # Only -p overrides the default: an exported SNOWFLAKE_PAT_FILE may belong to another lab.
+  PAT_FILE="${pat_arg:-$DEFAULT_PAT_FILE}"
   PAT_FILE="${PAT_FILE/#\~/$HOME}"
   if [[ -s "$PAT_FILE" ]]; then
     echo "Using your PAT at $PAT_FILE"
+    # Setup wrote the default file, so it holds $PAT_NAME: record when it expires.
+    if [[ "$PAT_FILE" == "$DEFAULT_PAT_FILE" ]]; then
+      status="$(pat_status "$SF_USER" "$PAT_NAME")" || die "Could not list the PATs of $SF_USER."
+      case "${status%% *}" in
+        ACTIVE) PAT_EXPIRES_AT="${status##* }" ;;
+        NONE)   warn "$SF_USER has no $PAT_NAME PAT, so $PAT_FILE is stale. Run ./demo.sh pat to reissue it." ;;
+        *)      PAT_EXPIRES_AT="${status##* }"
+                warn "The $PAT_NAME PAT in $PAT_FILE is ${status%% *}. Run ./demo.sh pat to reissue it." ;;
+      esac
+    fi
   else
     if [[ $create_pat -eq 0 ]]; then
       ask ok "No PAT at $PAT_FILE. Create one for $SF_USER (SYSADMIN, 7 days)? [Y/n] " \
         "No PAT at $PAT_FILE. Pass -p <pat-file>, or --create-pat to create one for $SF_USER (SYSADMIN, 7 days)."
       [[ "$ok" =~ ^[Nn]$ ]] && die "The lab needs a PAT. Save one to $PAT_FILE or pass -p <file>."
     fi
-    issue_pat "$SF_USER" "$PAT_NAME" SYSADMIN "$PAT_FILE"
+    PAT_EXPIRES_AT="$(issue_pat "$SF_USER" "$PAT_NAME" SYSADMIN "$PAT_FILE")" || exit 1
     echo "Saved your PAT to $PAT_FILE"
   fi
-  issue_pat "$COST_USER" cost_demo "$COST_ROLE" "$DEFAULT_BURST_PAT_FILE"
+  BURST_PAT_EXPIRES_AT="$(issue_pat "$COST_USER" cost_demo "$COST_ROLE" "$DEFAULT_BURST_PAT_FILE")" || exit 1
   echo "Saved the $COST_USER PAT (for ./demo.sh burst) to $DEFAULT_BURST_PAT_FILE"
 
   step "Writing .env"
@@ -178,7 +232,7 @@ cmd_setup() {
 
   if [[ $skip_smoke -eq 0 ]]; then
     step "Smoke test: one live prompt through the gateway"
-    load_env
+    load_env; need_pat
     run python lab/live_agent.py || die "Smoke test failed. Check the PAT and network policy, then: ./demo.sh ask"
   fi
 
@@ -191,6 +245,27 @@ Next:
   ./demo.sh burst       # before a demo: block the cost demo user
 Teardown: ./demo.sh teardown
 EOF
+}
+
+# Reissue the demo PATs and record their new expiry in .env. Yours is left alone
+# when setup was given your own file with -p.
+cmd_pat() {
+  [[ $# -eq 0 ]] || die "pat takes no options; it uses the connection in .env."
+  load_env
+  [[ -n "$CONN" ]] || die "No connection in .env. Run ./demo.sh setup first."
+  SF_USER="$SNOWFLAKE_USER" SF_ACCOUNT="$SNOWFLAKE_ACCOUNT" PAT_FILE="$SNOWFLAKE_PAT_FILE"
+  if [[ "$PAT_FILE" == "$DEFAULT_PAT_FILE" ]]; then
+    step "Reissuing your PAT ($PAT_NAME)"
+    PAT_EXPIRES_AT="$(issue_pat "$SF_USER" "$PAT_NAME" SYSADMIN "$PAT_FILE")" || exit 1
+    echo "Saved to $PAT_FILE; expires $(fmt_time "$PAT_EXPIRES_AT")"
+  else
+    warn "Your PAT at $PAT_FILE was passed with -p, so demo.sh leaves it alone. Replace it yourself."
+  fi
+  step "Reissuing the $COST_USER PAT"
+  BURST_PAT_EXPIRES_AT="$(issue_pat "$COST_USER" cost_demo "$COST_ROLE" "$DEFAULT_BURST_PAT_FILE")" || exit 1
+  echo "Saved to $DEFAULT_BURST_PAT_FILE; expires $(fmt_time "$BURST_PAT_EXPIRES_AT")"
+  write_env
+  echo "Updated $ENV_FILE"
 }
 
 cmd_teardown() {
@@ -226,11 +301,14 @@ sub="$1"; shift
 case "$sub" in
   -h|--help|help) usage ;;
   setup)    need_uv; cmd_setup "$@" ;;
-  traffic)  need_uv; load_env; run python lab/generate_traffic.py "$@" ;;
-  burst)    need_uv; load_env; run python lab/generate_traffic.py --burst --burst-pat-file "$BURST_PAT_FILE" "$@" ;;
-  ask)      need_uv; load_env; run python lab/live_agent.py "$@" ;;
-  notebook) need_uv; load_env; run jupyter lab "$NOTEBOOK" "$@" ;;
-  app)      need_uv; load_env; cd app; run streamlit run streamlit_app.py "$@" ;;
+  traffic)  need_uv; load_env; need_pat; run python lab/generate_traffic.py "$@" ;;
+  burst)    need_uv; load_env
+            check_pat "${BURST_PAT_EXPIRES_AT:-}" "The $COST_USER PAT ($BURST_PAT_FILE)"
+            run python lab/generate_traffic.py --burst --burst-pat-file "$BURST_PAT_FILE" "$@" ;;
+  ask)      need_uv; load_env; need_pat; run python lab/live_agent.py "$@" ;;
+  notebook) need_uv; load_env; need_pat; run jupyter lab "$NOTEBOOK" "$@" ;;
+  app)      need_uv; load_env; need_pat; cd app; run streamlit run streamlit_app.py "$@" ;;
+  pat)      need_uv; cmd_pat "$@" ;;
   deploy)   need_uv; load_env; cd app; run snow streamlit deploy --replace -c "$CONN" "$@" ;;
   teardown) cmd_teardown "$@" ;;
   *) usage; die "Unknown command: $sub" ;;

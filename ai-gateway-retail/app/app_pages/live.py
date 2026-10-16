@@ -2,7 +2,7 @@ import time
 
 import streamlit as st
 
-from gateway_client import chat
+from gateway_client import auth_hint, chat
 from trace_queries import load_trace, span_waterfall
 
 st.header("Live prompt")
@@ -52,9 +52,15 @@ with st.container(border=True):
     if res.ok:
         st.markdown(res.content)
     else:
-        st.error(res.content)
+        st.error(res.content or f"HTTP {res.status_code} with an empty response body.")
+        if hint := auth_hint(res):
+            st.info(hint)
 
 st.subheader("Gateway trace")
+if res.status_code == 401:
+    # Observed: a request rejected at authentication leaves no spans in AGENT_TRACE_TABLE
+    st.caption("Requests rejected at authentication were not traced in testing, so there is nothing to wait for.")
+    st.stop()
 placeholder = st.empty()
 spans = load_trace(conn, res.trace_id, days=1)
 if spans.empty:

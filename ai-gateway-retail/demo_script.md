@@ -1,18 +1,13 @@
 # Demo Script: Cortex AI Gateway
 
-About 23 minutes. Before you present, run `lab/setup.sql` and run `python lab/generate_traffic.py` once so the dashboards have history. Run the Trace Analyzer locally: gateway calls are traced only with a PAT from outside Snowflake (see the README section "Where to run the app").
+About 23 minutes. Before you present, run `./demo.sh setup` and `./demo.sh traffic` once so the dashboards have history. Run every command from the `ai-gateway-retail` folder: `demo.sh` loads `.env` and runs inside the uv-managed `.venv`, so there is no `python` to install or environment to export. Run the Trace Analyzer locally: gateway calls are traced only with a PAT from outside Snowflake (see the README section "Where to run the app").
 
 ## Pre-flight (5 min before)
 
-- Terminal 1: `export SNOWFLAKE_ACCOUNT=<org-account> SNOWFLAKE_PAT_FILE=~/.snowflake/ai_gateway_retail.pat`
-- Terminal 2: start the Trace Analyzer and leave it running:
-  ```bash
-  cd app
-  SNOWFLAKE_DEFAULT_CONNECTION_NAME=<connection> GATEWAY_HOST=<org-account>.snowflakecomputing.com \
-  streamlit run streamlit_app.py
-  ```
-- Check the PAT hasn't expired: send one prompt on the **Live prompt** page and confirm the waterfall appears.
-- At least 10 minutes before, block the cost demo user: `python lab/generate_traffic.py --burst`. It spends about 1.5 credits as `GATEWAY_RETAIL_COST_DEMO` until the gateway returns HTTP 403, then saves the denial. Confirm **Cost governance** shows 1 user blocked. The block lasts until 00:00 UTC.
+- Terminal 1: `cd ai-gateway-retail`, for the live prompt in section 2.
+- Terminal 2: start the Trace Analyzer and leave it running: `./demo.sh app`
+- Check the PAT hasn't expired: `demo.sh` warns in its last day and stops once it has. Reissue with `./demo.sh pat`. Then send one prompt on the **Live prompt** page and confirm the waterfall appears.
+- At least 10 minutes before, block the cost demo user: `./demo.sh burst`. It spends about 1.5 credits as `GATEWAY_RETAIL_COST_DEMO` until the gateway returns HTTP 403, then saves the denial. Confirm **Cost governance** shows 1 user blocked. The block lasts until 00:00 UTC.
 - Browser tab 1: Snowsight -> **AI & ML -> Cortex AI Gateway**
 - Browser tab 2: Trace Analyzer at http://localhost:8501, lookback set to 1 day
 - Deck open at the Architecture slide
@@ -24,7 +19,7 @@ Slides 1-3. One governed endpoint, MCP for data, telemetry you own.
 ## 2. Live prompt from an external agent (4 min)
 
 ```bash
-python lab/live_agent.py "Which customer segments have the highest churn risk, and what is their average lifetime value?"
+./demo.sh ask "Which customer segments have the highest churn risk, and what is their average lifetime value?"
 ```
 
 - Point out the single tool call printed (`retail_analytics_agent`) and the `trace_id`. The agent behind the MCP server picked the customer analyst and ran its SQL itself. The churn scores come from the registered XGBoost model (`MODEL_VERSION = 'V1'` in CHURN_PREDICTIONS), so model output reaches the external agent through the same governed path.

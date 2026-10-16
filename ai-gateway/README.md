@@ -51,10 +51,11 @@ SEs, solution architects, platform engineers, and teams evaluating centralized A
 ./demo.sh notebook     # the lab notebook, with the .venv kernel and .env loaded
 ./demo.sh app          # Trace Analyzer at http://localhost:8501
 ./demo.sh burst        # before a demo: drive the cost demo user over its quota
+./demo.sh pat          # reissue the demo PATs when they expire
 ./demo.sh teardown     # drop everything
 ```
 
-`setup` is safe to re-run. Non-interactive: `./demo.sh setup -c <connection> -p <pat-file>`. It writes `.env` (connection, account, user, PAT file, gateway host); every other command loads it. `./demo.sh ask "..."` sends one prompt and prints its trace_id; `./demo.sh deploy` deploys the app to Streamlit in Snowflake.
+`setup` is safe to re-run. Non-interactive: `./demo.sh setup -c <connection> -p <pat-file>`. It writes `.env` (connection, account, user, PAT file and expiry, gateway host); every other command loads it. The demo PATs last 7 days: commands that need one warn in its last day and stop once it has expired (unless you passed your own PAT with `-p`), and `./demo.sh pat` reissues them without rerunning setup (it rewrites `.env`). `./demo.sh ask "..."` sends one prompt and prints its trace_id; `./demo.sh deploy` deploys the app to Streamlit in Snowflake.
 
 ### Set up with Cortex Code
 

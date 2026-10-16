@@ -3,7 +3,7 @@ import uuid
 import pandas as pd
 import streamlit as st
 
-from gateway_client import chat, new_traceparent
+from gateway_client import auth_hint, chat, new_traceparent
 from optimize_config import MODELS, config
 
 st.header("Experiments")
@@ -117,7 +117,7 @@ WHERE r.PROMPT_ID = e.PROMPT_ID AND r.RUN_ID = ? AND r.STATUS = 'OK'
 
 
 def run_config(label: str, cfg: dict, prompts: pd.DataFrame, progress, offset: int, total: int,
-               pair: str) -> str:
+               pair: str) -> str | None:
     # Both runs of one experiment share the suffix, which is how Before/After pairs them.
     run_id = f"{label}-{pair}"
     session.sql(
@@ -133,6 +133,14 @@ def run_config(label: str, cfg: dict, prompts: pd.DataFrame, progress, offset: i
         res = chat(f"{context}\n\nQuestion: {p.PROMPT}", cfg["model"],
                    system=cfg["system_prompt"], max_tokens=cfg["max_tokens"],
                    traceparent=traceparent, conversation_id=run_id)
+        if res.status_code == 401:
+            # Every later call would fail the same way, so drop this run and say why
+            session.sql("DELETE FROM OPTIMIZATION_RUNS WHERE RUN_ID = ?", params=[run_id]).collect()
+            progress.empty()
+            st.error(f"HTTP 401 from the gateway on {p.PROMPT_ID}; the {label} run was not saved.")
+            if hint := auth_hint(res):
+                st.info(hint)
+            return None
         rows.append([run_id, p.PROMPT_ID, trace_id, res.content[:16000],
                      round(res.latency_ms), res.input_tokens, res.output_tokens,
                      "OK" if res.ok else f"HTTP {res.status_code}"])
@@ -152,11 +160,14 @@ if st.button(":material/play_arrow: Run experiment", type="primary", disabled=no
     bar = st.progress(0.0, "Starting...")
     pair = uuid.uuid4().hex[:8]
     b_id = run_config("baseline", baseline, prompts, bar, 0, total, pair)
-    c_id = run_config("candidate", candidate, prompts, bar, len(prompts), total, pair)
+    c_id = run_config("candidate", candidate, prompts, bar, len(prompts), total, pair) if b_id else None
     bar.empty()
-    st.session_state["compare_runs"] = (b_id, c_id)
-    st.success(f"Runs complete: `{b_id}` vs `{c_id}`")
-    st.page_link("app_pages/compare.py", label="See before / after", icon=":material/compare_arrows:")
+    if b_id and c_id:
+        st.session_state["compare_runs"] = (b_id, c_id)
+        st.success(f"Runs complete: `{b_id}` vs `{c_id}`")
+        st.page_link("app_pages/compare.py", label="See before / after", icon=":material/compare_arrows:")
+    elif b_id:
+        st.warning(f"The baseline run `{b_id}` was saved, with no candidate run to compare it to.")
 
 st.subheader("Recent runs")
 runs = conn.query(

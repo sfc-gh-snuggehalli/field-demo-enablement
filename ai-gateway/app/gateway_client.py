@@ -49,12 +49,12 @@ def _auth_headers() -> tuple[dict, str]:
             "Authorization": f"Bearer {token}",
             "X-Snowflake-Authorization-Token-Type": "OAUTH",
         }, "session token"
-    pat = os.getenv("SNOWFLAKE_PAT")
+    pat, source = os.getenv("SNOWFLAKE_PAT"), "SNOWFLAKE_PAT env"
     pat_file = os.path.expanduser(os.getenv("SNOWFLAKE_PAT_FILE", "~/.snowflake/ai_gateway_demo.pat"))
     if not pat and os.path.exists(pat_file):
-        pat = open(pat_file).read().strip()
+        pat, source = open(pat_file).read().strip(), "PAT file"
     if pat:
-        return {"Authorization": f"Bearer {pat}"}, "SNOWFLAKE_PAT env"
+        return {"Authorization": f"Bearer {pat}"}, source
     raise RuntimeError(
         "No gateway credential: bind a PAT secret to the app, run on the "
         "container runtime, or set SNOWFLAKE_PAT locally."
@@ -71,6 +71,30 @@ class GatewayResult:
     input_tokens: int | None
     output_tokens: int | None
     auth_mode: str
+
+
+def auth_hint(res: GatewayResult) -> str | None:
+    """What to do about an HTTP 401, given where the credential came from."""
+    if res.status_code != 401:
+        return None
+    if "INCOMING_REQUEST_BLOCKED" in (res.content or ""):
+        if res.auth_mode in ("PAT secret", "session token"):
+            return ("The account's network policy blocked this request. Gateway calls from inside "
+                    "Snowflake are blocked when the account has a network policy, so run the app "
+                    "locally with a PAT.")
+        return ("The account's network policy blocked this request: your IP address is not "
+                "allowed. Connect to an allowed network (for example your VPN) and try again.")
+    if res.auth_mode == "SNOWFLAKE_PAT env":
+        return ("The gateway rejected the PAT in SNOWFLAKE_PAT: it has most likely expired or been "
+                "revoked. SNOWFLAKE_PAT overrides the PAT file, so replace or unset it.")
+    if res.auth_mode == "PAT file":
+        return ("The gateway rejected the PAT: it has most likely expired (the demo PATs last "
+                "7 days) or been revoked. Run `./demo.sh pat` to reissue the demo PAT, then try "
+                "again. If you passed your own PAT file to setup, replace that file instead.")
+    if res.auth_mode == "PAT secret":
+        return ("The gateway rejected the PAT bound to the app: it has most likely expired or "
+                "been revoked. Reissue it and update the app's secret.")
+    return None
 
 
 def chat(
