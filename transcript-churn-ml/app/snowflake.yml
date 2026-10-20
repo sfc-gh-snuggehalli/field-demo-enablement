@@ -1,0 +1,26 @@
+definition_version: 2
+entities:
+  churn_story_app:
+    type: streamlit
+    identifier:
+      name: CHURN_STORY_APP
+      database: TRANSCRIPT_CHURN_ML_DEMO
+      schema: ANALYTICS
+    title: From calls to churn risk
+    query_warehouse: TRANSCRIPT_CHURN_ML_WH
+    runtime_name: SYSTEM$ST_CONTAINER_RUNTIME_PY3_11
+    # ./demo.sh app sets DEMO_COMPUTE_POOL to the account's DEFAULT_STREAMLIT_COMPUTE_POOL before deploying.
+    compute_pool: <% ctx.env.DEMO_COMPUTE_POOL %>
+    main_file: streamlit_app.py
+    # No pyproject.toml: streamlit, pandas and altair are preinstalled, so no external access integration is needed.
+    artifacts:
+      - streamlit_app.py
+      - common.py
+      - app_pages/p1_question.py
+      - app_pages/p2_governed.py
+      - app_pages/p3_january.py
+      - app_pages/p4_topics.py
+      - app_pages/p5_churn.py
+      - app_pages/p6_data_stayed.py
+      - app_pages/p7_ask.py
+      - .streamlit/config.toml

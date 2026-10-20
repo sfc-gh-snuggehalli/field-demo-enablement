@@ -18,6 +18,7 @@
 |------|-------------|
 | `presentations/{{SLUG}}.html` | Slide deck ({{SLIDE_COUNT}} slides) |
 | `presentations/{{SLUG}}-speaker-notes.md` | Per-slide speaker notes with talking points, presenter notes, and references |
+| `demo_script.md` | Timed run of show for the live talk: pre-flight, segments, cuts, recovery, Q&A |
 | `demo.sh` | One script for setup, data load, notebook and teardown |
 | `pyproject.toml`, `uv.lock` | Local Python environment (lab, notebook, Snowflake CLI), managed by uv |
 | `lab/setup.sql` | SQL setup script (database, warehouse, sample data, objects) |

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call-Transcript Topics to Churn, Where the Data Already Lives</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0F1B2D;
+      --sidebar-bg: #1B2A4A;
+      --primary: #29B5E8;
+      --accent: #7C3AED;
+      --text: #E2E8F0;
+      --text-muted: #94A3B8;
+      --card-bg: #162236;
+      --border: #2D4A6F;
+      --green: #10B981;
+      --orange: #F59E0B;
+      --red: #EF4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      z-index: 1000;
+      transition: width 0.1s;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      padding: 2rem 1.5rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sidebar a {
+      display: block;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      color: var(--text);
+      background: rgba(41, 181, 232, 0.1);
+    }
+
+    .sidebar a.active {
+      border-left: 3px solid var(--primary);
+      padding-left: calc(0.75rem - 3px);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 0;
+    }
+
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .slide h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slide h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    .slide h3 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .slide p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      text-align: center;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--card-bg);
+      color: var(--primary);
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:hover td {
+      background: rgba(41, 181, 232, 0.05);
+    }
+
+    .highlight-box {
+      background: rgba(41, 181, 232, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .context-box {
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--orange);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-orange { background: rgba(245, 158, 11, 0.15); color: var(--orange); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-blue { background: rgba(41, 181, 232, 0.15); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+    .badge-purple { background: rgba(124, 58, 237, 0.15); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+
+    .slide ul {
+      list-style: none;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .slide ul li {
+      padding: 0.75rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .slide ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    code {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--primary);
+    }
+
+    pre {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      width: 100%;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text);
+    }
+
+    pre .keyword { color: var(--accent); font-weight: 500; }
+    pre .string { color: var(--green); }
+    pre .comment { color: var(--text-muted); font-style: italic; }
+    pre .function { color: var(--primary); }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .flow-step {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .flow-step.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(41, 181, 232, 0.2);
+    }
+
+    .flow-step .step-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .flow-step .step-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+
+    .flow-arrow {
+      color: var(--primary);
+      font-size: 1.5rem;
+      font-weight: 300;
+    }
+
+    /* Layered architecture diagram: vertical levels of nodes joined by arrows.
+       Use for system architecture (who talks to whom); use .flow-diagram for linear pipelines. */
+    .arch-diagram {
+      width: 100%;
+      max-width: 800px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .arch-diagram .level {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-diagram .node {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .arch-diagram .node-primary {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(41, 181, 232, 0.2);
+    }
+
+    .arch-diagram .node-accent {
+      border-color: var(--accent);
+    }
+
+    .arch-diagram .arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .anim-fade {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .anim-fade.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .slide { padding: 2rem 1.5rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .github-link {
+      position: fixed;
+      top: 1rem;
+      right: 1.5rem;
+      z-index: 1000;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      transition: all 0.2s;
+    }
+    .github-link:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+    .github-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <a href="https://github.com/sfc-gh-snuggehalli/field-demo-enablement/tree/main/transcript-churn-ml" class="github-link" target="_blank">
+    <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+  <div class="progress-bar"></div>
+
+  <nav class="sidebar">
+    <h2>Transcripts to churn</h2>
+    <a href="#hero">Overview</a>
+    <a href="#problem">The Problem</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#decision">Where Each Step Runs</a>
+    <a href="#governance">PII Gone Before Embedding</a>
+    <a href="#incremental">Only New Rows</a>
+    <a href="#topics">Seeded, Then Discovered</a>
+    <a href="#kmeans">Why Not k-means</a>
+    <a href="#registry">The Clusterer Is a Model</a>
+    <a href="#insights">Price Drivers and Deals</a>
+    <a href="#feature-store">Call Signals as Features</a>
+    <a href="#survival">Survival vs Logistic</a>
+    <a href="#ledger">Data-Gravity Ledger</a>
+    <a href="#controls">Spend and PII Controls</a>
+    <a href="#demo">The Demo</a>
+    <a href="#closing">First Slice</a>
+  </nav>
+
+  <main class="main">
+
+    <section class="slide" id="hero">
+      <h1>Call-Transcript Topics to Churn, Where the Data Already Lives</h1>
+      <p>What are customers telling the sales and success teams, which new topics are emerging, and do those signals
+        predict who cancels? Segmented, redacted, embedded, clustered, labeled and modeled inside Snowflake, next to the
+        call data that already lands there.</p>
+      <div class="stat-grid anim-fade" style="margin-top: 2rem;">
+        <div class="stat-card"><div class="value">0</div><div class="label">planted phone numbers, emails or staff names left in 1,227 embedded segments</div></div>
+        <div class="stat-card"><div class="value">98%</div><div class="label">accuracy of business-topic assignment in SQL, on 75% of segments</div></div>
+        <div class="stat-card"><div class="value">2 of 2</div><div class="label">hidden topics recovered by density clustering, noise left unassigned</div></div>
+        <div class="stat-card"><div class="value">+0.068</div><div class="label">c-index from call features over usage-only churn models</div></div>
+      </div>
+    </section>
+
+    <section class="slide" id="problem">
+      <h2>The hybrid most teams end up with</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Transcripts in one place, models in another</h4><p>Calls land in the warehouse; topic models,
+          churn models and LLM calls run on a separate ML platform, so features go out and scores come back every day.</p></div>
+        <div class="card"><h4>"Untested on Snowflake runtimes"</h4><p>Density clustering and survival libraries are assumed to
+          need their own containers, so the whole churn workflow defaults to the external platform.</p></div>
+        <div class="card"><h4>PII rides along</h4><p>Raw transcripts carry names, phone numbers and emails. Every copy to an
+          embedding service, a notebook or a bucket is another place to govern.</p></div>
+        <div class="card"><h4>Topics drift, names don't</h4><p>Re-clustering renumbers topics, so dashboards and features
+          built on "cluster 7" silently change meaning.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="architecture">
+      <h2>Architecture</h2>
+      <h3>Five schemas, one database, nothing copied out</h3>
+      <div class="arch-diagram anim-fade">
+        <div class="level">
+          <div class="node">RAW: CALLS + UTTERANCES (masked)</div>
+          <div class="node">RAW: CRM_OPPORTUNITIES</div>
+          <div class="node">RAW: SUBSCRIPTIONS + USAGE_EVENTS</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">CORE: SEGMENTS (DT)</div>
+          <div class="node node-accent">SEGMENTS_REDACTED (stream + AI_REDACT)</div>
+          <div class="node node-accent">SEGMENT_EMBEDDINGS (DT, AI_EMBED)</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-accent">ML: seeded similarity</div>
+          <div class="node node-accent">UMAP + HDBSCAN sproc &rarr; TOPIC_CLUSTERER V1, V2</div>
+          <div class="node node-accent">AI_COMPLETE &rarr; PROPOSED_TOPICS</div>
+        </div>
+        <div class="arrow">&darr;</div>
+        <div class="level">
+          <div class="node node-primary"><strong>FEATURES: ACCOUNT_USAGE_FV + ACCOUNT_CALL_SIGNALS_FV &rarr; Dataset &rarr; CHURN_SURVIVAL</strong></div>
+          <div class="node node-primary"><strong>ANALYTICS: PRICE_SENTIMENT, CALL_INSIGHTS_SV, CHURN_SCORES + monitor</strong></div>
+        </div>
+      </div>
+      <div class="context-box anim-fade">
+        <strong>Pattern:</strong> mask the raw text, redact each new segment once, embed redacted text only; topics,
+        sentiment and churn features read the redacted layer; models are versioned and score where the rows are.
+      </div>
+    </section>
+
+    <section class="slide" id="decision">
+      <h2>Where each step runs</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4><span class="badge-blue">SQL</span> Declarative and incremental</h4><p>Segmenting, AI_EMBED,
+          similarity to exemplars, sentiment, the semantic view. Dynamic tables keep them fresh one new row at a time.</p></div>
+        <div class="card"><h4><span class="badge-green">Warehouse Python</span> Channel packages</h4><p>umap-learn, hdbscan,
+          lifelines, scikit-survival from the Snowflake package channel: stored procedures that fit, register and score.</p></div>
+        <div class="card"><h4><span class="badge-purple">Container Runtime</span> Anything on PyPI</h4><p>Packages outside the
+          channel, GPUs, or long training runs: notebooks and ML Jobs install from the PyPI artifact repository.</p></div>
+        <div class="card"><h4><span class="badge-orange">Keep outside</span> Only with a reason</h4><p>A step that needs a
+          system Snowflake cannot reach. Each one is a boundary crossing to secure and to pay for.</p></div>
+      </div>
+      <div class="highlight-box anim-fade" style="margin-top: 1.5rem;"><strong>In this lab every step runs in the first two
+        boxes; the third is the path for packages outside the channel.</strong></div>
+    </section>
+
+    <section class="slide" id="governance">
+      <h2>PII is gone before anything is embedded</h2>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step">Masking policy on the raw text column</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">Segments: 4 turns, ~136 tokens; short dials dropped</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">AI_REDACT + known-name pass, once per segment</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">AI_EMBED on redacted text only</div>
+      </div>
+      <div class="stat-grid anim-fade" style="margin-top: 1.5rem;">
+        <div class="stat-card"><div class="value">243 &rarr; 0</div><div class="label">planted phone numbers left after redaction</div></div>
+        <div class="stat-card"><div class="value">63%</div><div class="label">of calls are short dials, never sent to an AI function</div></div>
+        <div class="stat-card"><div class="value">4,096</div><div class="label">AI_REDACT input + output token limit: why segmentation comes first</div></div>
+      </div>
+      <div class="warning-box anim-fade">AI_REDACT is best effort. In one build it missed 2 staff names in 1,227 segments, so a
+        deterministic pass removes known names (the rep list) after it. Embeddings are built only from the result.</div>
+    </section>
+
+    <section class="slide" id="incremental">
+      <h2>A new month costs only the new month</h2>
+      <div class="two-col anim-fade">
+        <div>
+          <p>January's calls are appended to the raw tables. The segment dynamic table recomputes only the affected calls; a
+            stream hands only the new segments to AI_REDACT; the embedding dynamic table inserts only those rows.</p>
+          <div class="context-box">History: 1,227 segments, untouched. January: 698 new segments, redacted and embedded in 34 seconds.</div>
+        </div>
+        <div>
+<pre><span class="keyword">CALL</span> CORE.REDACT_NEW_SEGMENTS();
+-- {"redacted_rows": 698}
+
+<span class="keyword">ALTER DYNAMIC TABLE</span> CORE.SEGMENT_EMBEDDINGS <span class="keyword">REFRESH</span>;
+-- {"insertedRows": 698, "deletedRows": 0}</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="topics">
+      <h2>Business topics first, then the ones nobody defined</h2>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>Seeded (SQL)</h4><p>Eight business topics, two exemplars each in the team's words. A segment
+          takes a topic when its best cosine similarity is at least 0.47 and beats the runner-up by 0.03.</p>
+          <p><strong>75% of segments, 98% correct</strong>; 1,925 &times; 16 similarities in under 2 seconds.</p></div>
+        <div class="card"><h4>Discovered (warehouse Python)</h4><p>UMAP to 5 dimensions, then HDBSCAN on the 25% left over.
+          A topic needs about a tenth of the leftovers; smaller groups stay noise.</p>
+          <p><strong>Both hidden topics found</strong>: AI writing requests (Jaccard 0.88) and seat sharing (1.00).</p></div>
+      </div>
+      <div class="context-box anim-fade">An LLM names each new cluster from six of its most typical redacted remarks:
+        4 calls for 252 leftover segments, written to a review queue as PENDING.</div>
+    </section>
+
+    <section class="slide" id="kmeans">
+      <h2>Why density clustering and not k-means</h2>
+      <div class="stat-grid anim-fade">
+        <div class="stat-card"><div class="value">100%</div><div class="label">of leftovers k-means assigns, including the 44 that belong to no topic</div></div>
+        <div class="stat-card"><div class="value">82.5%</div><div class="label">HDBSCAN assigns; the rest stays noise</div></div>
+        <div class="stat-card"><div class="value">k given</div><div class="label">k-means needed the cluster count HDBSCAN found</div></div>
+      </div>
+      <div class="context-box anim-fade">On clean synthetic text the two are about equally pure (96.4% vs 95.7%). The difference
+        is the forced assignment: on real calls, small talk and cross-talk land in a topic's member list, its name and its
+        feature.</div>
+    </section>
+
+    <section class="slide" id="registry">
+      <h2>The clusterer is a versioned model</h2>
+      <div class="two-col anim-fade">
+        <div>
+          <p>The fitted UMAP + HDBSCAN pair is a custom model in the Model Registry with one input, the 1,024-value embedding
+            (a model method takes at most 500 arguments, so the vector is one array column). Each version names its
+            training snapshot.</p>
+          <div class="context-box">V2, refit with January, kept both emerging topics: member overlap with V1 of 1.00 and 0.73.
+            The mapping lives in ML.TOPIC_VERSION_MAP, so a reviewed name follows its topic.</div>
+        </div>
+        <div>
+<pre><span class="keyword">SELECT</span> SEGMENT_ID,
+  ML.TOPIC_CLUSTERER!PREDICT(EMBEDDING::ARRAY)
+    :CLUSTER_ID::INT <span class="keyword">AS</span> CLUSTER_ID
+<span class="keyword">FROM</span> CORE.SEGMENT_EMBEDDINGS;</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="insights">
+      <h2>Price negativity by driver, and topics on lost deals</h2>
+      <div class="flow-diagram anim-fade">
+        <div class="flow-step">Keyword prefilter: 33% of segments</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">AI_SENTIMENT with 3 price aspects</div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">AI_CLASSIFY on 292 negatives only</div>
+      </div>
+      <div class="stat-grid anim-fade" style="margin-top: 1.5rem;">
+        <div class="stat-card"><div class="value">117 / 100 / 75</div><div class="label">negatives driven by competitor price / value for money / pricing model</div></div>
+        <div class="stat-card"><div class="value">95.5%</div><div class="label">driver attribution matches the planted driver</div></div>
+        <div class="stat-card"><div class="value">12.7% vs 9.7%</div><div class="label">price talk on lost vs won deals</div></div>
+      </div>
+      <div class="context-box anim-fade">Both answers come from ANALYTICS.CALL_INSIGHTS_SV, so Cortex Analyst answers them in plain language.</div>
+    </section>
+
+    <section class="slide" id="feature-store">
+      <h2>Call signals are features, next to usage</h2>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>ACCOUNT_USAGE_FV</h4><p>Logins and reports over three months, the trend against the three
+          before, seats, tenure, plan value. Computed from raw usage events.</p></div>
+        <div class="card"><h4>ACCOUNT_CALL_SIGNALS_FV</h4><p>Calls, negative price remarks by driver, segments in discovered
+          topics, renewal talk, over the 90 days before each date.</p></div>
+      </div>
+      <div class="context-box anim-fade">Both are managed feature views over a static snapshot calendar: the same definitions read
+        at four dates (negative price remarks per account 0 &rarr; 0.051 &rarr; 0.087 as calls arrive). Training is a
+        point-in-time Dataset as of the snapshot, usable by any trainer inside Snowflake or out.</div>
+    </section>
+
+    <section class="slide" id="survival">
+      <h2>Survival models, trained next to the data</h2>
+      <div class="stat-grid anim-fade">
+        <div class="stat-card"><div class="value">0.548</div><div class="label">best test c-index, usage features only</div></div>
+        <div class="stat-card"><div class="value">0.616</div><div class="label">best with call features (+0.068)</div></div>
+        <div class="stat-card"><div class="value">0.611 vs 0.616</div><div class="label">best survival vs logistic, with calls: same ranking</div></div>
+      </div>
+      <div class="context-box anim-fade">lifelines (Cox) and scikit-survival (gradient-boosted) ran in a warehouse stored procedure,
+        six runs under Experiment Tracking. On ranking, logistic regression is a strong baseline; survival adds the probability
+        of cancelling by any date and handles accounts still active at the end of follow-up. The Cox version is the registry
+        default, scores 7,927 account-dates from SQL in 14 seconds, explains each account (top driver: negative price
+        remarks), and has a model monitor.</div>
+    </section>
+
+    <section class="slide" id="ledger">
+      <h2>The data-gravity ledger</h2>
+      <div class="two-col anim-fade">
+        <div class="card"><h4>Round trip</h4><p>Training and scoring rows to the client with to_pandas, a model trained and
+          scored there, scores back with write_pandas.</p><p><strong>4,000 rows (60,000 feature values) out, 2,000 back, 2 boundary crossings.</strong></p></div>
+        <div class="card"><h4>In place</h4><p>The registered model's PREDICT in SQL on the scoring table.</p>
+          <p><strong>0 rows out, 0 back, 0 crossings.</strong></p></div>
+      </div>
+      <div class="context-box anim-fade">Each path runs under its own query tag, so the same queries size an existing loop from
+        ACCOUNT_USAGE. At 2,000 rows the round trip was faster (5.2 s vs 12.6 s); the point is the rows moved and the
+        copies to govern, which grow with every account and every day.</div>
+    </section>
+
+    <section class="slide" id="controls">
+      <h2>Spend and PII controls</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>Estimate first</h4><p>AI_COUNT_TOKENS before a full pass: 260,873 input tokens to embed every
+          segment here.</p></div>
+        <div class="card"><h4>Process each row once</h4><p>Incremental dynamic tables and streams; filters before models; an LLM
+          per cluster (7 calls) rather than per segment (737).</p></div>
+        <div class="card"><h4>Cap and watch</h4><p>Per-user AI quotas with block enforcement, custom budgets on the pipeline's
+          warehouse, CORTEX_AI_FUNCTIONS_USAGE_HISTORY by query tag.</p></div>
+        <div class="card"><h4>Govern the text</h4><p>Masking on the raw column, redaction before embedding, embeddings only from
+          redacted text, an embed-model column for planned re-embeds.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="demo">
+      <h2>The demo: one app, one live moment, one question</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>A story app, not notebooks</h4><p>Seven Streamlit pages read the tables the pipeline built: governed
+          text, topics, churn lift and where the data stayed. One point per page.</p></div>
+        <div class="card"><h4>January arrives, live</h4><p>One button loads a new month of calls: 698 new segments through
+          redaction, embeddings, topics and price sentiment in about two minutes. History is not reprocessed.</p></div>
+        <div class="card"><h4>Ask it in plain language</h4><p>A Cortex Agent in Snowflake Intelligence answers from a semantic
+          view and a search service over the redacted text only.</p></div>
+        <div class="card"><h4>The notebooks are the build</h4><p>The same five notebooks create everything the app shows, for the
+          technical deep dive or a hands-on lab.</p></div>
+      </div>
+    </section>
+
+    <section class="slide" id="closing">
+      <h2>A first slice</h2>
+      <div class="card-grid anim-fade">
+        <div class="card"><h4>1. Segment, redact, embed one month</h4><p>On the calls already landing, with the masking policy and
+          the known-name pass. Measure tokens before and after.</p></div>
+        <div class="card"><h4>2. Seed the business topics</h4><p>Exemplars from the team, the similarity rule, and a hand-labeled
+          sample of 200-300 segments to measure accuracy.</p></div>
+        <div class="card"><h4>3. Price sentiment by driver</h4><p>The cascade on one month, answered through a semantic view for
+          the people who own pricing.</p></div>
+        <div class="card"><h4>4. Then churn</h4><p>Call signals as a feature view beside the existing usage features, and one
+          survival model compared with today's.</p></div>
+      </div>
+      <div class="highlight-box anim-fade" style="margin-top: 1.5rem;"><strong>Topics, sentiment and churn from the calls you
+        already record, with the text governed and the models where the data lives.</strong></div>
+    </section>
+
+  </main>
+
+  <script>
+    // Progress bar
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      document.querySelector('.progress-bar').style.width = progress + '%';
+    });
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.anim-fade').forEach(el => observer.observe(el));
+
+    // Active nav tracking
+    const sections = document.querySelectorAll('.slide');
+    const navLinks = document.querySelectorAll('.sidebar a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 200;
+        if (window.scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

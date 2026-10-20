@@ -40,6 +40,7 @@ module: run `./setup.sh`, then `cd app && npm run dev`.
 | Building Agentic AI Applications on the Cortex Agent SDK | SEs, architects & app developers | Presentation + Meta-Prompt + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-agent-sdk-whitelabel/presentations/cortex-agent-sdk-whitelabel.html) |
 | Run the likely-to-sell score where the homeowner data already lives | ML engineers & product leaders who own a production score | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/likely-to-sell-ml/presentations/likely-to-sell-ml.html) |
 | Multi-Agent Orchestration over MCP: One Governed Front Door for Any AI Client | SEs, architects & AI platform teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/multi-agent-mcp/presentations/multi-agent-mcp.html) |
+| Call-Transcript Topics to Churn, Where the Data Already Lives | ML engineers, data scientists & data engineers | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/transcript-churn-ml/presentations/transcript-churn-ml.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -251,6 +252,23 @@ Any MCP client (Claude, ChatGPT, Cursor, or the included Claude-style Streamlit 
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `app/`, `client/` | Claude-style MCP client (Streamlit) and a headless MCP smoke test |
 
+### Call-Transcript Topics to Churn, Where the Data Already Lives
+
+**Location:** `transcript-churn-ml/`
+
+Recorded calls become topics, price sentiment and churn features without the text leaving Snowflake: masked, redacted and embedded in incremental pipelines; business topics in SQL and new ones discovered with UMAP + HDBSCAN, versioned in the Model Registry; call signals in the Feature Store beside product usage; survival models (lifelines, scikit-survival) trained, registered, scored from SQL and monitored; and a data-gravity ledger against the round trip. For presenting, a Streamlit story app with one live step and a Snowflake Intelligence agent tell the same story without code on screen.
+
+| File | Description |
+|------|-------------|
+| `presentations/transcript-churn-ml.html` | Slide deck (16 slides) |
+| `presentations/transcript-churn-ml-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Run of show: 15-minute app path, then the 25-minute notebook deep dive |
+| `demo.sh`, `pyproject.toml`, `uv.lock` | One-command setup, headless build of all five notebooks, notebook, ledger and teardown |
+| `lab/setup.sql` | Database, warehouse and all synthetic data (calls, turns, CRM, subscriptions, usage, topic taxonomy) |
+| `lab/transcript-churn-0[1-5]-*.ipynb` | Segments and governance, topics and registry, insights and semantic view, churn with the Feature Store, ledger and cost; a CHECK per section |
+| `lab/app_setup.sql`, `app/` | Presenter path: live January step, account risk, semantic view, search service, agent, and the Streamlit story app |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -413,6 +431,24 @@ field-demo-enablement/
 │   │   └── cleanup.sql
 │   ├── app/                     # streamlit_app.py, host_llm.py, snowflake_mcp.py, personas.py
 │   └── client/                  # mcp_smoke.py
+├── transcript-churn-ml/
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── demo.sh
+│   ├── pyproject.toml, uv.lock
+│   ├── presentations/
+│   │   ├── transcript-churn-ml.html
+│   │   └── transcript-churn-ml-speaker-notes.md
+│   ├── app/                      # Streamlit story app (snowflake.yml, streamlit_app.py, app_pages/)
+│   └── lab/
+│       ├── transcript-churn-01-segments-governance.ipynb
+│       ├── transcript-churn-02-topics-registry.ipynb
+│       ├── transcript-churn-03-insights-semantic-view.ipynb
+│       ├── transcript-churn-04-churn-feature-store.ipynb
+│       ├── transcript-churn-05-ledger-cost.ipynb
+│       ├── setup.sql
+│       ├── app_setup.sql
+│       └── cleanup.sql
 <!-- REPO_TREE_END -->
 ```
 

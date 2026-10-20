@@ -1,6 +1,6 @@
 ---
 name: create-demo
-description: "Generate a complete Snowflake enablement/demo module that mirrors the demos-enablement kit: a dark-themed HTML slide deck, per-slide speaker notes, lab/setup.sql, a hands-on lab notebook, and a uv-packaged ./demo.sh that sets the lab up in one command (also from a Cortex Code prompt in the README), then register it in the root README index. Use whenever the user wants a new demo, lab, or presentation for a Snowflake feature (e.g. AI Functions, AI Function Studio, Cortex Search, semantic views, ML). Triggers: create demo, new demo, build a demo, make a presentation, new lab, add a module, demo for <feature>, presentation for <feature>, scaffold a demo. Requires the repo to be initialized with init-demo-repo first."
+description: "Generate a complete Snowflake enablement/demo module that mirrors the demos-enablement kit: a dark-themed HTML slide deck, per-slide speaker notes, a timed demo script (run of show), lab/setup.sql, a hands-on lab notebook, and a uv-packaged ./demo.sh that sets the lab up in one command (also from a Cortex Code prompt in the README), then register it in the root README index. Use whenever the user wants a new demo, lab, or presentation for a Snowflake feature (e.g. AI Functions, AI Function Studio, Cortex Search, semantic views, ML). Triggers: create demo, new demo, build a demo, make a presentation, new lab, add a module, demo for <feature>, presentation for <feature>, scaffold a demo. Requires the repo to be initialized with init-demo-repo first."
 ---
 
 # Create Demo Module
@@ -229,6 +229,33 @@ names the module's real subcommands and flags; add a line for each extra step (e
 list every command it must not run unprompted. Link only within this repo: a module that grew out
 of work in another repo carries that content (SQL, notes) itself, never a relative `../other-repo` path.
 
+### Step 6b: Generate the demo script (run of show)
+
+Every module ships `<slug>/demo_script.md`, the presenter's run of show for a live talk. The
+speaker notes explain each slide; the demo script sequences the deck, the notebook(s), Snowsight
+and any app into timed segments with the exact values the room should see.
+
+Copy `templates/demo-script.md` to `<slug>/demo_script.md` and fill every placeholder:
+- **Header**: `{{TOTAL_MINUTES}}` (a 20-25 minute default), `{{CUT_MINUTES}}` (what the Cuts reach),
+  `{{AUDIENCE}}`, `{{LIVE_SURFACES}}` (e.g. "the lab notebooks and Snowsight"), and three takeaways.
+- **Pre-flight**: what must be true the day before (`build --yes` passed, screenshots of each
+  expected result, credentials still valid), 30 minutes before (warm-up calls, open tabs) and the
+  screen start state.
+- **`{{RUN_OF_SHOW_ROWS}}`**: one row per segment, `| N | Segment | Where | Minutes | Ends at |`,
+  numbered from 0 (the deck frame) to the close. `Where` names slides by number (`Deck, slides
+  1-4`) and notebooks by section. `Ends at` is the running total (`3:00`, `6:00` ...).
+- **`{{SEGMENTS}}`**: one `## N. <Segment> (<where>, <min> min)` block per row, written as
+  **Say** / **Do** / **Show** / **If** beats. Every **Show** names the value the room should see,
+  taken from a verified build (a CHECK line or a cell output), never invented. Add a
+  **Fill while it runs** line for any call slower than ~10 s.
+- **Cuts**: an ordered list with the minutes each saves, then the one segment that is never cut
+  and why.
+- **Recovery tips**: one row per live dependency (each AI call, refresh, UI page, app, PAT).
+- **Q&A prep** (bold question, short answer) and **After the talk**.
+
+Write a first pass from the design, then a final pass after the lab has run, replacing every
+expected value with the measured one.
+
 ### Step 7: Register the module in the root README
 
 Edit the repo root `README.md` at its marker comments (created by init-demo-repo):
@@ -244,7 +271,8 @@ Preserve all marker comments so future runs can append again.
 
 ### Step 8: Report
 
-List every file created, the local path to open the deck, and the published Pages URL.
+List every file created, the local path to open the deck, `demo_script.md` (its run-of-show
+table and total minutes), and the published Pages URL.
 Remind the user of the run order (`./demo.sh setup` → `./demo.sh build --yes` or `./demo.sh notebook`;
 by hand: `setup.sql` → `python lab/data_gen.py` if present → notebook), that `./demo.sh teardown` (or
 `lab/cleanup.sql`) tears the demo down to start fresh, that the README's "Set up with Cortex
@@ -271,6 +299,7 @@ on that warehouse first.
 ```
 <slug>/
 ├── README.md
+├── demo_script.md            (timed run of show for the live talk)
 ├── demo.sh                   (omitted if include-lab = NO)
 ├── pyproject.toml, uv.lock, .python-version   (omitted if include-lab = NO)
 ├── presentations/
@@ -306,6 +335,10 @@ Plus updated root `README.md` (table row + section + tree node).
 - Real function names/signatures only — verify via docs (Step 2). No fabricated SQL.
 - Deck sidebar hrefs all resolve to slide ids; template instructional comments removed.
 - Deck includes an Architecture slide (`id="architecture"`, layered `.arch-diagram`) right after the Problem slide.
+- **demo_script.md is REQUIRED** (Step 6b): the run-of-show minutes sum to the stated total and
+  each `Ends at` is the running sum; every slide number it cites exists in the deck; every
+  **Show** carries a concrete value from a verified run; the Cuts name one never-cut segment;
+  Recovery has a row for each live dependency; no `{{` placeholder is left.
 - setup.sql DDL compiles; notebook is valid JSON and is NOT executed here.
 - **demo.sh + uv packaging is REQUIRED whenever include-lab = YES** (Step 5e): `uv.lock` resolves,
   every notebook/script import is a declared dependency, no `%pip install` cell, no bare `read`
