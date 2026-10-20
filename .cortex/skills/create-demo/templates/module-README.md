@@ -55,10 +55,12 @@ Set up the {{DECK_TITLE}} lab in the {{SLUG}} folder on my Snowflake account.
    -c <connection>), show me the options it printed (point out the connection marked
    is_default), ask me which to use, and re-run with that flag. If I have no Snowflake
    CLI connection, help me create one with snow connection add.
-3. Judge progress by the lines starting with ==> or ERROR: (SQL output goes to .logs/).
+3. Judge progress by the lines starting with ==>, CHECK or ERROR: (SQL output goes to .logs/).
    If it seems stuck on sign-in, tell me to finish the browser sign-in, then re-run the
    same command.
 4. When setup prints Done, tell me how to open the notebook (./demo.sh notebook).
+   Ask me before running any command that creates objects or spends credits (such as
+   ./demo.sh build --yes); when it finishes, show me every CHECK line it printed.
 Do not run teardown unless I ask.
 ```
 

@@ -21,8 +21,8 @@ includes an HTML slide deck, companion speaker notes, and (where applicable) a
 hands-on lab with SQL setup and a notebook.
 
 Some modules set themselves up in one step, and their README has a prompt to paste
-into Cortex Code that does it for you. The Cortex AI Gateway modules: install
-[uv](https://docs.astral.sh/uv/) (`brew install uv`), then run `./demo.sh setup` in the
+into Cortex Code that does it for you. The Cortex AI Gateway, likely-to-sell and multi-agent MCP
+modules: install [uv](https://docs.astral.sh/uv/) (`brew install uv`), then run `./demo.sh setup` in the
 module folder (`./demo.sh --help` lists the other commands). The Cortex Agent SDK
 module: run `./setup.sh`, then `cd app && npm run dev`.
 
@@ -38,6 +38,8 @@ module: run `./setup.sh`, then `cd app && npm run dev`.
 | Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & AI governance teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html) |
 | Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & retail analytics teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-retail/presentations/ai-gateway.html) |
 | Building Agentic AI Applications on the Cortex Agent SDK | SEs, architects & app developers | Presentation + Meta-Prompt + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-agent-sdk-whitelabel/presentations/cortex-agent-sdk-whitelabel.html) |
+| Run the likely-to-sell score where the homeowner data already lives | ML engineers & product leaders who own a production score | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/likely-to-sell-ml/presentations/likely-to-sell-ml.html) |
+| Multi-Agent Orchestration over MCP: One Governed Front Door for Any AI Client | SEs, architects & AI platform teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/multi-agent-mcp/presentations/multi-agent-mcp.html) |
 <!-- MODULE_TABLE_END -->
 
 ---
@@ -216,6 +218,39 @@ How to build a fully branded, CoWork-style agent app (ACME Assist for the fictio
 | `lab/cleanup.sql` | Tear everything down to start fresh |
 | `app/` | Reference build: React/Vite client, Express proxy, Next.js App Runtime variant, Store Ops simulator, CoCo runner |
 
+### Run the likely-to-sell score where the homeowner data already lives
+
+**Location:** `likely-to-sell-ml/`
+
+A likely-to-sell XGBoost model that is scored on another platform every night, brought home: every feature defined once in the Snowflake Feature Store with a point-in-time training Dataset, the same model trained inside Snowflake, registered next to the imported artifact under one model name, scored from SQL, retrained by a daily task graph with lineage behind every version, and shown to the business in a Result | Trust | Value app.
+
+| File | Description |
+|------|-------------|
+| `presentations/likely-to-sell-ml.html` | Slide deck (10 slides) |
+| `presentations/likely-to-sell-ml-speaker-notes.md` | Speaker notes |
+| `demo.sh`, `pyproject.toml`, `uv.lock` | One-command setup, headless build, notebook, app and teardown |
+| `lab/ml_demo_run_the_likely_to_sell_demo.ipynb` | The live demo notebook: Phases 0-7 with a CHECK per phase |
+| `lab/setup.sql` | Database, schemas and warehouse (Phase 0) |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `app/` | Streamlit in Snowflake business app (Result, Trust, Value) |
+
+### Multi-Agent Orchestration over MCP: One Governed Front Door for Any AI Client
+
+**Location:** `multi-agent-mcp/`
+
+Any MCP client (Claude, ChatGPT, Cursor, or the included Claude-style Streamlit app) reaches governed sales and support data through one Snowflake-managed MCP server: an orchestrator agent delegates to specialist agents through caller's-rights bridges, so grants and a row access policy, not prompts, decide each persona's answer. Compares hub and spoke with agent toolsets, measured with Cortex Agent evaluations.
+
+| File | Description |
+|------|-------------|
+| `presentations/multi-agent-mcp.html` | Slide deck (12 slides) |
+| `presentations/multi-agent-mcp-speaker-notes.md` | Speaker notes |
+| `demo_script.md` | Live run-of-show |
+| `demo.sh`, `pyproject.toml`, `uv.lock` | One-command setup (stack, persona key pairs, PAT), headless build, notebook, app, smoke test and teardown |
+| `lab/setup.sql` | The governed stack: data, semantic views, row access policy, bridges, agents, persona grants |
+| `lab/multi-agent-mcp-lab.ipynb` | MCP servers, the toolset agent, the persona boundary over MCP, evaluations; a CHECK per section |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `app/`, `client/` | Claude-style MCP client (Streamlit) and a headless MCP smoke test |
+
 <!-- MODULE_SECTIONS_END -->
 
 ---
@@ -352,6 +387,32 @@ field-demo-enablement/
 │   │   ├── history.sql
 │   │   └── cleanup.sql
 │   └── app/                     # React/Vite + Express, app-runtime/ (Next.js), coco-runner/
+├── likely-to-sell-ml/
+│   ├── README.md
+│   ├── demo.sh
+│   ├── pyproject.toml, uv.lock
+│   ├── presentations/
+│   │   ├── likely-to-sell-ml.html
+│   │   └── likely-to-sell-ml-speaker-notes.md
+│   ├── lab/
+│   │   ├── ml_demo_run_the_likely_to_sell_demo.ipynb
+│   │   ├── setup.sql
+│   │   └── cleanup.sql
+│   └── app/                     # streamlit_app.py, queries.py, environment.yml
+├── multi-agent-mcp/
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── demo.sh
+│   ├── pyproject.toml, uv.lock
+│   ├── presentations/
+│   │   ├── multi-agent-mcp.html
+│   │   └── multi-agent-mcp-speaker-notes.md
+│   ├── lab/
+│   │   ├── multi-agent-mcp-lab.ipynb
+│   │   ├── setup.sql
+│   │   └── cleanup.sql
+│   ├── app/                     # streamlit_app.py, host_llm.py, snowflake_mcp.py, personas.py
+│   └── client/                  # mcp_smoke.py
 <!-- REPO_TREE_END -->
 ```
 

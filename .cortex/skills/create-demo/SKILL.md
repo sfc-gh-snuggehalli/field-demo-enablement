@@ -20,6 +20,9 @@ fixed so every module is consistent; you fill the content for the specific featu
    `default_warehouse_size`. Use these to fill URLs and warehouse naming — never re-ask.
 2. **Load** `reference/design-system.md` before writing the deck. It documents every CSS
    component and the recommended slide arc. Do not invent CSS or change the palette.
+3. **Load** `reference/demo-sh-patterns.md` before writing `demo.sh` (Step 5e). It holds the
+   vetted blocks for headless `build`, `app`/`smoke`, PAT issue/rotate/expiry, service-user key
+   pairs and secret teardown.
 
 ## Workflow
 
@@ -94,6 +97,11 @@ cp <SKILL_DIR>/templates/lab.ipynb.tmpl <slug>/lab/<slug>-lab.ipynb
 Then use the notebook tools (`notebook_edit_cell`, `notebook_add_cell`) to substitute the
 `{{...}}` placeholders and add one markdown+code Section pair per lab section. Use
 `get_active_session()` and `USE DATABASE/SCHEMA/WAREHOUSE` (already in the connect cell).
+The template's connect cell also carries the account guard (`DEMO_EXPECTED_ACCOUNT`), a local
+`%%sql -r <name>` magic (so SQL cells run under `./demo.sh build` too; one statement per cell) and
+`check(section, ok, evidence)`. **End every section with a `check(...)`** that tests a real
+outcome (row counts, the expected answer, a grant present) and prints its evidence; `build` echoes
+these `CHECK` lines and a FAIL stops the run. Give cells a `name` in metadata.
 Do NOT run cells — the lab runs in the user's Snowflake account. Confirm the file is valid
 JSON afterward (e.g. `python3 -c "import json,sys; json.load(open(sys.argv[1]))" <path>`).
 
@@ -166,8 +174,19 @@ uv + `demo.sh` layout below is for Python labs (notebooks, Streamlit, lab script
    and import every top-level package once with `uv run --frozen python -c "import ..."`.
    Commit `uv.lock`. `.venv/` and `.env` are gitignored at the repo root.
 3. **demo.sh** - Copy `templates/demo.sh` to `<slug>/demo.sh` (`chmod +x`). Fill `{{DECK_TITLE}}`,
-   `{{SLUG}}`, `{{DB_NAME}}`. Add a subcommand per extra lab entry point (`app`, `traffic`, ...),
-   each `need_uv; load_env; run <cmd>`, and list it in the header comment and `usage()` range.
+   `{{SLUG}}`, `{{DB_NAME}}`. The template already checks the account behind the connection and
+   writes `SNOWFLAKE_ACCOUNT` (org-account, for REST hosts) and `DEMO_EXPECTED_ACCOUNT` to `.env`.
+   Add blocks from `reference/demo-sh-patterns.md` as the lab needs them:
+   - **`build [--yes]`** whenever the notebook creates objects or is the verification run: it runs
+     the notebook headless with nbconvert and echoes the `CHECK` lines (add `nbconvert` to
+     `pyproject.toml`). Then setup only prepares (env, connection, account-level objects) and
+     `build` does the rest; the README Quick start shows `setup -c` then `build --yes`.
+   - **`app` / `smoke`** for a local app or a headless check script.
+   - **PAT issue/rotate/expiry + `pat`** when anything calls a Snowflake REST API with a PAT;
+     **service-user key pairs** when the lab signs in as persona/service users. Both keep secrets
+     out of stdout, so they run safely under Cortex Code; never leave them as manual README steps.
+   Add a subcommand per extra lab entry point, each `need_uv; load_env; run <cmd>`, and list it in
+   the header comment and `usage()` range.
    Keep the agent-safe contract (Cortex Code runs it with no terminal):
    - every prompt goes through `ask <var> <prompt> <flag-hint>`, never a bare `read`: for a
      person at a terminal it prompts; otherwise it stops and names the flag that answers it.
@@ -188,13 +207,15 @@ uv + `demo.sh` layout below is for Python labs (notebooks, Streamlit, lab script
    `token_secret` from `--format json`; write the file with umask 077). Account-specific values
    (e.g. an egress host) go in as `<% name %>` placeholders filled with `snow sql -D name=value`;
    `demo.sh` derives them from the connection. Document the placeholder for Snowsight runs.
-5. **Credentials**: `demo.sh setup` writes `<slug>/.env` (connection name plus whatever the lab
-   scripts read) and every subcommand loads it, so nobody exports variables by hand. The
-   notebook template's connect cell falls back to `SNOWFLAKE_DEFAULT_CONNECTION_NAME` when there
-   is no active session.
+5. **Credentials**: `demo.sh setup` writes `<slug>/.env` (connection name, account, and whatever the
+   lab scripts read: PAT file path and expiry, key file paths) and every subcommand loads it, so
+   nobody exports variables by hand. The notebook template's connect cell falls back to
+   `SNOWFLAKE_DEFAULT_CONNECTION_NAME` when there is no active session. Never hard-code an account
+   identifier in the module (app config, `.env.example`, notebook): derive it from the connection.
 6. **Validate**: `bash -n <slug>/demo.sh`; `./demo.sh --help` from another directory; and
-   `./demo.sh setup </dev/null` must stop with the `-c` message, not hang or exit silently.
-   Running real setup is the user's call (it writes to their account); offer it.
+   `./demo.sh setup </dev/null` must stop with the `-c` message, not hang or exit silently; with
+   `build`, `COCO_AGENT=1 ./demo.sh build` (after a `.env` exists) must stop with the `--yes` message.
+   Running real setup/build is the user's call (it writes to their account); offer it.
 
 ### Step 6: Generate the module README
 
@@ -203,8 +224,10 @@ Copy `templates/module-README.md` to `<slug>/README.md` and fill all placeholder
 `{{LAB_*}}`, `{{PREREQUISITES_LIST}}`, `{{SETUP_CREATES_LIST}}`, `{{LAB_SECTIONS_LIST}}`,
 `{{KEY_CONCEPTS_LIST}}`, `{{REFERENCES_LIST}}`). If no lab, drop the lab rows/sections and the
 Quick start / Set up with Cortex Code / Manual setup headings. The Cortex Code prompt block
-names the module's real subcommands and flags; add a line for each extra step (e.g. start the
-app in the background and give the URL) and list every command it must not run unprompted.
+names the module's real subcommands and flags; add a line for each extra step (e.g. ask before
+`build --yes` and show its CHECK lines; start the app in the background and give the URL) and
+list every command it must not run unprompted. Link only within this repo: a module that grew out
+of work in another repo carries that content (SQL, notes) itself, never a relative `../other-repo` path.
 
 ### Step 7: Register the module in the root README
 
@@ -222,8 +245,8 @@ Preserve all marker comments so future runs can append again.
 ### Step 8: Report
 
 List every file created, the local path to open the deck, and the published Pages URL.
-Remind the user of the run order (`./demo.sh setup` → `./demo.sh notebook`; by hand: `setup.sql`
-→ `python lab/data_gen.py` if present → notebook), that `./demo.sh teardown` (or
+Remind the user of the run order (`./demo.sh setup` → `./demo.sh build --yes` or `./demo.sh notebook`;
+by hand: `setup.sql` → `python lab/data_gen.py` if present → notebook), that `./demo.sh teardown` (or
 `lab/cleanup.sql`) tears the demo down to start fresh, that the README's "Set up with Cortex
 Code" prompt lets a new user set it up by pasting it into Cortex Code, and to `git add`/commit/push
 to publish via GitHub Pages.
@@ -288,6 +311,11 @@ Plus updated root `README.md` (table row + section + tree node).
   every notebook/script import is a declared dependency, no `%pip install` cell, no bare `read`
   prompts, `./demo.sh setup </dev/null` stops with a flag message, setup.sql re-runs cleanly,
   and the README carries the Quick start and "Set up with Cortex Code" prompt.
+- Every notebook section ends in a `check(...)` CHECK line; a lab whose notebook creates objects
+  ships `./demo.sh build`. PATs and key pairs are issued by `demo.sh` (never pasted by hand), secrets
+  never reach stdout, and teardown removes the PATs and local secret files it created.
+- No hard-coded account identifiers and no links into other repos: `grep -rn "<your account>\|\.\./[a-z-]*/" <slug>/`
+  finds nothing that points outside the repo.
 - **cleanup.sql is REQUIRED whenever include-lab = YES** — every module ships a `lab/cleanup.sql`
   that tears down the full demo. It MUST cover objects created in the notebook(s), not just
   setup.sql, and MUST drop the account-level objects `DROP DATABASE` does not cascade (extra

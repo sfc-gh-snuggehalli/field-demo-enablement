@@ -15,6 +15,9 @@
 #
 # Requires uv (https://docs.astral.sh/uv/). uv installs Python, the lab
 # dependencies and the Snowflake CLI into .venv.
+#
+# Optional blocks (build, app, PATs, key pairs): see the create-demo skill's
+# reference/demo-sh-patterns.md. Keep usage() in step with this header.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -92,13 +95,21 @@ cmd_setup() {
   uv sync --project "$HERE" --frozen
   pick_connection
 
+  step "Checking the account behind '$CONN'"
+  local sf_user sf_account acct_name
+  IFS=, read -r sf_user sf_account acct_name < <(sf --format csv -q \
+    "SELECT CURRENT_USER(), CURRENT_ORGANIZATION_NAME()||'-'||CURRENT_ACCOUNT_NAME(), CURRENT_ACCOUNT_NAME()" | tail -n 1)
+  [[ -n "${sf_user:-}" ]] || die "Could not read the current user from connection '$CONN'."
+  echo "  $sf_user on $sf_account"
+
   step "Creating Snowflake objects (lab/setup.sql)"
   sql_file lab/setup.sql
   [[ $skip_data -eq 1 ]] || load_data
 
   step "Writing .env"
   ( umask 077
-    printf '# Written by ./demo.sh setup. demo.sh loads this before every command.\nSNOWFLAKE_DEFAULT_CONNECTION_NAME=%s\n' "$CONN" > "$ENV_FILE" )
+    printf '# Written by ./demo.sh setup. demo.sh loads this before every command.\nSNOWFLAKE_DEFAULT_CONNECTION_NAME=%s\nSNOWFLAKE_ACCOUNT=%s\nDEMO_EXPECTED_ACCOUNT=%s\n' \
+      "$CONN" "$sf_account" "$acct_name" > "$ENV_FILE" )
 
   step "Done"
   cat <<EOF
