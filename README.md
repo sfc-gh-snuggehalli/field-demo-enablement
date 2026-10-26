@@ -37,6 +37,7 @@ module: run `./setup.sh`, then `cd app && npm run dev`.
 | Cortex Search: BYO Embeddings & Cost Optimization | Data engineers, platform teams & solutions architects | Presentation + Hands-on Lab | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-search-cost/presentations/cortex-search-cost.html) |
 | Cortex AI Gateway: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & AI governance teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway/presentations/ai-gateway.html) |
 | Cortex AI Gateway for Retail Analytics: Govern, Observe and Optimize Every LLM Call | SEs, platform engineers & retail analytics teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-retail/presentations/ai-gateway.html) |
+| Cortex AI Gateway for Medical Device Field Sales: Govern, Observe and Optimize Every AI Call | SEs, platform engineers & medtech commercial teams | Presentation + Hands-on Lab + App | [Part 1](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-medtech/presentations/agent-build.html) · [Part 2](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/ai-gateway-medtech/presentations/ai-gateway.html) |
 | Building Agentic AI Applications on the Cortex Agent SDK | SEs, architects & app developers | Presentation + Meta-Prompt + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/cortex-agent-sdk-whitelabel/presentations/cortex-agent-sdk-whitelabel.html) |
 | Run the likely-to-sell score where the homeowner data already lives | ML engineers & product leaders who own a production score | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/likely-to-sell-ml/presentations/likely-to-sell-ml.html) |
 | Multi-Agent Orchestration over MCP: One Governed Front Door for Any AI Client | SEs, architects & AI platform teams | Presentation + Hands-on Lab + App | [View](https://sfc-gh-snuggehalli.github.io/field-demo-enablement/multi-agent-mcp/presentations/multi-agent-mcp.html) |
@@ -202,6 +203,27 @@ The same gateway, MCP, Trace Analyzer and cost-governance flow on athletic appar
 | `lab/live_agent.py` | Send one live prompt through the agent; prints the trace_id |
 | `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
 | `app/` | Trace Analyzer: live prompt, trace explorer, advisor, experiments, before/after, cost governance |
+
+### Cortex AI Gateway for Medical Device Field Sales: Govern, Observe and Optimize Every AI Call
+
+**Location:** `ai-gateway-medtech/`
+
+The gateway, MCP, Trace Analyzer and cost-governance flow for a medical device field sales team. A LangChain agent reasons through the Cortex AI Gateway and calls one governed Cortex Agent with two Cortex Analyst tools (sales performance; account health and share-loss risk) and Cortex Search over IFU summaries, clinical evidence, battlecards and policy. An XGBoost account share-loss model is trained on H1 signals, registered, batch-scored and monitored. Gateway Tools connects CoCo Desktop to Glean and the same Snowflake MCP server. The Trace Analyzer adds AI diagnosis, a rubric judge, a prompt optimizer with a holdout check, confidence intervals and per-intent routing, and every optimizer call goes through the gateway so it is traced and costed.
+
+| File | Description |
+|------|-------------|
+| `presentations/agent-build.html` | Part 1 deck: building the agent (8 slides) |
+| `presentations/agent-build-speaker-notes.md` | Part 1 speaker notes |
+| `presentations/ai-gateway.html` | Part 2 deck: AI Gateway control plane (18 slides) |
+| `presentations/ai-gateway-speaker-notes.md` | Part 2 speaker notes |
+| `demo_script.md` | Live run-of-show |
+| `lab/setup.sql` | Medical device data (13 tables), product knowledge + Cortex Search, two semantic views, share-loss predictions, Cortex Agent, MCP server, gateway spec + grants, Tools OAuth client, eval and optimizer tables, app access, cost demo quota |
+| `lab/tools_setup.sql` | Gateway Tools follow-up: OAuth client secret, `MCP$USER` grant, trace check |
+| `lab/cleanup.sql` | Tear everything down to start fresh |
+| `lab/ai-gateway-lab.ipynb` | Hands-on notebook: gateway + LangChain + MCP, share-loss model, observability, cost controls |
+| `lab/live_agent.py` | Send one live prompt through the agent; prints the trace_id |
+| `lab/generate_traffic.py` | Generates varied gateway traffic for the dashboards |
+| `app/` | Trace Analyzer: live prompt, trace explorer, advisor with AI diagnosis, experiments with prompt optimizer, before/after with CI, routing and cost of optimization, cost governance |
 
 ### Building Agentic AI Applications on the Cortex Agent SDK
 
@@ -386,6 +408,18 @@ field-demo-enablement/
 │   ├── presentations/
 │   ├── lab/
 │   │   ├── setup.sql
+│   │   ├── cleanup.sql
+│   │   ├── ai-gateway-lab.ipynb
+│   │   ├── live_agent.py
+│   │   └── generate_traffic.py
+│   └── app/
+├── ai-gateway-medtech/          # AI Gateway for med-device sales + Tools (Glean) + optimizer
+│   ├── README.md
+│   ├── demo_script.md
+│   ├── presentations/
+│   ├── lab/
+│   │   ├── setup.sql
+│   │   ├── tools_setup.sql
 │   │   ├── cleanup.sql
 │   │   ├── ai-gateway-lab.ipynb
 │   │   ├── live_agent.py
